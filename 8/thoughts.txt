@@ -1,0 +1,2 @@
+[ ] chunk into array of numbers
+[ ] recursive pull header, children, meta nodes
