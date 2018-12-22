@@ -1,0 +1,26 @@
+- This is an infinite tape
+- last marble worth is just total marbles
+- rotate tape left for CCW
+- rotate tape right for CW
+- [0] of tape is the head
+- rotate players left for next player
+  - head is current player
+- nextmarble is just a number
+
+first build:
+405 players; last marble is worth 71700 points: ########## high score is 428690
+
+
+real	0m5.640s
+user	0m5.590s
+sys	0m0.010s
+
+Optimise:
+405 players; last marble is worth 71700 points: ########## high score is 428690
+
+
+real	0m0.319s
+user	0m0.280s
+sys	0m0.020s
+
+Much FASTER!!
