@@ -24,3 +24,13 @@ user	0m0.280s
 sys	0m0.020s
 
 Much FASTER!!
+
+Next A List - may be slower on the original, but doesn't grow?
+405 players; last marble is worth 71700 points: ########## high score is 428690
+
+real	0m0.144s
+user	0m0.090s
+sys	0m0.030s
+
+EVEN FASTE! -> + O(1)
+
