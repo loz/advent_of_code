@@ -1,0 +1,42 @@
+1, 1
+1, 6
+8, 3
+3, 4
+5, 5
+8, 9
+
+
+..........
+.A........
+..........
+........C.
+...D......
+.....E....
+.B....*...  * is exact same between B and C
+..........
+..........
+........F.
+
+
+aaaaa.cccc
+aAaaa.cccc
+aaaddecccc
+aadddeccCc
+..dDdeeccc
+bb.deEeecc
+bBb.eeee..
+bbb.eeefff
+bbb.eeffff
+bbb.ffffFf
+
+
+[X] 1. calculate distance between 2 points => |x1-x2| + |y1-y2|
+[X] 2. determine biggest x and y for finite grid
+[X] 3. for all points on finite grid:
+   [X] 1. calculate distances to all co-ords
+   [X] 2. map distance => co-ords as array
+   [X] 3. find smallest distance:
+      [X] - if it has 1 co-ord, thats it, otherwise . (NoNearest)
+[X] 4. mark any co-ord which is on edge as (Infinite), and discount
+[X] 5. sum counts of each marked co-ord non-infite count where 'won'
+[ ] *. largest count area => target, and co-ord.
