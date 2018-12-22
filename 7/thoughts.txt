@@ -1,0 +1,23 @@
+[X] process instruction DEP -> STEP
+[X] Build map [STEP] -> [DEP, DEP...]
+[X] Find Available Steps
+    [X] STEP !complete
+    [X] && STEP -> DEPS == complete
+[X] Order available Steps
+[X] Complete first step -> repeat until no available
+
+WITH TIMING
+[X] List of available workers
+  [X] no available workers, do work
+[X] List of available work
+  [X] -> remove ACTIVE work
+[X] for each available work, give to available worker
+  -> ACTIVE work
+  [ :task => LETTER, :remaining => initial_time(LETTER) ]
+[X] Do work
+  [X] For each elf -- remaining time
+  [X] increment time counter
+  [X] complete any work with 0 remaining time
+[X] All available workers and NO available work
+  [X] Finish -> Timer is time
+
