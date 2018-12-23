@@ -1,0 +1,9 @@
+[X] Be able to parse co-ords and vector from line
+[X] Build an array of all co-ords
+[X] Build a plotter of each
+  [X] left, right, upper, lower gives bounds
+  [X] offset origin is |left|, |upper|
+  [X] plot with offsets
+  [X] scale co-ordinates down to fit on screen (give a scale)
+[X] process array modify co-ords by vector (Particle->move)
+
