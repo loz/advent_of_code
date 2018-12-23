@@ -1,0 +1,27 @@
+- rules don't matter if no plant, decreses search space
+  - no matching rule means no plant next generation
+- is it possible that left-wise we can propogate, into the infite left?
+  ..[c].. -> #.[c]..
+  ..#.[c].. -> #.#.[c]..
+- if starts or ends with #, then padd with ..
+  - if padding start, increase the offset..
+
+
+50Billion?
+
+Stabilizes to pattern:
+##.#....##.#....##.#....##.#....##.#....##.#.....##.#........##.#....##.#.....###.#....###.#....###.#....###.#....##.#....##.#....##.#....##.#....###.#....##.#....##.#
+
+at 107, but then shifts over by 1 line each generation from there.
+@ 107 = 7976
+@ 108 = 8041 (+65)
+@ 109 = 8106 (+65)
+
+each generation + 65 after 108
+
+if 50B-107 * 65 + 7976
+= 3_250_000_001_021
+=> TOO HIGH
+
+if 50B-108 * 65..
+= 3250000000956
