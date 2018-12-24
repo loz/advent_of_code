@@ -1,0 +1,41 @@
+- need to find a train on the map
+  - 1st row -> last row
+  - 1st colum -> last colum
+- follow movement for the train
+ >- => ->
+ >\ => -v
+ >/ => -^
+ >+ => -^ -> -v      +------->---+ >+ => R   ^+ => L  v+ => S
+
+ -< => <- 
+ /< => v-
+ \< => ^-
+ +< => v- <- ^-
+
+ |  => ^
+ ^     |
+  / =>   >
+  ^      |
+ \  => <
+ ^     |
+  + =>   <  ^  >
+  ^      |  |  |
+
+ v  => |
+ |     v
+   v     |
+   \     >
+ v     |
+ /     <
+   v     |  |  |
+   +     >  v  <
+
+ASSUMPTION:
+ - no train starts on curve or intersection
+ - ALL trains starting on L turn out of LSR sequence
+
+TODO
+[X] - trainlist sorted for correct processing ****<- THIS
+[X] - detect crash
+   [X] - no more tick
+   [X] - find crash location
