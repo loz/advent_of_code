@@ -94,6 +94,37 @@ describe Battle do
       end
     end
 
+    describe "#turn" do
+      it "moves each unit in turn order" do
+        map = <<-EOF
+#########
+#G..G..G#
+#.......#
+#.......#
+#G..E..G#
+#.......#
+#.......#
+#G..G..G#
+#########
+        EOF
+        @battle.set_map(map)
+        @battle.define_targets
+        @battle.turn
+
+        @battle.map_string.must_equal <<-EOF
+#########
+#.G...G.#
+#...G...#
+#...E..G#
+#.G.....#
+#.......#
+#G..G..G#
+#.......#
+#########
+        EOF
+      end
+    end
+
     describe "#move_step" do
       it "selects first step from shortests in reading order" do
         map = <<-EOF
