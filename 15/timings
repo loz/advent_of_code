@@ -1,0 +1,56 @@
+First Implemention
+realchin0m9.186s
+userchin0m9.104s
+sysrchin0m0.043s
+
+Maintain Counter
+realchin0m9.022
+userchin0m8.947
+sysrchin0m0.041
+
+Move index to hash
+realchin0m19.857s
+userchin0m19.651s
+sysrchin0m0.106s
+SLOWER??
+
+Remove dup in recursion
+broken test, but way faster in main
+realchin0m0.267s
+userchin0m0.245s
+sysrchin0m0.017s
+
+=> Kill the dup for speed
+
+Remove visited to avoid dup
+(works in test too)
+realchin0m3.436s
+userchin0m3.371s
+sysrchin0m0.029s
+
+Try a Linked List?
+Node <- Node <- Node <- Here
+Node <- Node <- Here
+realchin0m8.155s
+userchin0m8.079s
+sysrchin0m0.039s
+
+Sort search spaces for neartest -> furthers
+realchin0m0.263s
+userchin0m0.243s
+sysrchin0m0.016s
+THIS IS GOOD ENOUGH?
+
+
+Still some painful searches.
+1. track visited with #visits to 
+  if visited again in <visits continue
+  update visited #visits
+2. prepopulate visited for all posible targets
+  as they were not selected as nearest, set to 0
+  - remove current target from list before starting
+TIME FOR ALL ELVES...
+real	0m3.457s
+user	0m3.415s
+sys	0m0.026s
+

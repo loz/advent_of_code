@@ -1,9 +1,61 @@
+COLORS = {
+  :yellow => "\e[33m",
+  :green => "\e[32m"
+}
+
 class Battle
   attr_reader :elves, :map
 
+  def self.visualise_map(map)
+    print "\e[0;0H"
+    map.each do |row|
+      puts row.join
+    end
+  end
+
+  class Step
+    attr_reader :loc, :prev
+
+    def plot
+      print COLORS[:yellow]
+      _plot
+      print "\e[0m"
+    end
+
+    def _plot
+      x,y = loc
+      print "\e[%d;%dH" % [y+1,x+1]
+      print "X"
+      prev.plot unless prev.nil?
+    end
+
+    def length
+      if prev.nil?
+        1
+      else
+        1 + prev.length
+      end
+    end
+
+    def visited?(loc)
+      if loc == @loc
+        true
+      elsif prev.nil?
+        false
+      else
+        @prev.visited?(loc)
+      end
+    end
+
+    def initialize(loc, prev)
+      @loc = loc
+      @prev = prev
+    end
+  end
+
   class Unit
     attr_reader :pos, :type, :locations
-    attr_accessor :targets
+    attr_accessor :targets, :target
 
     def initialize(x,y,type)
       @pos = [x,y]
@@ -13,6 +65,7 @@ class Battle
 
     def determine_range(map)
       @locations = []
+      @target = nil
       @targets.each do |target|
         tx, ty = target.pos
         @locations << [tx,ty-1] if map[ty-1][tx] == '.'
@@ -25,8 +78,14 @@ class Battle
     def filter_nearest(map)
       @routes = {}
       @shortest = nil
+      @all_locations = @locations.dup
+      @locations.sort! do |l1, l2|
+        d1 = (@pos[0]-l1[0]).abs + (pos[1]-l1[1]).abs
+        d2 = (@pos[0]-l2[0]).abs + (pos[1]-l2[1]).abs
+        d1 <=> d2
+      end
       @locations.each do |l|
-        puts "Searching For Nearest: #{l}"
+        #puts "Searching For Nearest: #{l}"
         explore_all_routes(map, l)
       end
       @routes.select! do |loc, routes|
@@ -36,13 +95,27 @@ class Battle
       @locations = @routes.keys
     end
 
+    def select_target
+      @target = @locations.min do |l1, l2|
+        x1, y1 = l1
+        x2, y2 = l2
+        if y1 < y2
+          -1
+        elsif y1 > y2
+          1
+        else
+          x1 <=> x2
+        end
+      end
+    end
+
     def distance(loc)
       shortest_route(@routes[loc]).length
     end
 
     def shortest_route(routes)
       routes.min do |r1,r2|
-        r1.count <=> r2.count
+        r1.length <=> r2.length
       end
     end
 
@@ -57,7 +130,12 @@ class Battle
 
     def explore_all_routes(map, location)
       x,y = pos
-      routes = explore_to(map, x,y, location)
+      visited_in = {}
+      @all_locations.each do |loc|
+        visited_in[loc] = 0
+      end
+      visited_in.delete location
+      routes = explore_to(map, x,y, location, visited_in)
       @routes[location] = routes
     end
 
@@ -85,13 +163,12 @@ class Battle
       false
     end
 
-    def explore_to(map, sx, sy, location, visited = [], routes = [])
-      visited << [sx,sy]
-
+    def explore_to(map, sx, sy, location, visited_in, head = nil, routes = [], visits=0)
+      visits+=1
       if @shortest
-        return if visited.length > @shortest
+        return if visits > @shortest
       end
-
+      head = Step.new([sx,sy],head)
       directions = [
         [0,-1], #NORTH
         [-1,0], #WEST
@@ -103,22 +180,34 @@ class Battle
         dx,dy = d
         nx = sx + dx
         ny = sy + dy
+        seen = false
 
-        unless visited.include? [nx,ny]
+        if best = visited_in[[nx,ny]]
+          if visits < best
+            visited_in[[nx,ny]] = visits
+          else
+            seen = true
+          end
+        else
+          visited_in[[nx,ny]] = visits
+        end
+        unless seen
           if map[ny][nx] == '.'
             if nx == location[0] && ny == location[1]
-              @shortest ||= visited.length
+              @shortest ||= visits
               #puts "Route Found: %s (shortest: %s, this: %s)" %
-              #  [visited.inspect, @shortest[location], visited.length]
-              @shortest = visited.length if visited.length < @shortest
-              routes << visited
+              #  [visited.inspect, @shortest, visited.length]
+              @shortest = visits if visits < @shortest
+              routes << head
             else
-              explore_to(map, nx, ny, location, visited.dup, routes)
+              #Battle.visualise_map(map)
+              #head.plot
+              explore_to(map, nx, ny, location, visited_in, head, routes, visits)
             end
           end
         end
       end
-      routes
+      return routes
     end
   end
 
@@ -136,6 +225,10 @@ class Battle
     @units.select {|u| u.type == 'E' }
   end
 
+  def goblins
+    @units.select {|u| u.type == 'G' }
+  end
+
   def visualise_map
     print "\e[0;0H"
     @map.each do |row|
@@ -143,10 +236,10 @@ class Battle
     end
   end
 
-  def visualise_locations(locations)
+  def visualise_locations(locations, color)
     rows = @map.size
     print "\e[0;0H"
-    print "\e[32m" #Green
+    print COLORS[color]
     locations.each do |loc|
       x,y = loc
       print "\e[%d;%dH" % [y+1,x+1]
