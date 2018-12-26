@@ -14,7 +14,7 @@ class Battle
   end
 
   class Step
-    attr_reader :loc, :prev
+    attr_reader :loc, :prev, :length
 
     def plot
       print COLORS[:yellow]
@@ -29,11 +29,10 @@ class Battle
       prev.plot unless prev.nil?
     end
 
-    def length
-      if prev.nil?
-        1
-      else
-        1 + prev.length
+    def next(needle)
+      unless prev.nil?
+        return self if prev.loc == needle
+        prev.next(needle)
       end
     end
 
@@ -47,9 +46,10 @@ class Battle
       end
     end
 
-    def initialize(loc, prev)
+    def initialize(loc, prev, length)
       @loc = loc
       @prev = prev
+      @length = length
     end
   end
 
@@ -88,15 +88,34 @@ class Battle
         #puts "Searching For Nearest: #{l}"
         explore_all_routes(map, l)
       end
-      @routes.select! do |loc, routes|
+      routes = @routes.select do |loc, routes|
         shortest = shortest_route(routes)
-        shortest && shortest.length == @shortest
+        if shortest
+          shortest.length == @shortest
+        end
       end
-      @locations = @routes.keys
+      @locations = routes.keys
     end
 
     def select_target
       @target = @locations.min do |l1, l2|
+        cmp_reading_order(l1,l2)
+      end
+    end
+
+    def move_step
+      options = @routes[@target]
+      options.select! do |route|
+        route.length == @shortest
+      end
+      steps = options.map {|route| route.next(pos).loc }
+      steps.sort! do |l1, l2|
+        cmp_reading_order(l1,l2)
+      end
+      steps.first
+    end
+
+    def cmp_reading_order(l1,l2)
         x1, y1 = l1
         x2, y2 = l2
         if y1 < y2
@@ -106,7 +125,6 @@ class Battle
         else
           x1 <=> x2
         end
-      end
     end
 
     def distance(loc)
@@ -168,7 +186,7 @@ class Battle
       if @shortest
         return if visits > @shortest
       end
-      head = Step.new([sx,sy],head)
+      head = Step.new([sx,sy],head, visits)
       directions = [
         [0,-1], #NORTH
         [-1,0], #WEST
@@ -191,17 +209,17 @@ class Battle
         else
           visited_in[[nx,ny]] = visits
         end
-        unless seen
-          if map[ny][nx] == '.'
-            if nx == location[0] && ny == location[1]
-              @shortest ||= visits
-              #puts "Route Found: %s (shortest: %s, this: %s)" %
-              #  [visited.inspect, @shortest, visited.length]
-              @shortest = visits if visits < @shortest
-              routes << head
-            else
-              #Battle.visualise_map(map)
-              #head.plot
+        if map[ny][nx] == '.'
+          if nx == location[0] && ny == location[1]
+            @shortest ||= visits
+            #puts "Route Found: %s (shortest: %s, this: %s)" %
+            #  [visited.inspect, @shortest, visited.length]
+            @shortest = visits if visits < @shortest
+            routes << head
+          else
+            #Battle.visualise_map(map)
+            #head.plot
+            unless seen
               explore_to(map, nx, ny, location, visited_in, head, routes, visits)
             end
           end

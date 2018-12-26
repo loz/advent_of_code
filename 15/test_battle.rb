@@ -91,7 +91,31 @@ describe Battle do
         elf.select_target
 
         elf.target.must_equal [3,1]
-        p elf
+      end
+    end
+
+    describe "#move_step" do
+      it "selects first step from shortests in reading order" do
+        map = <<-EOF
+#######
+#.....#
+#....G#
+#.E...#
+#######
+        EOF
+        @battle.set_map(map)
+        @battle.define_targets
+
+        elf = @battle.elves[0]
+        elf.determine_range(@battle.map)
+        elf.filter_reachable(@battle.map)
+        elf.filter_nearest(@battle.map)
+        elf.select_target
+
+        elf.target.must_equal [4,2]
+
+        dest = elf.move_step
+        dest.must_equal [2,2]
       end
     end
   end
