@@ -18,12 +18,24 @@ DIRECTIONS = [
 ]
 
 class Battle
-  attr_reader :elves, :map
+  attr_reader :elves, :map, :round
 
   def self.visualise_map(map)
     print "\e[0;0H"
     map.each do |row|
       puts row.join
+    end
+  end
+
+  def cmp_reading_order(l1,l2)
+    x1, y1 = l1
+    x2, y2 = l2
+    if y1 < y2
+      -1
+    elsif y1 > y2
+      1
+    else
+      x1 <=> x2
     end
   end
 
@@ -33,7 +45,26 @@ class Battle
     print letter
   end
 
+  def unit_at(x,y)
+    #p "%s v %s" % [[x,y], @units.map { |u| u.pos }]
+    @units.each do |i|
+      return i if i.pos == [x,y]
+    end
+  end
+
+  def remove_unit(unit)
+    x,y = unit.pos
+    map[y][x] = "."
+  end
+
+  def ongoing?
+    @units.reject! {|u| u.dead? }
+    elves.count != 0 && goblins.count != 0
+  end
+
   def turn
+    @units.reject! {|u| u.dead? }
+    @units.sort! {|u1, u2| cmp_reading_order(u1.pos,u2.pos) }
     @round += 1
     print " " * 40
     print "Round: #{@round}"
@@ -44,7 +75,7 @@ class Battle
     #end
     @units.each do |unit|
       if unit.in_range?(map)
-        puts "In Range!"
+        unit.attack(self)
       else
         unit.determine_range(map)
         unit.filter_reachable(map)
@@ -58,6 +89,9 @@ class Battle
           x,y = dest
           map[y][x] = unit.type
           unit.pos = dest
+          if unit.in_range?(map)
+            unit.attack(self)
+          end
         end
       end
       visualise_map
@@ -117,12 +151,17 @@ class Battle
 
   class Unit
     attr_reader :type, :locations
-    attr_accessor :pos, :targets, :target
+    attr_accessor :pos, :targets, :target, :hitpoints
 
     def initialize(x,y,type)
       @pos = [x,y]
       @type = type
       @targets = []
+      @hitpoints = 200
+    end
+
+    def dead?
+      hitpoints <= 0
     end
 
     def in_range?(map)
@@ -135,6 +174,39 @@ class Battle
         return true if map[ny][nx] == enemy
       end
       false
+    end
+
+    def attack(battle)
+      x, y = pos
+      enemy = ENEMY[type]
+      enemies = DIRECTIONS.map do |d|
+        dx,dy = d
+        nx = x + dx
+        ny = y + dy
+        if battle.map[ny][nx] == enemy
+          battle.unit_at(nx,ny)
+        else
+          nil
+        end
+      end
+      #puts "---Attack #{pos} > #{enemy} ---"
+      #puts battle.map_string
+      #puts "-------------------"
+      enemies = enemies.compact
+      enemies.sort! {|e1, e2| e1.hitpoints <=> e2.hitpoints }
+      weakest = enemies.first
+      if weakest
+        enemies.select! {|e| e.hitpoints == weakest.hitpoints }
+        unless enemies.count == 1
+          enemies.sort! { |e1, e2| cmp_reading_order(e1.pos,e2.pos) }
+        end
+        enemy = enemies.first
+        enemy.hitpoints -= 3
+        if enemy.dead?
+          battle.remove_unit(enemy)
+        end
+      end
+      #puts "-------------------"
     end
 
     def determine_range(map)

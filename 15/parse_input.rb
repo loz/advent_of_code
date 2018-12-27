@@ -11,9 +11,11 @@ battle.set_map(map)
 puts "Defining Targets.."
 battle.define_targets
 
-while true do
+while battle.ongoing? do
   battle.turn
 end
+
+puts "Battle Finished @ #{battle.round}"
 
 =begin
 elf = battle.elves[0]

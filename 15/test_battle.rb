@@ -123,6 +123,46 @@ describe Battle do
 #########
         EOF
       end
+
+      it "removes each defeated unit" do
+        map= <<-EOF
+#######
+#.G...#
+#...EG#
+#.#.#G#
+#..G#E#
+#.....#
+#######
+        EOF
+        @battle.set_map(map)
+        @battle.define_targets
+
+        22.times { @battle.turn }
+        puts @battle.map_string
+
+        @battle.map_string.must_equal <<-EOF
+#######
+#...G.#
+#..GEG#
+#.#.#G#
+#...#E#
+#.....#
+#######
+        EOF
+        @battle.turn
+
+        puts @battle.map_string
+        @battle.map_string.must_equal <<-EOF
+#######
+#...G.#
+#..G.G#
+#.#.#G#
+#...#E#
+#.....#
+#######
+        EOF
+
+      end
     end
 
     describe "#move_step" do
