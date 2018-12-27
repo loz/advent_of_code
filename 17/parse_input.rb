@@ -9,15 +9,22 @@ veins.each_line do |vein|
 end
 
 water = Water.new()
-puts `clear`
-reservoir.visualise
+image = reservoir.visualise()
+`open viz.png`
 round = 0
 while !water.complete? do
   round += 1
   water.flow(reservoir)
-  if round % 10 == 0
-    print "\e[0;0H"
-    reservoir.visualise
+  if round % 100 == 0
+    reservoir.visualise(image)
+    `open viz.png`
   end
-  #sleep 0.2
 end
+
+#
+#  round += 1
+#  if round % 10 == 0
+#    print "\e[0;0H"
+#  end
+#  #sleep 0.2
+#end

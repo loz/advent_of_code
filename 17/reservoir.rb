@@ -1,4 +1,4 @@
-require 'ruby2d'
+require 'chunky_png'
 
 COLORS = {
   '+' => "\e[21m\e[36m+\e[0m",
@@ -7,6 +7,16 @@ COLORS = {
   '~' => "\e[36m~\e[0m",
   '*' => "\e[36m*\e[0m"
 }
+
+VIZ_COLORS = {
+  '+' => ChunkyPNG::Color('aqua'),
+  '#' => ChunkyPNG::Color('yellow'),
+  '|' => ChunkyPNG::Color('lightblue'),
+  '~' => ChunkyPNG::Color('aqua'),
+  '*' => ChunkyPNG::Color('aqua'),
+}
+
+
 class Reservoir
 
   def initialize
@@ -32,35 +42,44 @@ class Reservoir
     end
   end
 
-  def visualise
-    right = 0
-    @squares.each do |row|
-      if row
-        right = row.length if row.length > right
+  def visualise(window = nil)
+    if(window.nil?) 
+      right = 0
+      @squares.each do |row|
+        if row
+          right = row.length if row.length > right
+        end
       end
-    end
-    left = right
-    @squares.each do |row|
-      if row
-        pos_left = row.index {|c| !c.nil? && c != "." }
-        left = pos_left if pos_left && pos_left < left
+      left = right
+      @squares.each do |row|
+        if row
+          pos_left = row.index {|c| !c.nil? && c != "." }
+          left = pos_left if pos_left && pos_left < left
+        end
       end
-    end
-    puts "Left:  #{left}"
-    puts "Right: #{right}"
-    width = right-left
-    puts "Width: #{width}"
-    puts "Depth: #{depth}"
+      puts "Left:  #{left}"
+      puts "Right: #{right}"
+      width = right-left
+      puts "Width: #{width}"
+      puts "Depth: #{depth}"
 
-    depth.times do |y|
-      width.times do |x|
-        cell = cell(x + left, y)
-        if cell != "."
-          print "\e[%d;%dH" % [y,x]
-          print COLORS[cell]
+      @left = left
+      @width = width
+      @depth = depth
+
+      window = ChunkyPNG::Image.new(@width, @depth, ChunkyPNG::Color('darkgray'))
+    end
+    
+    @depth.times do |y|
+      @width.times do |x|
+        cell = cell(x + @left, y)
+        if cell != "." && !cell.nil?
+          window[x,y] = VIZ_COLORS[cell]
         end
       end
     end
+    window.save('viz.png', :interlace => true)
+    window
   end
 
   def colorize(render)
