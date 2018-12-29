@@ -10,9 +10,9 @@ COLORS = {
 
 VIZ_COLORS = {
   '+' => ChunkyPNG::Color('aqua'),
-  '#' => ChunkyPNG::Color('yellow'),
+  '#' => ChunkyPNG::Color('sandybrown'),
   '|' => ChunkyPNG::Color('lightblue'),
-  '~' => ChunkyPNG::Color('aqua'),
+  '~' => ChunkyPNG::Color('blue'),
   '*' => ChunkyPNG::Color('aqua'),
 }
 
@@ -22,6 +22,17 @@ class Reservoir
   def initialize
     @squares = []
     set_cell(500,0,"+")
+  end
+
+  def counts()
+    counts = {}
+    @squares.each do |row|
+      row.each do |cell|
+        counts[cell] ||= 0
+        counts[cell] += 1
+      end
+    end
+    counts
   end
 
   def depth
@@ -150,55 +161,106 @@ class Reservoir
 end
 
 class NoFlow
-  def flow(reservoir); end
-  def flowing?; false; end
-  def complete?(v); true; end
+  def flow(r); false; end
+  def complete?; true; end
+  def find_node_at(x,y); false; end
 end
 
 class InfiniteFlow
-  def flow(r); true end
+  def flow(r); true; end
   def flowing?; true; end
-  def complete?(v); true; end
+  def complete?; true; end
+end
+
+class FollowerFlow
+  def initialize(x,y, parent, reservoir)
+    @x = x
+    @y = y
+    #Find Followed Node
+    y = y + 1
+    cell = reservoir.cell(x,y)
+    while cell == "|"
+      y += 1
+      cell = reservoir.cell(x,y)
+    end
+    puts "Following Water @ #{x},#{y}"
+    root = parent.root_node
+    @following = root.find_node_at(x,y)
+    puts " --> #{@following.inspect}"
+  end
+  def flow(r); true; end
+  def complete?
+    return true if @following.nil?
+    @following.complete?
+  end
 end
 
 class Water
   def initialize(x=500, y=0, options = {})
+    @direction = options[:direction] || :down
     @parent = options[:parent]
-    @left = options[:left]
-    @right = options[:right]
 
     @x = x
     @y = y
   end
 
-  def complete?(visited = [])
-    visited << self
-    return true if @rest
-    return false if @down.nil? #Not Yet Flowed Infinitely
-    return false unless @down.complete?(visited)
+  def root_node
+    return self if @parent.nil?
+    return @parent.root_node
+  end
 
-    unless @left.nil? || visited.include?(@left)
-      return false unless @left.complete?(visited)
-    end
+  def find_node_at(x, y)
+    return self if (x == @x && y == @y)
+    left = @left.find_node_at(x, y) if @left
+    return left if left
+    right = @right.find_node_at(x,y) if @right
+    return right if right
+    nil
+  end
 
-    unless @right.nil? || visited.include?(@right)
-      return false unless @right.complete?(visited)
+  def remove(child)
+    @left = nil if @left == child
+    @right = nil if @right == child
+  end
+
+  def complete?
+    #puts "Complete?:> #{inspect}"
+    if @down
+      return @down.complete?
+    else
+      complete = (!@left.nil? || !@right.nil?)
+      if @left
+        complete &= @left.complete?
+      end
+      if @right
+        complete &= @right.complete?
+      end
+      return complete
     end
-    return true
   end
 
   def flow(reservoir)
     return false if @rest
+    flowed = false
+    cell = reservoir.cell(@x,@y)
+
+    reservoir.set_cell(@x, @y, "|") if cell == "."
 
     flowed = flow_down(reservoir)
     return true if flowed
 
-    left = flow_left(reservoir)
-    right = flow_right(reservoir)
+    if @direction == :left || @direction == :down
+      left = flow_left(reservoir)
+      flowed ||= left
+    end
 
-    flowed = left || right
+    if @direction == :right || @direction == :down
+      right = flow_right(reservoir)
+      flowed ||= right
+    end
+
     if !flowed
-      rest(reservoir)
+      flowed ||= flow_back(reservoir)
     end
     return flowed
   end
@@ -210,55 +272,111 @@ class Water
     reservoir.set_cell(@x,@y, "~")
   end
 
-  def flow_down(reservoir)
-    if @down
-      return @down.flow(reservoir)
-    else
-      if (@y+1) == reservoir.depth
-        @down = InfiniteFlow.new
-        reservoir.set_cell(@x,@y,"*")
+  def flow_back(reservoir)
+    if @direction == :down
+      @left = nil
+      @right = nil
+      if walled_in?(reservoir)
+        rest_water(reservoir)
+        @y -= 1
         return true
       end
-      down = reservoir.cell(@x,@y+1)
-      if (down == '#' || down == '~')
-        @down = NoFlow.new
-        return false
-      end
-      reservoir.set_cell(@x,@y + 1,"|")
-      @down = Water.new(@x, @y + 1, :parent => self)
+    end
+    return false
+  end
+
+  def walled_in?(reservoir)
+    y = @y
+    x = @x
+    cell = reservoir.cell(x,y)
+    while cell != "#" && cell != "." do
+      x -= 1
+      cell = reservoir.cell(x,y)
+    end
+    wall_left = cell == "#"
+    y = @y
+    x = @x
+    cell = reservoir.cell(x,y)
+    while cell != "#" && cell != "." do
+      x += 1
+      cell = reservoir.cell(x,y)
+    end
+    wall_right = cell == "#"
+    wall_left && wall_right
+  end
+
+  def rest_water(reservoir)
+    y = @y
+    x = @x
+    while reservoir.cell(x, y) != "#" &&
+          reservoir.cell(x, y) != "." do
+      reservoir.set_cell(x,y, "~")
+      x -= 1
+    end
+    x = @x+1
+    while reservoir.cell(x, y) != "#" &&
+          reservoir.cell(x, y) != "." do
+      reservoir.set_cell(x,y, "~")
+      x += 1
+    end
+  end
+
+  def flow_down(reservoir)
+    return @down.flow(reservoir) if @down
+    if (@y+1) == reservoir.depth
+      @down = InfiniteFlow.new
+      reservoir.set_cell(@x,@y,"*")
       return true
     end
+
+    down = reservoir.cell(@x,@y+1)
+    if (down == '|')
+      #@parent.remove(self)
+      #@down = FollowerFlow.new(@x,@y, self, reservoir)
+      return true
+    end
+
+    if (down != '.')
+      return false
+    end
+
+    @y = @y + 1
+    @direction = :down
+    return true
   end
 
   def flow_left(reservoir)
-    if @left
-      return false if @left == @parent
-      return @left.flow(reservoir)
-    else
-     left = reservoir.cell(@x-1, @y)
-     if (left == '#' || left == '~')
-       @left = NoFlow.new
-       return false
-     end
-     reservoir.set_cell(@x-1,@y, "|")
-     @left = Water.new(@x-1,@y, :right => self, :parent => self)
-     return true
+    return @left.flow(reservoir) if @left
+
+    left = reservoir.cell(@x-1, @y)
+    if left != "." && left != "|"
+      @left = NoFlow.new
+      return false
     end
+
+    if @direction == :down
+      #reservoir.set_cell(@x-1,@y, "<")
+      @left = Water.new(@x-1,@y, :direction => :left, :parent => self)
+    else
+      @x -= 1
+    end
+    return true
   end
 
   def flow_right(reservoir)
-    if @right
-      return false if @right == @parent
-      return @right.flow(reservoir)
-    else
-     right = reservoir.cell(@x+1, @y)
-     if (right == '#' || right == '~')
-       @right = NoFlow.new
-       return false
-     end
-     reservoir.set_cell(@x+1,@y, "|")
-     @right = Water.new(@x+1,@y, :left => self, :parent => self)
-     return true
+    return @right.flow(reservoir) if @right
+    right = reservoir.cell(@x+1, @y)
+    if right != "." && right != "|"
+      @right = NoFlow.new
+      return false
     end
+
+    if @direction == :down
+      #reservoir.set_cell(@x+1,@y, ">")
+      @right = Water.new(@x+1,@y, :direction => :right, :parent => self)
+    else
+      @x += 1
+    end
+    return true
   end
 end

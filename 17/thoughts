@@ -1,0 +1,13 @@
+Slow traversal through all water is problematic, getting slower per run.
+- Only track the end, and spawns
+
+input.example
+Current Time:
+real	0m0.293s
+user	0m0.148s
+sys	0m0.065s
+
+Only end spawns
+real	0m0.269s
+user	0m0.150s
+sys	0m0.062s

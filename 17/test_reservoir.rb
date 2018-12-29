@@ -23,7 +23,7 @@ y=13, x=498..504
 
     it "flows down" do
       w = Water.new()
-      6.times { w.flow(@reservoir) }
+      7.times { w.flow(@reservoir) }
 
       render = @reservoir.render_at(494,14,14)
 
@@ -50,9 +50,133 @@ y=13, x=498..504
 
     end
 
+    it "flows correctly in multiple directions" do
+      reservoir = Reservoir.new
+      veins = <<-EOF
+x=500, y=2
+x=496..504, y=8
+x=496, y=5..7
+x=504, y=5..7
+      EOF
+      veins.each_line do |vein|
+        reservoir.mark_vein(vein) 
+      end
+
+      w = Water.new()
+      40.times { w.flow(reservoir) }
+
+
+      render = reservoir.render_at(494,14,14)
+      #puts "*"*20
+      #puts reservoir.colorize(render)
+      #puts "*"*20
+
+      render.must_equal <<-EOF
+......+.......
+.....|||......
+.....|#|......
+.....|.|......
+.|||||||||||..
+.|#~~~~~~~#|..
+.|#~~~~~~~#|..
+.|#~~~~~~~#|..
+.*#########*..
+..............
+..............
+..............
+..............
+..............
+      EOF
+
+    end
+
+    it "rests correctly in lob-sided wells" do
+      reservoir = Reservoir.new
+      veins = <<-EOF
+x=499..500, y=4
+x=499, y=3
+x=497..503, y=6
+x=497, y=3..5
+x=503, y=3..5
+x=494..507, y=13
+x=494, y=10..12
+x=507, y=9..12
+      EOF
+      veins.each_line do |vein|
+        reservoir.mark_vein(vein) 
+      end
+
+      w = Water.new()
+      100.times { w.flow(reservoir) }
+
+      render = reservoir.render_at(494,14,14)
+      puts "*"*20
+      puts reservoir.colorize(render)
+      puts "*"*20
+
+      render.must_equal <<-EOF
+......+.......
+......|.......
+..|||||||||...
+..|#~#~~~#|...
+..|#~##~~#|...
+..|#~~~~~#|...
+..|#######|...
+..|.......|...
+..|.......|...
+|||||||||||||#
+#~~~~~~~~~~~~#
+#~~~~~~~~~~~~#
+#~~~~~~~~~~~~#
+##############
+      EOF
+      w.complete?.must_equal true
+    end
+
+    it "flows correctly around objects inside wells" do
+      reservoir = Reservoir.new
+      veins = <<-EOF
+x=500, y=2
+x=498..500, y=6
+x=496..504, y=8
+x=496, y=5..7
+x=504, y=5..7
+      EOF
+      veins.each_line do |vein|
+        reservoir.mark_vein(vein) 
+      end
+
+      w = Water.new()
+      30.times { w.flow(reservoir) }
+
+
+      render = reservoir.render_at(494,14,14)
+      #puts "*"*20
+      #puts reservoir.colorize(render)
+      #puts "*"*20
+
+      render.must_equal <<-EOF
+......+.......
+.....|||......
+.....|#|......
+.....|.|......
+.|||||||||||..
+.|#~~~~~~~#|..
+.|#~###~~~#|..
+.|#~~~~~~~#|..
+.*#########*..
+..............
+..............
+..............
+..............
+..............
+      EOF
+
+    end
+
     it "flows left when it cannot flow down" do
       w = Water.new()
-      7.times { w.flow(@reservoir) }
+      8.times { w.flow(@reservoir) }
 
       render = @reservoir.render_at(494,14,14)
 
@@ -80,7 +204,7 @@ y=13, x=498..504
 
     it "flows right when it cannot flow down" do
       w = Water.new()
-      18.times { w.flow(@reservoir) }
+      22.times { w.flow(@reservoir) }
 
       render = @reservoir.render_at(494,14,14)
 
@@ -91,7 +215,7 @@ y=13, x=498..504
       render.must_equal <<-EOF
 ......+.......
 ......|.....#.
-.#..#~|||...#.
+.#..#|||....#.
 .#..#~~#......
 .#..#~~#......
 .#~~~~~#......
@@ -122,7 +246,7 @@ y=13, x=498..504
 .#..#.|.....#.
 .#..#.|#......
 .#..#.|#......
-.#...||#......
+.#....|#......
 .#~~~~~#......
 .#######......
 ..............
@@ -138,18 +262,22 @@ y=13, x=498..504
       w = Water.new()
       render = @reservoir.render_at(494,14)
 
-      50.times { w.flow(@reservoir) }
+      53.times { w.flow(@reservoir) }
+
+      w.complete?.must_equal false
+
+      w.flow(@reservoir)
 
       render = @reservoir.render_at(494,14)
 
-      puts "*"*20
-      puts @reservoir.colorize(render)
-      puts "*"*20
+      #puts "*"*20
+      #puts @reservoir.colorize(render)
+      #puts "*"*20
 
       render.must_equal <<-EOF
 ......+.......
 ......|.....#.
-.#..#~|||...#.
+.#..#||||...#.
 .#..#~~#|.....
 .#..#~~#|.....
 .#~~~~~#|.....
@@ -163,7 +291,7 @@ y=13, x=498..504
 ...*#######*..
       EOF
 
-      w.must_be :complete?
+      w.complete?.must_equal true
     end
   end
   
@@ -171,8 +299,6 @@ y=13, x=498..504
     it "records veins vertically" do
       @reservoir.mark_vein("x=495, y=2..7")
       render = @reservoir.render_at(494,14,10)
-
-      #puts "*"*20
 
       render.must_equal <<-EOF
 ......+.......
