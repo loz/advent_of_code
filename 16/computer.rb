@@ -11,8 +11,8 @@ class Computer
     :eqir, :eqri, :eqrr
   ]
 
-  def initialize
-    @registers = Array.new(4,0)
+  def initialize(registers = 4)
+    @registers = Array.new(registers, 0)
   end
 
   def match_opcodes(before, instructions, after, options = OPCODES)
