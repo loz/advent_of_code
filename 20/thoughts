@@ -1,0 +1,10 @@
+For example, consider this regex: ^ENWWW(NEEE|SSE(EE|N))$
+
+1. RegEx to FSA?
+
+START>:E>N>W>W>W>[SPLIT]>END
+  L: N>E>E>E->nil
+  R: S>S>E>[SPLIT]
+    L: E>E>nil
+    R: N>nil
+
