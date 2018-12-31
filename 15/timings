@@ -54,3 +54,15 @@ real	0m3.457s
 user	0m3.415s
 sys	0m0.026s
 
+
+Newest: (speed_test.rb)
+Set Map..
+Defining Targets..
+
+real	0m0.083s
+user	0m0.065s
+sys	0m0.015s
+
+real	0m0.085s
+user	0m0.067s
+sys	0m0.015s

@@ -13,7 +13,7 @@ describe Battle do
 #E..G.#
 #...#.#
 #.G.#G#
-#######
+######/
       EOF
       @battle.set_map(@map)
     end
@@ -47,29 +47,12 @@ describe Battle do
       end
     end
 
-    describe "#filter_reachable" do
-      it "removes locations which cannot be reached" do
-        @battle.define_targets
-
-        elf = @battle.elves[0]
-        elf.determine_range(@battle.map)
-        elf.filter_reachable(@battle.map)
-
-        elf.locations.length.must_equal 4
-        elf.locations.must_include [3,1]
-        elf.locations.must_include [2,2]
-        elf.locations.must_include [1,3]
-        elf.locations.must_include [3,3]
-      end
-    end
-
     describe "#filter_nearest" do
       it "retains locations which are closest" do
         @battle.define_targets
 
         elf = @battle.elves[0]
         elf.determine_range(@battle.map)
-        elf.filter_reachable(@battle.map)
         elf.filter_nearest(@battle.map)
 
         elf.locations.length.must_equal 3
@@ -86,7 +69,6 @@ describe Battle do
 
         elf = @battle.elves[0]
         elf.determine_range(@battle.map)
-        elf.filter_reachable(@battle.map)
         elf.filter_nearest(@battle.map)
         elf.select_target
 
@@ -138,7 +120,7 @@ describe Battle do
         @battle.define_targets
 
         22.times { @battle.turn }
-        puts @battle.map_string
+        #puts @battle.map_string
 
         @battle.map_string.must_equal <<-EOF
 #######
@@ -151,7 +133,7 @@ describe Battle do
         EOF
         @battle.turn
 
-        puts @battle.map_string
+        #puts @battle.map_string
         @battle.map_string.must_equal <<-EOF
 #######
 #...G.#
@@ -166,7 +148,7 @@ describe Battle do
     end
 
     describe "#move_step" do
-      it "selects first step from shortests in reading order" do
+      it "selects first step from shortest(s)in reading order" do
         map = <<-EOF
 #######
 #.....#
@@ -179,7 +161,6 @@ describe Battle do
 
         elf = @battle.elves[0]
         elf.determine_range(@battle.map)
-        elf.filter_reachable(@battle.map)
         elf.filter_nearest(@battle.map)
         elf.select_target
 

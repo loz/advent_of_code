@@ -5,6 +5,12 @@ COLORS = {
   'G' => "\e[32m"
 }
 
+VIS_SUBS = {
+  '#' => "\e[33m#\e[0m",
+  'E' => "\e[32mE\e[0m",
+  'G' => "\e[31mG\e[0m",
+}
+
 ENEMY = {
   'E' => 'G',
   'G' => 'E'
@@ -18,13 +24,29 @@ DIRECTIONS = [
 ]
 
 class Battle
-  attr_reader :elves, :map, :round
+  attr_reader :units, :elves, :map, :round
+
+  def self.visualise_route(node)
+    print "\e[0;0H"
+    print COLORS[:cyan]
+    node.visualise_route
+      #print "\e[%d;%dH" % [y+1,x+1]
+    print "\e[0m"
+  end
+
+  def self.map_string(map)
+    map.map do |row|
+      row.join
+    end.join("\n") + "\n"
+  end
 
   def self.visualise_map(map)
     print "\e[0;0H"
-    map.each do |row|
-      puts row.join
+    str = map_string(map)
+    VIS_SUBS.each do |ch, rep|
+      str = str.gsub(ch, rep)
     end
+    puts str
   end
 
   def cmp_reading_order(l1,l2)
@@ -66,10 +88,10 @@ class Battle
     @units.reject! {|u| u.dead? }
     @units.sort! {|u1, u2| cmp_reading_order(u1.pos,u2.pos) }
     @round += 1
-    print " " * 40
-    print "Round: #{@round}"
+    #print " " * 40
+    #print "Round: #{@round}"
 
-    visualise_map
+    #visualise_map
     #@units.each do |unit|
     #  p "%s, %s" % [unit.pos, unit.type]
     #end
@@ -78,7 +100,6 @@ class Battle
         unit.attack(self)
       else
         unit.determine_range(map)
-        unit.filter_reachable(map)
         unit.filter_nearest(map)
         unit.select_target
         unless unit.target.nil?
@@ -94,42 +115,39 @@ class Battle
           end
         end
       end
-      visualise_map
+      #visualise_map
     end
-    puts "\n" * 10
+    #puts "\n" * 10
   end
 
   class Step
     attr_reader :loc, :prev, :length
 
-    def plot
-      print COLORS[:yellow]
-      _plot
-      print "\e[0m"
-    end
+    def first?; false; end
 
-    def _plot
+    def visualise_route
       x,y = loc
       print "\e[%d;%dH" % [y+1,x+1]
-      print "X"
-      prev.plot unless prev.nil?
+      if first?
+        print "?"
+      else
+        print "X"
+        prev.visualise_route unless first?
+      end
     end
 
     def string
+      return "" if first?
       str = loc.inspect
       str += ":%s" %length
-      unless prev.nil?
-        str += " < "
-        str += prev.string
-      end
+      str += " < "
+      str += prev.string
       str
     end
 
-    def first_step
-      unless prev.nil?
-        return prev.first_step
-      end
-      self
+    def step(n)
+      return self if length == n
+      return prev.step(n)
     end
 
     def visited?(loc)
@@ -142,12 +160,18 @@ class Battle
       end
     end
 
-    def initialize(loc, prev, length)
+    def initialize(loc, prev = nil, length = 0)
       @loc = loc
       @prev = prev
       @length = length
     end
   end
+
+  class StartStep < Step
+    def visited?(pos); false; end
+    def first?; true; end
+  end
+
 
   class Unit
     attr_reader :type, :locations
@@ -222,25 +246,26 @@ class Battle
     end
 
     def filter_nearest(map)
+      return if @locations.empty?
       @routes = {}
-      @shortest = nil
+      @shortest = map.length * map.first.length #Largest possible Value
       @all_locations = @locations.dup
-      @locations.sort! do |l1, l2|
-        d1 = (@pos[0]-l1[0]).abs + (pos[1]-l1[1]).abs
-        d2 = (@pos[0]-l2[0]).abs + (pos[1]-l2[1]).abs
-        d1 <=> d2
-      end
-      @locations.each do |l|
-        #puts "Searching For Nearest: #{l}"
-        explore_all_routes(map, l)
-      end
-      routes = @routes.select do |loc, routes|
+      @routes = explore_map(map, @locations)
+      shortests = @routes.map do |target, routes|
         shortest = shortest_route(routes)
-        if shortest
-          shortest.length == @shortest
+        [target, shortest]
+      end
+      #shortests.each do |target, route|
+      #  puts "#{target} -> #{route.string}"
+      #end
+      #puts "Shortest Route: #{@shortest}"
+      @locations = []
+      shortests.each do |target, route|
+        if route.length == @shortest
+          @locations << target
         end
       end
-      @locations = routes.keys
+      #p @locations
     end
 
     def select_target
@@ -250,17 +275,30 @@ class Battle
     end
 
     def move_step
+      #puts "making a Move: #{@target} from #{pos}"
       options = @routes[@target]
       #puts '*'*20
       #options.each do |option|
       #  p option.string
       #end
       #puts '*'*20
+
       options.select! do |route|
         route.length == @shortest
       end
+
+      #puts '*'*20
+      #options.each do |option|
+      #  p option.string
+      #end
+      #puts '*'*20
+
       #puts "Locking for First Steps towards #{pos}"
-      steps = options.map {|route| route.first_step.loc }
+      steps = options.map {|route| route.step(1).loc }
+      #puts "*" * 20
+      #puts steps.inspect
+      #puts "*" * 20
+
       steps.sort! do |l1, l2|
         cmp_reading_order(l1,l2)
       end
@@ -289,84 +327,48 @@ class Battle
       end
     end
 
-    def filter_reachable(map)
-      @locations.select! {|l| can_reach(map, l) }
+    def explore_map(map, locations)
+      #puts "Explore Map: #{self.pos.inspect} -> #{locations.inspect}"
+      start = StartStep.new(pos)
+      routes = Hash.new { |h, k| h[k] = [] }
+      worst_case = @shortest
+      shortests = Hash.new { |h, k| h[k] = worst_case }
+      x, y = pos
+      explore(x, y, map, locations, routes, start, shortests)
+      #routes.each do |k,v|
+      #  puts "#{k} -> "
+      #    v.each do |r|
+      #      puts "  #{r.string}"
+      #    end
+      #end
+      routes
     end
 
-    def can_reach(map, location)
-      x,y = pos
-      explore_to_first(map, x,y,location)
-    end
+    def explore(x, y, map, locations, routes, current, shortests, length = 0)
+      #puts "Exploring @(#{x}, #{y}) :> #{current.string}"
+      exp_pos = [x,y]
+      return if length > @shortest #Shortcut if we already found shorter routes
+      return if length > shortests[[x,y]] #Short-circuit, we've found shorter path here
+      return if current.visited?(exp_pos)
+      return if map[y][x] != "." unless current.first?
 
-    def explore_all_routes(map, location)
-      #puts "Exploring all routes to #{location}(#{type}:#{pos})"
-      x,y = pos
-      visited_in = {}
-      @all_locations.each do |loc|
-        visited_in[loc] = 0
+      here = Step.new(exp_pos, current, length)
+      #Battle.visualise_map(map)
+      #Battle.visualise_route(here)
+      if locations.include? exp_pos
+        @shortest = length if length < @shortest
+        routes[exp_pos] << here
       end
-      visited_in.delete location
-      routes = explore_to(map, x,y, location, visited_in)
-      @routes[location] = routes
-    end
+      shortests[[x,y]] = length if length < shortests[[x,y]]
 
-    def explore_to_first(map, sx, sy, location, visited = [])
-      visited << [sx,sy]
-
+      #puts "----UPLR---"
       DIRECTIONS.each do |d|
         dx,dy = d
-        nx = sx + dx
-        ny = sy + dy
-        unless visited.include? [nx,ny]
-          if map[ny][nx] == '.'
-            return true if nx == location[0] && ny == location[1]
-            return true if explore_to_first(map, nx, ny, location, visited)
-          end
-        end
+        nx = x + dx
+        ny = y + dy
+        explore(nx, ny, map, locations, routes, here, shortests, length + 1)
       end
-      false
-    end
-
-    def explore_to(map, sx, sy, location, visited_in, head = nil, routes = [], visits=0)
-      visits+=1
-      if @shortest
-        return if visits > @shortest
-      end
-      
-      DIRECTIONS.each do |d|
-        dx,dy = d
-        nx = sx + dx
-        ny = sy + dy
-        seen = false
-
-        if best = visited_in[[nx,ny]]
-          if visits < best
-            visited_in[[nx,ny]] = visits
-          else
-            seen = true
-          end
-        else
-          visited_in[[nx,ny]] = visits
-        end
-        if map[ny][nx] == '.'
-          new_head = Step.new([nx,ny],head, visits)
-
-          if nx == location[0] && ny == location[1]
-            @shortest ||= visits
-            #puts "(#{type}): Route to %s Found: %s (shortest: %s, this: %s)" %
-            #  [location, new_head.string, @shortest, visits]
-            @shortest = visits if visits < @shortest
-            routes << new_head
-          else
-            #Battle.visualise_map(map)
-            #head.plot
-            unless seen
-              explore_to(map, nx, ny, location, visited_in, new_head, routes, visits)
-            end
-          end
-        end
-      end
-      return routes
+      #puts ">----UPLR---<"
     end
   end
 
@@ -397,9 +399,11 @@ class Battle
 
   def visualise_map
     print "\e[0;0H"
-    @map.each do |row|
-      puts row.join
+    str = map_string
+    VIS_SUBS.each do |ch, rep|
+      str = str.gsub(ch, rep)
     end
+    puts str
   end
 
   def visualise_locations(locations, color)
