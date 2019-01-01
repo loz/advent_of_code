@@ -87,7 +87,11 @@ class Battle
   def turn
     @units.reject! {|u| u.dead? }
     @units.sort! {|u1, u2| cmp_reading_order(u1.pos,u2.pos) }
-    @round += 1
+    #@units.each do |u|
+    #  print "> #{u.pos} "
+    #end
+    #puts ""
+    #puts ""
     #print " " * 40
     #print "Round: #{@round}"
 
@@ -96,11 +100,22 @@ class Battle
     #  p "%s, %s" % [unit.pos, unit.type]
     #end
     @units.each do |unit|
+      unit.targets = @units.select { |u| !u.dead? && u.type != unit.type }
+      if unit.targets.empty? #Battle Is Over
+        puts "Battle Over!"
+        return 
+      end
+      next if unit.dead?
       if unit.in_range?(map)
         unit.attack(self)
       else
         unit.determine_range(map)
         unit.filter_nearest(map)
+        #print "#{unit.pos} POS: "
+        #unit.locations.each do |loc|
+        #  print "> #{loc} "
+        #end
+        #puts  ""
         unit.select_target
         unless unit.target.nil?
           dest = unit.move_step
@@ -115,9 +130,10 @@ class Battle
           end
         end
       end
-      #visualise_map
+      visualise_map
     end
     #puts "\n" * 10
+    @round += 1
   end
 
   class Step
@@ -175,13 +191,14 @@ class Battle
 
   class Unit
     attr_reader :type, :locations
-    attr_accessor :pos, :targets, :target, :hitpoints
+    attr_accessor :pos, :targets, :target, :hitpoints, :attack_points
 
     def initialize(x,y,type)
       @pos = [x,y]
       @type = type
       @targets = []
       @hitpoints = 200
+      @attack_points = 3
     end
 
     def dead?
@@ -225,7 +242,7 @@ class Battle
           enemies.sort! { |e1, e2| cmp_reading_order(e1.pos,e2.pos) }
         end
         enemy = enemies.first
-        enemy.hitpoints -= 3
+        enemy.hitpoints -= @attack_points
         if enemy.dead?
           battle.remove_unit(enemy)
         end
@@ -250,17 +267,19 @@ class Battle
       @routes = {}
       @shortest = map.length * map.first.length #Largest possible Value
       @all_locations = @locations.dup
-      @routes = explore_map(map, @locations)
-      shortests = @routes.map do |target, routes|
-        shortest = shortest_route(routes)
-        [target, shortest]
-      end
-      #shortests.each do |target, route|
-      #  puts "#{target} -> #{route.string}"
+      explore_map(map, @locations)
+
+
+      #@paths.each do |target, route|
+      #  puts "#{target} -> #{route.inspect}"
       #end
+
+      lengths = @paths.map { |t, r| r.length }
+      @shortest = lengths.min
+
       #puts "Shortest Route: #{@shortest}"
       @locations = []
-      shortests.each do |target, route|
+      @paths.each do |target, route|
         if route.length == @shortest
           @locations << target
         end
@@ -276,33 +295,8 @@ class Battle
 
     def move_step
       #puts "making a Move: #{@target} from #{pos}"
-      options = @routes[@target]
-      #puts '*'*20
-      #options.each do |option|
-      #  p option.string
-      #end
-      #puts '*'*20
-
-      options.select! do |route|
-        route.length == @shortest
-      end
-
-      #puts '*'*20
-      #options.each do |option|
-      #  p option.string
-      #end
-      #puts '*'*20
-
-      #puts "Locking for First Steps towards #{pos}"
-      steps = options.map {|route| route.step(1).loc }
-      #puts "*" * 20
-      #puts steps.inspect
-      #puts "*" * 20
-
-      steps.sort! do |l1, l2|
-        cmp_reading_order(l1,l2)
-      end
-      steps.first
+      #puts @paths[@target].inspect
+      return @paths[@target].first
     end
 
     def cmp_reading_order(l1,l2)
@@ -317,17 +311,135 @@ class Battle
         end
     end
 
-    def distance(loc)
-      shortest_route(@routes[loc]).length
-    end
-
-    def shortest_route(routes)
-      routes.min do |r1,r2|
-        r1.length <=> r2.length
+    def reconstruct_path(routes, current)
+      #puts "Reconstruct: #{routes.inspect}"
+      path = [current]
+      while !routes[current].nil? do
+        current = routes[current]
+        path.unshift current
       end
+      path
     end
 
     def explore_map(map, locations)
+      paths = {}
+      height = map.length
+      width =  map.first.length
+      worst_case = width * height #Largest possible Value
+      locations.each do |location|
+        #puts "Exploring Map: #{pos} -> #{location}"
+        #Explore from NWES locations
+        # Thus, will ALWAYS take shortest path in reading order
+        x, y = pos
+        shortest = worst_case
+        DIRECTIONS.each do |d|
+          dx,dy = d
+          nx = x + dx
+          ny = y + dy
+          next if nx == 0 || nx == width - 1
+          next if ny == 0 || ny == height - 1
+          next if map[ny][nx] != "."
+          neighbour = [nx, ny]
+          path = a_star(neighbour, location, map)
+          #puts "-> : #{path.inspect}"
+          next if path.nil? #No Route
+          if path.length < shortest
+            paths[location] = path
+            shortest = path.length
+          end
+        end
+      end
+      #puts '*' * 10
+      #paths.each do |loc, path|
+      #  puts "#{loc} -> #{path}"
+      #end
+      #puts '*' * 10
+      @paths = paths
+    end
+
+    def manhatten(a, b)
+      ax, ay = a
+      bx, by = b
+      (ax-bx).abs + (ay-by).abs
+    end
+
+    def best_score(scores, set)
+      min = set.min { |l1, l2| scores[l1] <=> scores[l2] }
+      min = scores[min]
+      best = set.select {|loc| scores[loc] == min }
+      #sort options in READING order
+      best.sort! { |l1, l2| cmp_reading_order(l1,l2) }
+      best.first
+    end
+
+    def a_star(start, goal, map)
+      #puts "Searching #{start} -> #{goal}:..."
+      #all = []
+      closed_set = []
+      open_set = [start]
+      cameFrom = {}
+
+      height = map.length
+      width =  map.first.length
+      worst_case = width * height #Largest possible Value
+      shortest = worst_case
+      gScore = {}
+      fScore = {}
+      height.times do |y|
+        width.times do |x|
+          gScore[[x,y]] = worst_case
+          fScore[[x,y]] = worst_case
+        end
+      end
+      gScore[start] = 0
+
+      fScore[start] = manhatten(start, goal)
+
+      while !open_set.empty?
+        current = best_score(fScore, open_set)
+        if current == goal
+          path = reconstruct_path(cameFrom, current)
+          #puts "Found A Shortest Route!, #{path}"
+          #all << path
+          #shortest = path.length - 1 
+          #open_set.delete current
+          #return cameFrom
+          return path
+        else
+          open_set.delete current
+          closed_set << current
+
+          next if gScore[current] > shortest
+          #puts "Current: #{current}"
+          x, y = current
+          DIRECTIONS.each do |d|
+            dx,dy = d
+            nx = x + dx
+            ny = y + dy
+            neighbour = [nx, ny]
+            #puts "N: #{neighbour}, #{width}x#{height}"
+            next if map[ny][nx] != "."
+            next if closed_set.include? neighbour
+            poss_gscore = gScore[current] + 1
+
+            if open_set.include? neighbour
+              next if poss_gscore > gScore[neighbour]
+            else
+              #Discover
+              open_set << neighbour
+            end
+            #Best path for now..
+            cameFrom[neighbour] = current
+            gScore[neighbour] = poss_gscore
+            fScore[neighbour] = poss_gscore + manhatten(neighbour, goal)
+          end
+        end
+      end
+      #puts "---DONE---"
+      nil
+    end
+
+    def Xexplore_map(map, locations)
       #puts "Explore Map: #{self.pos.inspect} -> #{locations.inspect}"
       start = StartStep.new(pos)
       routes = Hash.new { |h, k| h[k] = [] }
@@ -384,7 +496,7 @@ class Battle
   end
 
   def elves
-    @units.select {|u| u.type == 'E' }
+    @units.select {|u| !u.dead? && u.type == 'E' }
   end
 
   def goblins

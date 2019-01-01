@@ -13,7 +13,7 @@ describe Battle do
 #E..G.#
 #...#.#
 #.G.#G#
-######/
+#######
       EOF
       @battle.set_map(@map)
     end
@@ -59,7 +59,6 @@ describe Battle do
         elf.locations.must_include [3,1]
         elf.locations.must_include [2,2]
         elf.locations.must_include [1,3]
-        elf.distance([3,1]).must_equal 2
       end
     end
 
@@ -93,6 +92,9 @@ describe Battle do
         @battle.define_targets
         @battle.turn
 
+        #puts `clear`
+        #Battle.visualise_map(@battle.map)
+
         @battle.map_string.must_equal <<-EOF
 #########
 #.G...G.#
@@ -103,6 +105,34 @@ describe Battle do
 #G..G..G#
 #.......#
 #########
+        EOF
+      end
+
+      it "doesn't get stuck in move loops" do
+        map= <<-EOF
+#######
+#...G.#
+#..G.G#
+#.#.#G#
+#...#E#
+#.....#
+#######
+        EOF
+        @battle.set_map(map)
+        @battle.define_targets
+        @battle.turn
+
+        puts `clear`
+        Battle.visualise_map(@battle.map)
+
+        @battle.map_string.must_equal <<-EOF
+#######
+#..G..#
+#...G.#
+#.#G#G#
+#...#E#
+#.....#
+#######
         EOF
       end
 
