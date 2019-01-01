@@ -40,4 +40,20 @@ describe Cave do
     @cave.geo_index(1,1).must_equal 135340535
     @cave.erosion_level(1,1).must_equal 13620
   end
+
+  it "has a calculated risk" do
+    cave = Cave.new(3, [10,10])
+    cave.risk(0,0).must_equal 0 #Rocky
+
+    cave = Cave.new(4, [10,10])
+    cave.risk(0,0).must_equal 1 #Wet
+
+    cave = Cave.new(5, [10,10])
+    cave.risk(0,0).must_equal 2 #Narrow
+  end
+
+  it "calculates total risk for depth and area to target" do
+    cave = Cave.new(510, [10,10])
+    cave.total_risk.must_equal 114
+  end
 end
