@@ -56,4 +56,68 @@ describe Cave do
     cave = Cave.new(510, [10,10])
     cave.total_risk.must_equal 114
   end
+
+  describe "navigate" do
+    before do
+      @depth = 510
+      @target = [10, 10]
+      @cave = Cave.new(@depth, @target)
+    end
+
+    it "navigates to self with desired tool" do
+      start = [[0,0], :torch]
+      goal = [[0,0], :gear]
+      route = @cave.navigate(start, goal)
+      route.must_equal [
+        [[0,0], :torch],
+        [[0,0], :gear],
+      ]
+      @cave.cost(route).must_equal 7
+    end
+
+    it "navigates with no change" do
+      start = [[0,0], :torch]
+      goal = [[0,1], :torch]
+      route = @cave.navigate(start, goal)
+      route.must_equal [
+        [[0,0], :torch],
+        [[0,1], :torch],
+      ]
+      @cave.cost(route).must_equal 1
+    end
+
+    it "navigates with change" do
+      start = [[0,0], :torch]
+      goal = [[1,0], :gear]
+      route = @cave.navigate(start, goal)
+      route.must_equal [
+        [[0,0], :torch],
+        [[0,0], :gear],
+        [[1,0], :gear],
+      ]
+      @cave.cost(route).must_equal 8
+    end
+
+    it "finds shortest path to destination" do
+      start = [[0,0], :torch]
+      goal = [[1,0], :neither]
+      route = @cave.navigate(start, goal)
+      route.must_equal [
+        [[0,0], :torch],
+        [[0,1], :torch],
+        [[1,1], :torch],
+        [[1,1], :neither],
+        [[1,0], :neither],
+      ]
+      @cave.cost(route).must_equal 10
+
+      start = [[0,0], :torch]
+      goal = [[2,2], :gear]
+      route = @cave.navigate(start, goal)
+      @cave.cost(route).must_equal 11
+
+      route = @cave.navigate(start, [[10,10], :torch])
+      @cave.cost(route).must_equal 45
+    end
+  end
 end

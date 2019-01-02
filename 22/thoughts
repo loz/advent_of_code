@@ -1,0 +1,53 @@
+In rocky regions, you can use the climbing gear or the torch. You cannot use neither (you'll likely slip and fall).
+In wet regions, you can use the climbing gear or neither tool. You cannot use the torch (if it gets wet, you won't have a light source).
+In narrow regions, you can use the torch or neither tool. You cannot use the climbing gear (it's too bulky to fit).
+
+You start at 0,0 (the mouth of the cave) with the torch equipped
+
+Moving to an adjacent region takes one minute
+
+You can change your currently equipped tool or put both away if your new equipment would
+be valid for your current region. Switching to using the climbing gear, torch, or neither
+always takes seven minutes, regardless of which tools you start with.
+
+Finally, once you reach the target, you need the torch equipped before you can find him in the dark.
+
+SO
+state changes, not just movement.
+[pos, tool] -> [pos, newtool] cost:7
+[pos, tool] -> [newpos, tool] cost:1
+
+start: [[0,0], :torch]
+goal: [target, :torch]
+
+[rocky, :torch]    -> rocky:1  | narrow:1 | [self, :gear]:7
+[rocky, :gear]     -> rocky:1  | wet:1    | [self, :torch]:7
+[wet, :gear]       -> wet:1    | rocky:1  | [self, :neither]:7
+[wet, :neither]    -> wet:1    | narrow:1 | [self, :gear]:7
+[narrow, :torch]   -> narrow:1 | rocky:1  | [self, :neither]:7
+[narrow, :neither] -> narrow:1 | wet:1    | [self, :torch]:7
+
+
+LIMIT + 10
+1075
+
+LIMIT + 11
+1073
+
+LIMIT + 12
+1066
+
+LIMIT + 20
+1060
+
+LIMIT + 25
+1050
+
+LIMIT + 50
+1048
+
+LIMIT + 1000
+
+
+1048
+
