@@ -18,6 +18,13 @@ class Nanobots
       #puts "#{self.pos} -> #{other.pos} -> #{distance}"
       distance <= range
     end
+
+    def in_range_coord(coord)
+      #puts "Distance, #{pos} -> #{coord} @#{range}"
+      distance = (coord[0] - x).abs + (coord[1] - y).abs + (coord[2] - z).abs
+      #puts "TRUE" if distance <= range
+      distance <= range
+    end
   end
 
   def initialize
@@ -97,12 +104,86 @@ class Nanobots
     [sum_x/total, sum_y/total, sum_z/total]
   end
 
-  def in_bbox(bbox)
+  def in_bbox_old(bbox)
     min_x, min_y, min_z, max_x, max_y, max_z = bbox
     @bots.select do |bot|
       bot.x >= min_x-bot.range && bot.x <= max_x+bot.range &&
       bot.y >= min_y-bot.range && bot.y <= max_y+bot.range &&
       bot.z >= min_z-bot.range && bot.z <= max_z+bot.range
+    end
+  end
+
+  def squared(x)
+    x * x
+  end
+
+  def in_bbox(bbox)
+    min_x, min_y, min_z, max_x, max_y, max_z = bbox
+    corners = [
+      [min_x, min_y, min_x],
+      [min_x, min_y, max_x],
+      [min_x, max_y, min_x],
+      [min_x, max_y, max_x],
+      [max_x, min_y, min_x],
+      [max_x, min_y, max_x],
+      [max_x, max_y, min_x],
+      [max_x, max_y, max_x],
+    ]
+    #def in_range_coord(coord)
+    @bots.select do |bot|
+      range = false
+      in_x = bot.x >= min_x && bot.x <= max_x
+      in_y = bot.y >= min_y && bot.y <= max_y
+      in_z = bot.z >= min_z && bot.z <= max_z
+      in_rx = bot.x >= (min_x-bot.range) && bot.x <= (max_x+bot.range)
+      in_ry = bot.y >= (min_y-bot.range) && bot.y <= (max_y+bot.range)
+      in_rz = bot.z >= (min_z-bot.range) && bot.z <= (max_z+bot.range)
+      #In Corners
+      corners.each do |box_c|
+        range ||= bot.in_range_coord(box_c)
+      end
+
+      #In Box
+      range ||= (in_x && in_y && in_z)
+
+      #In range of faces
+      range ||= (in_x && in_y &&
+                (bot.in_range_coord([bot.x,bot.y,min_z]) ||
+                bot.in_range_coord([bot.x,bot.y,max_z])))
+      range ||= (in_x && in_z &&
+                (bot.in_range_coord([bot.x,min_y,bot.z]) ||
+                bot.in_range_coord([bot.x,max_y,bot.z])) )
+      range ||= (in_y && in_z &&
+                (bot.in_range_coord([min_x,bot.y,bot.z]) ||
+                bot.in_range_coord([max_x,bot.y,bot.z])) )
+
+      range
+    end
+  end
+
+  def in_bbox_bad(bbox)
+    min_x, min_y, min_z, max_x, max_y, max_z = bbox
+    @bots.select do |bot|
+      dist_squared = squared(bot.range)
+      if bot.x < min_x
+        dist_squared -= squared(bot.x - min_x)
+      elsif bot.x > max_x
+        dist_squared -= squared(bot.x - max_x)
+      end
+
+      if bot.y < min_y
+        dist_squared -= squared(bot.y - min_y)
+      elsif bot.y > max_y
+        dist_squared -= squared(bot.y - max_y)
+      end
+
+      if bot.z < min_z
+        dist_squared -= squared(bot.z - min_z)
+      elsif bot.z > max_z
+        dist_squared -= squared(bot.z - max_z)
+      end
+
+      dist_squared > 0
     end
   end
 end

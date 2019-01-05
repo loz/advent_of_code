@@ -81,6 +81,100 @@ pos=<10,10,10>, r=5
     ]
   end
 
+  describe "In Bounding Box" do
+    before do
+      @bbox = [0,0,0,10,10,10]
+      @bots.add("pos=<0,0,0>, r=1")
+      @bot = @bots.bots.first
+    end
+
+    it "returns bots range touching corners of bounding box" do
+      @bot.x = @bot.y = @bot.z = -12
+      @bot.range = 35
+      found = @bots.in_bbox(@bbox)
+      found.must_equal []
+
+      @bot.range = 36
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+
+      @bot.x = @bot.y = @bot.z = 12
+      @bot.range = 36
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+    end
+
+    it "returns bots range touching edges of bounding box" do
+      
+      @bot.x = -12
+      @bot.y = 0
+      @bot.z = 5
+      @bot.range = 11
+
+      found = @bots.in_bbox(@bbox)
+      found.must_equal []
+
+      @bot.range = 12
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+
+      @bot.x = 12
+      @bot.y = 0
+      @bot.z = 5
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+
+      @bot.x = 5
+      @bot.y = 0
+      @bot.z = -12
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+
+      @bot.x = 5
+      @bot.y = 0
+      @bot.z = 12
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+    end
+
+
+    it "returns bots range touching faces of bounding box" do
+      @bot.x = -12
+      @bot.y = 5
+      @bot.z = 5
+      @bot.range = 11
+
+      found = @bots.in_bbox(@bbox)
+      found.must_equal []
+
+      @bot.range = 12
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+
+      @bot.x = 12
+      @bot.y = 5
+      @bot.z = 5
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+    end
+
+    it "returns bots located inside the bounding box" do
+      @bot.x = -12
+      @bot.y = 5
+      @bot.z = 5
+      @bot.range = 1
+      found = @bots.in_bbox(@bbox)
+      found.must_equal []
+
+      @bot.x = 5
+      @bot.y = 5
+      @bot.z = 5
+      @bot.range = 1
+      found = @bots.in_bbox(@bbox)
+      found.must_equal [@bot]
+    end
+  end
+
   it "calculates range correct for example" do
     example = <<-EOF
 pos=<0,0,0>, r=4
