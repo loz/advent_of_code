@@ -13,6 +13,10 @@ class Nanobots
       [@x, @y, @z]
     end
 
+    def distance_to(coord)
+      (coord[0] - x).abs + (coord[1] - y).abs + (coord[2] - z).abs
+    end
+
     def in_range(other)
       distance = (other.x - x).abs + (other.y - y).abs + (other.z - z).abs
       #puts "#{self.pos} -> #{other.pos} -> #{distance}"
@@ -21,7 +25,7 @@ class Nanobots
 
     def in_range_coord(coord)
       #puts "Distance, #{pos} -> #{coord} @#{range}"
-      distance = (coord[0] - x).abs + (coord[1] - y).abs + (coord[2] - z).abs
+      distance = distance_to(coord)
       #puts "TRUE" if distance <= range
       distance <= range
     end
@@ -49,10 +53,16 @@ class Nanobots
 
   def centre(bbox)
     min_x, min_y, min_z, max_x, max_y, max_z = bbox
-    x = min_x + ((max_x-min_x)/ 2)
-    y = min_y + ((max_y-min_y)/ 2)
-    z = min_z + ((max_z-min_z)/ 2)
+    x = min_x + ((max_x-min_x)/ 2.0)
+    y = min_y + ((max_y-min_y)/ 2.0)
+    z = min_z + ((max_z-min_z)/ 2.0)
     [x, y, z]
+  end
+
+  def distance(coord1, coord2)
+    (coord2[0]-coord1[0]).abs +
+    (coord2[1]-coord1[1]).abs +
+    (coord2[2]-coord1[2]).abs
   end
 
   def subdivide(bbox, center = nil)
@@ -60,14 +70,17 @@ class Nanobots
     centre ||= centre(bbox)
     mid_x, mid_y, mid_z = centre
     [
-      [min_x, min_y, min_z, mid_x, mid_y, mid_z],
-      [mid_x, min_y, min_z, max_x, mid_y, mid_z],
-      [min_x, mid_y, min_z, mid_x, max_y, mid_z],
-      [mid_x, mid_y, min_z, max_x, max_y, mid_z],
-      [min_x, min_y, mid_z, mid_x, mid_y, max_z],
-      [mid_x, min_y, mid_z, max_x, mid_y, max_z],
-      [min_x, mid_y, mid_z, mid_x, max_y, max_z],
-      [mid_x, mid_y, mid_z, max_x, max_y, max_z],
+      [min_x, min_y, min_z, mid_x.floor, mid_y.floor, mid_z.floor],
+
+      [mid_x.ceil, min_y, min_z, max_x, mid_y.floor, mid_z.floor],
+      [min_x, mid_y.ceil, min_z, mid_x.floor, max_y, mid_z.floor],
+      [min_x, min_y, mid_z.ceil, mid_x.floor, mid_y.floor, max_z],
+
+      [mid_x.ceil, mid_y.ceil, min_z, max_x, max_y, mid_z.floor],
+      [min_x, mid_y.ceil, mid_z.ceil, mid_x.floor, max_y, max_z],
+      [mid_x.ceil, min_y, mid_z.ceil, max_x, mid_y.floor, max_z],
+
+      [mid_x.ceil, mid_y.ceil, mid_z.ceil, max_x, max_y, max_z],
     ]
   end
 
@@ -120,14 +133,14 @@ class Nanobots
   def in_bbox(bbox)
     min_x, min_y, min_z, max_x, max_y, max_z = bbox
     corners = [
-      [min_x, min_y, min_x],
-      [min_x, min_y, max_x],
-      [min_x, max_y, min_x],
-      [min_x, max_y, max_x],
-      [max_x, min_y, min_x],
-      [max_x, min_y, max_x],
-      [max_x, max_y, min_x],
-      [max_x, max_y, max_x],
+      [min_x, min_y, min_z],
+      [min_x, min_y, max_z],
+      [min_x, max_y, min_z],
+      [min_x, max_y, max_z],
+      [max_x, min_y, min_z],
+      [max_x, min_y, max_z],
+      [max_x, max_y, min_z],
+      [max_x, max_y, max_z],
     ]
     #def in_range_coord(coord)
     @bots.select do |bot|
@@ -141,7 +154,10 @@ class Nanobots
       #In Corners
       corners.each do |box_c|
         range ||= bot.in_range_coord(box_c)
+        #puts "In Range of: #{box_c}" if range
+        break if range
       end
+      #puts "In Corners #{bbox} > #{bot.pos}:#{bot.range}" if range
 
       #In Box
       range ||= (in_x && in_y && in_z)

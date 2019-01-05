@@ -73,11 +73,25 @@ pos=<10,10,10>, r=5
       [10,10,10,30,30,30],
       [30,10,10,50,30,30],
       [10,30,10,30,50,30],
-      [30,30,10,50,50,30],
       [10,10,30,30,30,50],
-      [30,10,30,50,30,50],
+      [30,30,10,50,50,30],
       [10,30,30,30,50,50],
+      [30,10,30,50,30,50],
       [30,30,30,50,50,50],
+    ]
+  end
+
+  it "subdivides adjacent corners correctly" do
+    divisions = @bots.subdivide [10,10,10,11,11,11]
+    divisions.must_equal [
+      [10,10,10,10,10,10],
+      [11,10,10,11,10,10],
+      [10,11,10,10,11,10],
+      [10,10,11,10,10,11],
+      [11,11,10,11,11,10],
+      [10,11,11,10,11,11],
+      [11,10,11,11,10,11],
+      [11,11,11,11,11,11],
     ]
   end
 
@@ -86,6 +100,33 @@ pos=<10,10,10>, r=5
       @bbox = [0,0,0,10,10,10]
       @bots.add("pos=<0,0,0>, r=1")
       @bot = @bots.bots.first
+    end
+
+    it "gets correct number for example, with 1unit bounding boxes" do
+      boxes = {
+        [12, 12, 12] => 5,
+        [12, 12, 11] => 2,
+        [12, 12, 11] => 2,
+        [12, 12, 10] => 2,
+        [12, 12, 15] => 2,
+        [12, 12, 14] => 2,
+        [12, 12, 14] => 2,
+        [12, 12, 13] => 2,
+      }
+      example = <<-EOF
+  pos=<10,12,12>, r=2
+  pos=<12,14,12>, r=2
+  pos=<16,12,12>, r=4
+  pos=<14,14,14>, r=6
+  pos=<50,50,50>, r=200
+  pos=<10,10,10>, r=5
+      EOF
+      example.each_line {|l| @bots.add(l) }
+      
+      boxes.each do |pos, count|
+        #p "#{pos+pos} should have #{count}"
+        @bots.in_bbox(pos + pos).count.must_equal count
+      end
     end
 
     it "returns bots range touching corners of bounding box" do
