@@ -1,5 +1,5 @@
 require 'minitest/autorun'
-require_relative './imune'
+require_relative './immune'
 
 describe Immune do
   before do
@@ -44,4 +44,245 @@ describe Immune do
       group.weaknesses.must_equal []
     end
   end
+
+  describe "ordering" do
+    before do
+      @system = Immune.new
+
+      group = Immune::Group.new
+      group.initiative = 8
+      group.units = 10
+      group.damage_points = 10
+      @system.good << group
+
+      group = Immune::Group.new
+      group.initiative = 2
+      group.units = 10
+      group.damage_points = 12
+      @system.good << group
+
+      group = Immune::Group.new
+      group.initiative = 7
+      group.units = 12
+      group.damage_points = 12
+      @system.bad << group
+
+      group = Immune::Group.new
+      group.initiative = 3
+      group.units = 10
+      group.damage_points = 12
+      @system.bad << group
+    end
+
+    it "return groups in initiative order" do
+      last = 999
+      @system.groups.count.must_equal 4
+      @system.groups.each do |g|
+        (g.initiative < last).must_equal true
+        last = g.initiative
+      end
+    end
+
+    it "returns target_ordered in descresing order of effective power" do
+      groups = @system.target_ordered
+
+      groups[0].initiative.must_equal 7
+      groups[1].initiative.must_equal 2
+      groups[2].initiative.must_equal 3
+      groups[3].initiative.must_equal 8
+    end
+
+    it "attack_ordered in descending order of initiative" do
+      groups = @system.attack_ordered
+
+      groups[0].initiative.must_equal 8
+      groups[1].initiative.must_equal 7
+      groups[2].initiative.must_equal 3
+      groups[3].initiative.must_equal 2
+    end
+
+  end
+
+  describe "attacking" do
+    it "The attacking group chooses to target the group in the enemy army to which it would deal the most damage" do
+      group =Immune::Group.new
+      group.weaknesses = []
+      group.immunity = []
+      group.damage = :stuff
+      group.damage_points = 100
+      group.units = 10
+
+      @system.good << group
+
+      group =Immune::Group.new
+      group.weaknesses = []
+      group.immunity = [:stuff]
+      group.damage = :bar
+      group.damage_points = 100
+      group.units = 10
+      @system.bad << group
+
+      group =Immune::Group.new
+      group.weaknesses = [:stuff]
+      group.immunity = []
+      group.damage = :bar
+      group.damage_points = 100
+      group.units = 10
+      @system.bad << group
+
+      @system.establish_targets
+
+      @system.good.first.target.must_equal @system.bad[1]
+
+    end
+    
+    it "will prioritise a weakness to its damage as this deals double damage" do
+      group =Immune::Group.new
+      group.weaknesses = []
+      group.immunity = []
+      group.damage = :stuff
+      group.damage_points = 100
+      group.units = 10
+
+      @system.good << group
+
+      group =Immune::Group.new
+      group.weaknesses = []
+      group.immunity = []
+      group.damage = :bar
+      group.damage_points = 100
+      group.units = 10
+      @system.bad << group
+
+      group =Immune::Group.new
+      group.weaknesses = [:stuff]
+      group.immunity = []
+      group.damage = :bar
+      group.damage_points = 100
+      group.units = 10
+      @system.bad << group
+
+      @system.establish_targets
+
+      @system.good.first.target.must_equal @system.bad[1]
+    end
+
+    describe "when two groups with equal damage" do
+      it "chooses to target the defending group with the largest effective power" do
+        group =Immune::Group.new
+        group.weaknesses = []
+        group.immunity = []
+        group.damage = :stuff
+        group.damage_points = 100
+        group.units = 10
+
+        @system.good << group
+
+        group =Immune::Group.new
+        group.weaknesses = []
+        group.immunity = []
+        group.damage = :bar
+        group.damage_points = 100
+        group.units = 10
+        @system.bad << group
+
+        group =Immune::Group.new
+        group.weaknesses = []
+        group.immunity = []
+        group.damage = :bar
+        group.damage_points = 100
+        group.units = 20
+        @system.bad << group
+
+        @system.establish_targets
+
+        @system.good.first.target.must_equal @system.bad[1]
+      end
+
+        describe "when there is still a tie" do
+          it "chooses the defending group with the highest initiative" do
+            group =Immune::Group.new
+            group.weaknesses = []
+            group.immunity = []
+            group.damage = :stuff
+            group.damage_points = 100
+            group.units = 10
+            group.initiative = 1
+
+            @system.good << group
+
+            group =Immune::Group.new
+            group.weaknesses = []
+            group.immunity = []
+            group.damage = :bar
+            group.damage_points = 100
+            group.units = 10
+            group.initiative = 2
+            @system.bad << group
+
+            group =Immune::Group.new
+            group.weaknesses = []
+            group.immunity = []
+            group.damage = :bar
+            group.damage_points = 100
+            group.units = 10
+            group.initiative = 3
+            @system.bad << group
+
+            @system.establish_targets
+
+            @system.good.first.target.must_equal @system.bad[1]
+          end
+        end
+    end
+    describe "when it cannot deal any damage" do
+      it "does not choose a target" do
+        group =Immune::Group.new
+        group.weaknesses = []
+        group.immunity = []
+        group.damage = :stuff
+        group.damage_points = 100
+        group.units = 10
+        group.initiative = 1
+
+        @system.good << group
+
+        group =Immune::Group.new
+        group.weaknesses = []
+        group.immunity = [:stuff]
+        group.damage = :bar
+        group.damage_points = 100
+        group.units = 10
+        group.initiative = 2
+        @system.bad << group
+
+        group =Immune::Group.new
+        group.weaknesses = []
+        group.immunity = [:stuff]
+        group.damage = :bar
+        group.damage_points = 100
+        group.units = 10
+        group.initiative = 3
+        @system.bad << group
+
+        @system.establish_targets
+
+        @system.good.first.target.must_equal nil
+      end
+    end
+  end
+
+  describe "group" do
+    before do
+      @group = Immune::Group.new
+    end
+
+    it "has an effective power" do
+      @group.units = 123
+      @group.damage_points = 12
+
+      @group.effective_power.must_equal (123*12)
+    end
+  end
+
 end
