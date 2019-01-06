@@ -18,7 +18,14 @@ describe Immune do
       group.initiative.must_equal 2
     end
 
+    it "captures weakness and immunity in any order" do
+      group = @system.parse_group("2956 units each with 5021 hit points (weak to slashing; immune to bludgeoning) with an attack that does 13 slashing damage at initiative 15")
+      group.immunity.must_equal [:bludgeoning]
+      group.weaknesses.must_equal [:slashing]
+    end
+
     it "captures when multiple weaknesses and immunities" do
+
       group = @system.parse_group("989 units each with 1274 hit points (immune to fire; weak to bludgeoning, slashing) with an attack that does 25 slashing damage at initiative 3")
 
       group.units.must_equal 989
@@ -83,12 +90,12 @@ describe Immune do
       end
     end
 
-    it "returns target_ordered in descresing order of effective power" do
+    it "returns target_ordered in descresing order of effective power, followed by initiative" do
       groups = @system.target_ordered
 
       groups[0].initiative.must_equal 7
-      groups[1].initiative.must_equal 2
-      groups[2].initiative.must_equal 3
+      groups[1].initiative.must_equal 3
+      groups[2].initiative.must_equal 2
       groups[3].initiative.must_equal 8
     end
 
@@ -165,6 +172,43 @@ describe Immune do
       @system.establish_targets
 
       @system.good.first.target.must_equal @system.bad[1]
+    end
+
+    it "can only be chosen as a target by one attacking group" do
+      group =Immune::Group.new
+      good1 = group
+      group.weaknesses = []
+      group.immunity = []
+      group.damage = :stuff
+      group.damage_points = 100
+      group.units = 10
+      group.initiative = 1
+      @system.good << group
+
+      group =Immune::Group.new
+      bad1 = group
+      group.weaknesses = []
+      group.immunity = []
+      group.damage = :bar
+      group.damage_points = 100
+      group.units = 10
+      group.initiative = 2
+      @system.bad << group
+
+      group =Immune::Group.new
+      bad2 = group
+      group.weaknesses = [:stuff]
+      group.immunity = []
+      group.damage = :bar
+      group.damage_points = 100
+      group.units = 10
+      group.initiative = 3
+      @system.bad << group
+
+      @system.establish_targets
+
+      bad1.target.must_equal nil
+      bad2.target.must_equal good1
     end
 
     describe "when two groups with equal damage" do
