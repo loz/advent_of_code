@@ -272,6 +272,54 @@ describe Immune do
     end
   end
 
+  describe "dealing damage" do
+    it "applies damage across full unit hitpoints" do
+        agressor =Immune::Group.new
+        agressor.weaknesses = []
+        agressor.immunity = []
+        agressor.damage = :stuff
+        agressor.damage_points = 75
+        agressor.units = 1
+        agressor.initiative = 1
+
+        defender =Immune::Group.new
+        defender.weaknesses = []
+        defender.immunity = []
+        defender.hit_points = 10
+        defender.units = 10
+        defender.initiative = 3
+
+        agressor.target = defender
+
+        agressor.fight!
+
+        defender.units.must_equal 3
+    end
+
+    it "removes all units when damage >= unit defence" do
+        agressor =Immune::Group.new
+        agressor.weaknesses = []
+        agressor.immunity = []
+        agressor.damage = :stuff
+        agressor.damage_points = 75
+        agressor.units = 1
+        agressor.initiative = 1
+
+        defender =Immune::Group.new
+        defender.weaknesses = []
+        defender.immunity = []
+        defender.hit_points = 10
+        defender.units = 5
+        defender.initiative = 3
+
+        agressor.target = defender
+
+        agressor.fight!
+
+        defender.units.must_equal 0
+    end
+  end
+
   describe "group" do
     before do
       @group = Immune::Group.new
@@ -282,6 +330,29 @@ describe Immune do
       @group.damage_points = 12
 
       @group.effective_power.must_equal (123*12)
+    end
+  end
+
+  describe "fight!" do
+    before do
+      @system = Immune.new
+      @system.good << @system.parse_group("17 units each with 5390 hit points (weak to radiation, bludgeoning) with an attack that does 4507 fire damage at initiative 2")
+      @system.good << @system.parse_group("989 units each with 1274 hit points (immune to fire; weak to bludgeoning, slashing) with an attack that does 25 slashing damage at initiative 3")
+
+      @system.bad << @system.parse_group("801 units each with 4706 hit points (weak to radiation) with an attack that does 116 bludgeoning damage at initiative 1")
+      @system.bad << @system.parse_group("4485 units each with 2961 hit points (immune to radiation; weak to fire, cold) with an attack that does 12 slashing damage at initiative 4")
+      
+      @system.fight!
+    end
+
+    it "deals damage for each unit against the target" do
+      @system.good.last.units.must_equal 905
+      @system.bad.first.units.must_equal 797
+      @system.bad.last.units.must_equal 4434
+    end
+
+    it "removes depleated units" do
+      @system.good.count.must_equal 1
     end
   end
 

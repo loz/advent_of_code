@@ -3,7 +3,7 @@ class Immune
 
   class Group
     attr_accessor :units, :hit_points, :weaknesses, :immunity, :damage,
-        :damage_points, :initiative, :target
+        :damage_points, :initiative, :target, :target_damage
 
     def effective_power
       units * damage_points
@@ -13,10 +13,20 @@ class Immune
       if enemy.immunity.include? damage
         0
       elsif enemy.weaknesses.include? damage
-        damage_points * 2
+        effective_power * 2
       else
-        damage_points
+        effective_power
       end
+    end
+
+    def fight!
+      #puts "Fight: #{units}:#{hit_points}(#{damage_points} @#{initiative}) Vs #{target.units}:#{target.hit_points}"
+      damage = damage_to(target)
+      #puts "Dealing #{damage}"
+      #puts "Target: #{target.units * target.hit_points} (#{target.hit_points})"
+      #puts "Whole Damage: #{damage / target.hit_points}"
+      target.units -= (damage / target.hit_points)
+      target.units = 0 if target.units < 0
     end
   end
 
@@ -36,6 +46,16 @@ class Immune
     else
       @good
     end
+  end
+
+
+  def fight!
+    establish_targets
+    attack_ordered.each do |attacker|
+      attacker.fight!
+    end
+    @good.reject! {|g| g.units == 0 }
+    @bad.reject! {|g| g.units == 0 }
   end
 
   def establish_targets
