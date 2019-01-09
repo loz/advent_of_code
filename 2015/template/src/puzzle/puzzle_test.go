@@ -2,5 +2,9 @@ package puzzle
 
 import "testing"
 
-func TestCalculatesPaperForDimensions(t *testing.T) {
+func TestExample(t *testing.T) {
+  p := NewPuzzle("example")
+  if p == nil {
+    t.Error("Error creating new Puzzle")
+  }
 }
