@@ -41,4 +41,20 @@ describe Battle do
       elf.locations.should contain({3,3})
     end
   end
+
+  describe "#filter_nearest" do
+    it "retains locations which are closest" do
+      battle.set_map(map1)
+      battle.define_targets
+
+      elf = battle.elves[0]
+      elf.determine_range(battle.map)
+      elf.filter_nearest(battle.map)
+
+      elf.locations.size.should eq 3
+      elf.locations.should contain({3,1})
+      elf.locations.should contain({2,2})
+      elf.locations.should contain({1,3})
+    end
+  end
 end
