@@ -7,17 +7,22 @@ module Calibrate
 
     def initialize()
       @frequency = 0 
-      @observed = [] of Int32
+      @observed = {} of Int32 => Bool
     end
 
-    def calibrate(str)
-      str.each_line do |line|
-        val = line.to_i
-        @frequency += val
-        if @observed.includes? @frequency
-          break
+    def calibrate(str, lock = false)
+      locked = false 
+      while !locked
+        str.each_line do |line|
+          val = line.to_i
+          @frequency += val
+          if @observed[@frequency]?
+            locked = true
+            break
+          end
+          @observed[@frequency]= true
         end
-        @observed << @frequency
+        locked ||= !lock
       end
     end
   end

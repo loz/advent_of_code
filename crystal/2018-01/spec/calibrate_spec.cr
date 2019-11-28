@@ -39,4 +39,15 @@ describe Calibrate do
     device.calibrate(string)
     device.frequency.should eq 4
   end
+
+  it "repeats input when lock required to find a lock" do
+    device = Calibrate::Device.new
+    string = <<-EOF
+    +3
+    -4
+    +5
+    EOF
+    device.calibrate(string, true)
+    device.frequency.should eq 3
+  end
 end
