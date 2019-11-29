@@ -18,18 +18,22 @@ func NewPuzzle(input string) *Puzzle {
 	//fmt.Printf("Creating New Puzzle From: %s\n", input)
 	p.wires = make(map[string]uint16)
 
+  p.wires["b"] = 46065
+
+  for x:= 0; x < 10000; x++ {
+  //for p.wires["a"] == 0 {
 	lines := strings.Split(input, "\n")
 	for _, line := range lines {
 		if line != "" {
 			process(&p, line)
 		}
 	}
-
+  }
 	return &p
 }
 
 func process(p *Puzzle, line string) {
-	fmt.Printf("Parsing Line >>%s<<\n", line)
+	//fmt.Printf("Parsing Line >>%s<<\n", line)
 	tokens := strings.Split(line, " ")
 	numTokens := len(tokens)
 	//fmt.Printf("%d Tokens Parsed\n", numTokens)
@@ -43,14 +47,22 @@ func process(p *Puzzle, line string) {
 		} else {
 			p.wires[dest] = uint16(val)
 		}
-		fmt.Printf("    %d -> %s\n", p.wires[dest], dest)
+		//fmt.Printf("    %d -> %s\n", p.wires[dest], dest)
 	} else if numTokens == 4 { // OP X -> Y
 		v1, dest := tokens[1], tokens[3]
 		p.wires[dest] = (^p.wires[v1])
-		fmt.Printf("    %d -> %s\n", p.wires[dest], dest)
+		//fmt.Printf("    %d -> %s\n", p.wires[dest], dest)
 	} else if numTokens == 5 { // X OP Y -> Z
 		v1, op, v2, dest := tokens[0], tokens[1], tokens[2], tokens[4]
 		//fmt.Printf("Operator: %s, V1:%s, V2:%s -> D:%s\n", op, v1, v2, dest)
+		val, err := strconv.ParseUint(v1, 10, 16)
+    if err == nil {
+      p.wires[v1] = uint16(val)
+    }
+		val, err = strconv.ParseUint(v2, 10, 16)
+    if err == nil {
+      p.wires[v2] = uint16(val)
+    }
 		if op == "AND" {
 			p.wires[dest] = p.wires[v1] & p.wires[v2]
 		} else if op == "OR" {
@@ -70,6 +82,6 @@ func process(p *Puzzle, line string) {
 		} else {
 			fmt.Print("Error: Unknown Operator")
 		}
-		fmt.Printf("    %d -> %s\n", p.wires[dest], dest)
+		//fmt.Printf("    %d -> %s\n", p.wires[dest], dest)
 	}
 }

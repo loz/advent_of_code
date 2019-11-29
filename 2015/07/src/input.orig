@@ -332,7 +332,7 @@ gl AND gm -> go
 gl OR gm -> gn
 y AND ae -> ag
 hv OR hu -> hw
-46065 -> b
+1674 -> b
 ab AND ad -> ae
 NOT ac -> ad
 1 AND ht -> hu
