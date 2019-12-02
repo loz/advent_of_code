@@ -76,4 +76,23 @@ describe Puzzle do
     mols.should contain "OHOH"
     mols.should contain "HHHH"
   end
+
+  it "regresses mutations to target" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+    e => H
+    e => O
+    H => HO
+    H => OH
+    O => HH
+
+    HOHOHO
+    EOF
+
+    steps = puzzle.regress("e")
+    steps.size.should eq 6
+  end
+
+
+
 end

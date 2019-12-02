@@ -29,26 +29,10 @@ class Puzzle
     #puts "Generating"
     #mols = molecules
     #puts "#{molecules.size} combinations"
-
-    target = @medicine.dup
-    puts "Generating #{@medicine}"
-    options = ["e"]
-    10000.times do |step|
-      new_options = [] of String
-      puts "Processing #{options.size} options"
-      options.each do |opt|
-        @medicine = opt
-        new_mols = molecules
-        new_mols.each do |mol|
-          if mol == target
-            puts "Found", step
-            return
-          end
-        end
-        new_options += new_mols
-      end
-      options = new_options
-    end
+    puts "Regressing"
+    short = regress("e")
+    p short
+    p short.size
   end
 
   def molecules
@@ -59,6 +43,34 @@ class Puzzle
        end
     end
     matches.uniq
+  end
+
+  def regress(target)
+    reverse = {} of String => String
+    mapping.each do |src, dests|
+      dests.each { |dest| reverse[dest] = src }
+    end
+    paths = [] of Array(String)
+    paths += gen_regress([] of String, @medicine.dup, reverse, target)
+    shortest = paths.min_by { |path| path.size }
+    shortest
+  end
+
+  def gen_regress(prior, current, maps, target)
+    paths = [] of Array(String)
+    if current == target
+      puts "Solution @#{prior.size}"
+      paths << prior
+    else
+      maps.each do |s, d|
+        newchild = current.sub(s, d)
+        if newchild != current
+          step = prior + [current]
+          paths += gen_regress(step, newchild, maps, target)
+        end
+      end
+    end
+    paths
   end
 
   def replacements(left, rest, src, dest)
