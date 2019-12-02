@@ -36,12 +36,14 @@ class Puzzle
         arg2 = memory[@cursor+2]
         dest = memory[@cursor+3]
         #puts "-> add #{arg1}(#{memory[arg1]}) + #{arg2}(#{memory[arg2]}) -> #{dest}"
+        #puts "-> add #{arg1} + #{arg2} -> #{dest}"
         memory[dest] = memory[arg1] + memory[arg2]
       elsif opcode == 2
         arg1 = memory[@cursor+1]
         arg2 = memory[@cursor+2]
         dest = memory[@cursor+3]
         #puts "-> mul #{arg1}(#{memory[arg1]}) * #{arg2}(#{memory[arg2]}) -> #{@cursor}"
+        #puts "-> mul #{arg1} * #{arg2} -> #{dest}"
         memory[dest] = memory[arg1] * memory[arg2]
       elsif opcode == 99
         return
@@ -65,18 +67,21 @@ class Puzzle
 
   def result
     save_memory
-    200.times do |n|
-      200.times do |v|
+    121.times do |n|
+      120.times do |v|
         restore_memory
         noun = n + 1
         verb = v + 1
         memory[1] = noun
         memory[2] = verb
+        #print "N:#{noun} V:#{verb}" 
         execute
         result = memory[0]
-        puts "N:#{noun} V:#{verb} -> #{result}"
+        #puts "-> #{result}"
         if result == 19690720
           puts "N:#{noun} V:#{verb} -> #{result}"
+          res = (100 * noun) + verb
+          puts "Result: #{res}"
           return
         end
       end
