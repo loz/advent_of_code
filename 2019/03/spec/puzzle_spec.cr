@@ -100,4 +100,24 @@ describe Puzzle do
     puzzle.distance_to(closest).should eq 159
 
   end
+
+  it "calculates steps to intersection" do
+    puzzle = Puzzle.new
+    
+    puzzle.process <<-EOF
+    R8,U5,L5,D3
+    U7,R6,D4,L4
+    EOF
+
+    intersections = puzzle.intersections
+
+    steps = puzzle.steps_to(intersections[0])
+    steps["1"].should eq 15
+    steps["2"].should eq 15
+
+    steps = puzzle.steps_to(intersections[1])
+    steps["1"].should eq 20
+    steps["2"].should eq 20
+
+  end
 end

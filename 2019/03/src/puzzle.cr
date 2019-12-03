@@ -3,6 +3,8 @@ class Puzzle
   property startx = 0
   property starty = 0
   property intersections = [] of Tuple(Int32,Int32)
+  property first = ""
+  property second = ""
 
   def process(str)
     first = str.lines[0]
@@ -17,12 +19,59 @@ class Puzzle
     init_grid(bounds)
     plot(first, '1')
     plot(second, '2')
+    @first = first
+    @second = second
   end
 
   def closest_intersection
     @intersections.min_by do |loc|
       distance_to(loc)
     end
+  end
+
+  def steps_to(loc)
+    {
+      "1" => sequence_to(@first, loc),
+      "2" => sequence_to(@second, loc)
+    }
+  end
+
+  def sequence_to(seq, loc)
+    #p "Sequence to: #{seq} -> #{loc}"
+    curx = startx
+    cury = starty
+    steps = 0
+    seq.split(",").each do |move|
+      direction, distance = parse(move)
+      case direction
+        when 'R'
+          distance.times do
+            curx += 1
+            steps += 1
+            #puts "#{{curx-startx, cury-starty}} vs #{loc}"
+            return steps if {curx-startx, cury-starty} == loc
+          end
+        when 'L'
+          distance.times do
+            curx -= 1
+            steps += 1
+            return steps if {curx-startx, cury-starty} == loc
+          end
+        when 'U'
+          distance.times do
+            cury += 1
+            steps += 1
+            return steps if {curx-startx, cury-starty} == loc
+          end
+        when 'D'
+          distance.times do
+            cury -= 1
+            steps += 1
+            return steps if {curx-startx, cury-starty} == loc
+          end
+      end
+    end
+    return steps
   end
 
   def distance_to(loc)
@@ -128,6 +177,17 @@ class Puzzle
     closest = closest_intersection
     puts "Closest: #{closest}"
     puts distance_to(closest)
+
+    intersects = intersections
+    p intersects
+    intersects.each do |inter|
+      print "#{inter} -> "
+      steps = steps_to(inter)
+      left = steps["1"]
+      right = steps["2"]
+      total = left + right
+      puts total 
+    end
   end
 
 end
