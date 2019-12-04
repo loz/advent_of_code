@@ -1,0 +1,7 @@
+the triangle number format can be calculated as
+
+N = ((ROW+COL-1)*(ROW+COL))/2)-(ROW-1)
+
+This will tell you the number for any row of colum (that is the sequence number, N)
+
+Apply N itterations on the number to get the actual number if it were written in triangles
