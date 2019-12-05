@@ -39,6 +39,26 @@ class Puzzle
     {opcode, modes}
   end
 
+  def fetch_params(count, modes, dest=nil)
+    params = [] of Int32
+    count.times do |offset|
+      arg = memory[@cursor+offset+1]
+      val = if modes[offset] == 0
+        memory[arg]
+      else
+        arg
+      end
+      params << val
+      #p "#{offset}, #{params}, #{modes} #{@cursor}, #{memory} (#{arg}:#{val})"
+    end
+    if dest
+      val  = memory[@cursor+dest]
+      params << val
+      #puts "-> #{dest} (#{params})"
+    end
+    params
+  end
+
   def execute(input = [] of Int32)
     output = [] of Int32
     @cursor = 0
@@ -48,39 +68,12 @@ class Puzzle
       #puts "#{opcode}:#{modes}"
       #puts "@#{@cursor} => #{opcode}"
       if opcode == 1
-        arg1 = memory[@cursor+1]
-        arg2 = memory[@cursor+2]
-        dest = memory[@cursor+3]
-        #puts "-> add #{arg1}(#{memory[arg1]}) + #{arg2}(#{memory[arg2]}) -> #{dest}"
-        #puts "-> add #{arg1} + #{arg2} -> #{dest}"
-        val1 = if modes[0] == 0
-          memory[arg1]
-        else
-          arg1
-        end
-        val2 = if modes[1] == 0
-          memory[arg2]
-        else
-          arg2
-        end
+        val1, val2, dest = fetch_params(2, modes, 3)
+        #p val1, val2, dest, modes
         memory[dest] = val1 + val2
         @cursor += 4
       elsif opcode == 2
-        arg1 = memory[@cursor+1]
-        arg2 = memory[@cursor+2]
-        dest = memory[@cursor+3]
-        #puts "-> mul #{arg1}(#{memory[arg1]}) * #{arg2}(#{memory[arg2]}) -> #{@cursor}"
-        #puts "-> mul #{arg1} * #{arg2} -> #{dest}"
-        val1 = if modes[0] == 0
-          memory[arg1]
-        else
-          arg1
-        end
-        val2 = if modes[1] == 0
-          memory[arg2]
-        else
-          arg2
-        end
+        val1, val2, dest = fetch_params(2, modes, 3)
         memory[dest] = val1 * val2
         @cursor += 4
       elsif opcode == 3
@@ -89,63 +82,25 @@ class Puzzle
         memory[dest] = val
         @cursor += 2
       elsif opcode == 4
-        arg1 = memory[@cursor+1]
-        if modes[0] == 0
-          output << memory[arg1]
-        else
-          output << arg1
-        end
+        val = fetch_params(1, modes).first
+        output << val
         @cursor += 2
       elsif opcode == 5
-        arg1 = memory[@cursor+1]
-        arg2 = memory[@cursor+2]
-        cmp = if modes[0] == 0
-          memory[arg1]
-        else
-          arg1
-        end
-        jmp = if modes[1] == 0
-          memory[arg2]
-        else
-          arg2
-        end
+        cmp, jmp = fetch_params(2, modes)
         if cmp != 0
           @cursor = jmp
         else
           @cursor += 3
         end
       elsif opcode == 6
-        arg1 = memory[@cursor+1]
-        arg2 = memory[@cursor+2]
-        cmp = if modes[0] == 0
-          memory[arg1]
-        else
-          arg1
-        end
-        jmp = if modes[1] == 0
-          memory[arg2]
-        else
-          arg2
-        end
+        cmp, jmp = fetch_params(2, modes)
         if cmp == 0
           @cursor = jmp
         else
           @cursor += 3
         end
       elsif opcode == 7
-        arg1 = memory[@cursor+1]
-        arg2 = memory[@cursor+2]
-        dest = memory[@cursor+3]
-        cmp1 = if modes[0] == 0
-          memory[arg1]
-        else
-          arg1
-        end
-        cmp2 = if modes[1] == 0
-          memory[arg2]
-        else
-          arg2
-        end
+        cmp1, cmp2, dest = fetch_params(2, modes, 3)
         if cmp1 < cmp2
           memory[dest] = 1
         else
@@ -153,19 +108,7 @@ class Puzzle
         end
         @cursor += 4
       elsif opcode == 8
-        arg1 = memory[@cursor+1]
-        arg2 = memory[@cursor+2]
-        dest = memory[@cursor+3]
-        cmp1 = if modes[0] == 0
-          memory[arg1]
-        else
-          arg1
-        end
-        cmp2 = if modes[1] == 0
-          memory[arg2]
-        else
-          arg2
-        end
+        cmp1, cmp2, dest = fetch_params(2, modes, 3)
         if cmp1 == cmp2
           memory[dest] = 1
         else
