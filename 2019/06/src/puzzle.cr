@@ -45,6 +45,35 @@ class Puzzle
     total
   end
 
+  def ancestors(node)
+    planets = [] of String
+    current = node
+    while current && current.parent
+      current = current.parent if current
+      planets << current.name if current
+    end
+    planets
+  end
+
+  def common_ancestor(one, two)
+    one_root = ancestors(one)
+    two_root = ancestors(two)
+    distance = 0
+    current = one_root.shift
+    while !two_root.includes?(current)
+      distance += 1
+      current = one_root.shift
+    end
+    #puts "Common Found: #{current} @ #{distance}"
+    common = current
+    current = two_root.shift
+    while current != common
+      distance += 1
+      current = two_root.shift
+    end
+    [common, distance]
+  end
+
   def create_planet(name, parent=nil)
     planet = Planet.new(name, parent)
     @lookup[name] = planet
@@ -58,6 +87,11 @@ class Puzzle
   def result
     com = planet("COM")
     puts "Total Oribits:", orbits(com)
+    you = planet("YOU")
+    santa = planet("SAN")
+
+    common, distance = common_ancestor(you,santa)
+    puts "Common: #{common}, Distance: #{distance}"
   end
 
 end
