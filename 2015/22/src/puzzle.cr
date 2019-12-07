@@ -53,13 +53,23 @@ class Puzzle
     spells
   end
 
+  def apply_hard_mode(state)
+    new_state = state.dup
+    phit, pshield, pmana = new_state.player
+
+    phit -= 1
+    new_state.player = {phit, pshield, pmana}
+    new_state
+  end
+
   def cast(state, spell)
 
     #puts "-- Player turn --"
     #state.dump 
 
     new_states = [] of State
-    new_state = apply_effects(state)
+    new_state = apply_hard_mode(state)
+    new_state = apply_effects(new_state) unless new_state.ended?
     new_state = apply_spell(new_state, spell) unless new_state.ended?
     new_states << new_state
     #puts "Player casts #{spell}"
@@ -67,7 +77,7 @@ class Puzzle
     #puts "-- Boss  turn --"
     #new_state.dump
 
-    new_state = apply_effects(new_state)
+    new_state = apply_effects(new_state) unless new_state.ended?
     new_state = boss_fight(new_state) unless new_state.ended?
     new_states << new_state
     #puts "Boss maybe deals damage"
@@ -140,21 +150,34 @@ class Puzzle
   
     states = [state]
     allwins = [] of State
-    10.times do |t|
+    cheapest = 999999
+    20.times do |t|
       states = generation(states)
       print "Gen #{t}: #{states.size}"
       losses = states.select {|s| s.loss? }
       wins = states.select {|s| s.win? && !s.loss? }
+      wins.each do |w|
+        if w.manacost < cheapest
+          cheapest = w.manacost
+        end
+      end
       allwins += wins
       print " -> #{losses.size} losses"
       print " -> #{wins.size} wins"
       states = states.select {|s| !s.loss? && !s.win? }
-      puts " -> #{states.size} in generation"
+      print " -> #{states.size} in generation"
+      states = states.select {|s| s.manacost < cheapest }
+      puts " -> #{states.size} in cheaper than #{cheapest}"
       break if states.empty?
     end
     allwins.each do |w|
       p w
     end
+    cost = allwins.min_by do |w|
+      w.manacost
+    end
+    puts "Cheapest: #{cheapest}"
+    puts "EG:", cost
   end
 
   def generation(states)
