@@ -20,12 +20,16 @@ class State
 
   def win?
     b, _ = boss
-    b <= 0 && !loss?
+    b <= 0 #&& !loss?
   end
 
   def loss?
     p, _ = player
     p <= 0
+  end
+
+  def draw?
+    win? && loss?
   end
 
 end
@@ -54,6 +58,7 @@ class Puzzle
   end
 
   def apply_hard_mode(state)
+    #return state
     new_state = state.dup
     phit, pshield, pmana = new_state.player
 
@@ -147,6 +152,8 @@ class Puzzle
     state = State.new
     state.player = {50, 0, 500}
     state.boss = {55, 8}
+    #state.player = {20, 0, 250}
+    #state.boss = {14, 8}
   
     states = [state]
     allwins = [] of State
@@ -158,6 +165,7 @@ class Puzzle
       wins = states.select {|s| s.win? && !s.loss? }
       wins.each do |w|
         if w.manacost < cheapest
+          puts "New Best: #{w.inspect}"
           cheapest = w.manacost
         end
       end
@@ -184,18 +192,20 @@ class Puzzle
     newgen = [] of State
     states.each do |state|
       options = possible_spells(state)
-      outcomes = options.map do |opt|
-        #puts "=" * 40
-        states = cast(state, opt)
-        s1 = states.first
-        s2 = states.last
-        if s1.win? || s1.loss?
-          s1
-        else
-          s2
+      if !options.empty? #Dead if no spells possible
+        outcomes = options.map do |opt|
+          #puts "=" * 40
+          states = cast(state, opt)
+          s1 = states.first
+          s2 = states.last
+          if s1.win? || s1.loss?
+            s1
+          else
+            s2
+          end
         end
+        newgen = newgen + outcomes
       end
-      newgen = newgen + outcomes
     end
     newgen
   end
