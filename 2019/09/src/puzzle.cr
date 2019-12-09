@@ -200,7 +200,7 @@ class Puzzle
 
   def result
     output = [] of Int64
-    input = [1.to_i64]
+    input = [2.to_i64]
     execute input, output
     p output
   end
