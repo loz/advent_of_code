@@ -33,16 +33,24 @@ class Puzzle
   def apply(move)
     direction = move[0].to_s
     distance = move[1,move.size-1].to_i
+
     moves = DIRECTIONS[orientation][direction]
     dx, dy, neworientation = moves
     x, y = location
-    @location = {x + (dx * distance), y + (dy * distance) }
-    @orientation = neworientation
-    if @visited.includes? location
-      puts "Visited!: #{location}"
-    else
-      @visited << location
+
+    nloc = {x,y}
+    distance.times do
+      x, y = {x + dx, y + dy}
+      nloc = {x,y}
+      if @visited.includes? nloc
+        puts "Visited!: #{nloc}"
+      else
+        @visited << nloc
+      end
+      #p @visited
     end
+    @location = nloc
+    @orientation = neworientation
   end
 
   def result
