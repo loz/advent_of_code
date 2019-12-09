@@ -33,6 +33,7 @@ class Puzzle
     str.lines.each do |line|
       parse_codes(line)
     end
+    puts "#{@cursor} Memory Loaded"
   end
 
   def save_memory
@@ -64,13 +65,15 @@ class Puzzle
 
   def fetch_params(count, modes, dest=nil)
     params = [] of Int64
+    print "{"
     count.times do |offset|
       arg = memory[@cursor+offset+1]
+      print "#{arg} "
       val = if modes[offset] == 0
         memory[arg.to_i64]
       elsif modes[offset] == 2
         relloc = @relative_base + arg
-        puts "FETCH REL: => #{@relative_base}::#{arg}, #{relloc} #{memory[relloc]}"
+        #puts "FETCH REL: => #{@relative_base}::#{arg}, #{relloc} #{memory[relloc]}"
         memory[relloc]
       else
         arg
@@ -79,11 +82,16 @@ class Puzzle
       #p "#{offset}, #{params}, #{modes} #{@cursor}, #{memory} (#{arg}:#{val})"
     end
     if dest
-      val  = memory[@cursor+dest]
+      val = if modes[dest-1] == 2
+        memory[@cursor+dest] + @relative_base
+      else
+        memory[@cursor+dest] 
+      end
+      print val
       params << val
       #puts "-> #{dest} (#{params})"
     end
-    puts " => #{params}"
+    print "} => #{params} "
     params
   end
 
@@ -92,44 +100,57 @@ class Puzzle
     while true
     #3.times do
       opcode, modes = gencode(memory[@cursor])
-      puts "#{opcode}:#{modes}"
-      puts "@#{@cursor} => #{opcode}"
+      print "@#{@cursor} [R:#{@relative_base}] => "
+      print "#{opcode}:#{modes} "
       if opcode == 1
+        print "add "
         val1, val2, dest = fetch_params(2, modes, 3)
+        puts "#{val1}, #{val2} -> @#{dest}"
         memory[dest.to_i64] = val1 + val2
         @cursor += 4
       elsif opcode == 2
+        print "mul "
         val1, val2, dest = fetch_params(2, modes, 3)
+        puts "#{val1}, #{val2} -> @#{dest}"
         memory[dest.to_i64] = val1 * val2
         @cursor += 4
       elsif opcode == 3
-        dest = memory[@cursor+1]
+        print "inp "
+        dest = fetch_params(0, modes, 1).first
         val = input.shift
+        puts "#{val} -> @#{dest}"
         #puts " << #{val}"
-        STDOUT.flush
         memory[dest.to_i64] = val
         @cursor += 2
       elsif opcode == 4
+        print "out "
         val = fetch_params(1, modes).first
+        puts "#{val}"
         #puts " >> #{val}"
         output << val
         @cursor += 2
       elsif opcode == 5
+        print "jit "
         cmp, jmp = fetch_params(2, modes)
+        puts "#{cmp} :> @#{jmp}"
         if cmp != 0
           @cursor = jmp.to_i64
         else
           @cursor += 3
         end
       elsif opcode == 6
+        print "jif "
         cmp, jmp = fetch_params(2, modes)
+        puts "#{cmp} :> @#{jmp}"
         if cmp == 0
           @cursor = jmp.to_i64
         else
           @cursor += 3
         end
       elsif opcode == 7
+        print "jlt "
         cmp1, cmp2, dest = fetch_params(2, modes, 3)
+        puts "#{cmp1}, #{cmp2} :> @#{dest}"
         if cmp1 < cmp2
           memory[dest.to_i64] = 1
         else
@@ -137,7 +158,9 @@ class Puzzle
         end
         @cursor += 4
       elsif opcode == 8
+        print "jie "
         cmp1, cmp2, dest = fetch_params(2, modes, 3)
+        puts "#{cmp1}, #{cmp2} :> @#{dest}"
         if cmp1 == cmp2
           memory[dest.to_i64] = 1
         else
@@ -145,11 +168,14 @@ class Puzzle
         end
         @cursor += 4
       elsif opcode == 9
+        print "rad "
         offset = fetch_params(1, modes).first
-        puts "RELATIVE --> #{@relative_base} + #{offset}"
+        puts "#{offset}"
+        #puts "RELATIVE --> #{@relative_base} + #{offset}"
         @relative_base += offset
         @cursor += 2
       elsif opcode == 99
+        puts "hlt "
         @halted = true
         return output
       else
