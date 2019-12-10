@@ -2,14 +2,18 @@ class Puzzle
 
   property rocks = {} of Tuple(Int32,Int32) => Bool
   property visible = {} of Tuple(Int32,Int32) => Array(Tuple(Int32,Int32))
+  property width = 0
+  property height = 0
 
   def process(str)
     row = 0
     str.each_line do |line|
       #puts "#{row} -> #{line}"
       scan_row(row, line)
+      @width = line.size
       row += 1
     end
+    @height = row
   end
 
   def map_los
@@ -91,10 +95,34 @@ class Puzzle
     visible.max_by { |l, v|  v.size }
   end
 
+  def debug(loc)
+    visbile = @visible[loc]
+    @height.times do |y|
+      @width.times do |x|
+        if loc == {x,y}
+          print '*'
+        elsif visbile.includes?({x,y})
+          print 'V'
+        elsif @rocks[{x,y}]?
+          print '#'
+        else
+          print '.'
+        end
+      end
+      puts
+    end
+  end
+
   def result
     map_los
     loc, list = best()
-    p loc, list.size
+
+    debug(loc)
+
+    #p loc, list.size
+    #visible.each do |l, v|
+    #  puts "#{l} -> #{v.size}"
+    #end
   end
 
 end
