@@ -1,6 +1,7 @@
 class Puzzle
 
   property rocks = {} of Tuple(Int32,Int32) => Bool
+  property visible = {} of Tuple(Int32,Int32) => Array(Tuple(Int32,Int32))
 
   def process(str)
     row = 0
@@ -9,6 +10,23 @@ class Puzzle
       scan_row(row, line)
       row += 1
     end
+  end
+
+  def map_los
+    rocks.each_key do |loc|
+      rocks.each_key do |target|
+        if loc != target
+          @visible[loc] = [] of Tuple(Int32,Int32) unless @visible[loc]?
+          if line_of_sight?(loc, target)
+            @visible[loc] << target
+          end
+        end
+      end
+    end
+  end
+
+  def los_count(loc)
+    @visible[loc].size
   end
 
   def scan_row(y, line)
@@ -70,6 +88,13 @@ class Puzzle
   end
 
   def result
+    map_los
+
+    loc, list   = visible.max_by do |l, v|
+     #puts "L: #{l} -> #{v.size}"
+     v.size
+    end
+    p loc, list.size
   end
 
 end

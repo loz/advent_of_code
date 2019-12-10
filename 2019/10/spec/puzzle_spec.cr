@@ -66,4 +66,20 @@ describe Puzzle do
     puzzle.line_of_sight?({4,2}, {2,2}).should eq false
   end
 
+  it "can calculate number in line of sight" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+    .#..#
+    .....
+    #####
+    ....#
+    ...##
+    EOF
+
+    puzzle.map_los
+
+    puzzle.los_count({4,2}).should eq 5
+    puzzle.los_count({3,4}).should eq 8
+  end
+
 end
