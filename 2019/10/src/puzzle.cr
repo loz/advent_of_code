@@ -20,9 +20,7 @@ class Puzzle
   end
 
   def line_of_sight?(from, to)
-    p from, to
     points = points_between(from, to)
-    p points
     points.each do |p|
       return false if @rocks[p]?
     end
@@ -40,31 +38,32 @@ class Puzzle
 
     dx = (ds_x - sc_x)
     dy = (ds_y - sc_y)
-    p "Dx:#{dx}, Dy:#{dy}"
+
+    dlx = dx.abs
+    dly = dy.abs
+
+    drx = dx < 0 ? -1 : 1
+    dry = dy < 0 ? -1 : 1
+
+    #p "Dx:#{dx}, Dy:#{dy}"
     if dx == 0
-      (sc_y+1..ds_y-1).each do |y|
-        locs << {sc_x, y}
+      (1..dly-1).each do |y|
+        locs << {sc_x, sc_y + (y*dry)}
       end
     elsif dy == 0
-      (sc_x+1..ds_x-1).each do |x|
-        locs << {x, sc_y}
+      (1..dlx-1).each do |x|
+        locs << {sc_x + (x*drx), sc_y}
       end
     else
-      puts "----"
-      d = if dx < 0
-        -1
-      else
-        +1
-      end
-      x = sc_x + d
-      while x != ds_x 
+      #puts "----"
+      (1..dlx-1).each do |x|
         xdy = x * dy
         if xdy % dx == 0
           y = (xdy / dx).to_i
-          p({x,y})
-          locs << {x, sc_y + y}
+          nx = sc_x + (x*drx)
+          ny = sc_y + (y*dry)
+          locs << {nx, ny}
         end
-        x = x + d
       end
     end
     locs
