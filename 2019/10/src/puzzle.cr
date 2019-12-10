@@ -87,13 +87,13 @@ class Puzzle
     locs
   end
 
+  def best
+    visible.max_by { |l, v|  v.size }
+  end
+
   def result
     map_los
-
-    loc, list   = visible.max_by do |l, v|
-     #puts "L: #{l} -> #{v.size}"
-     v.size
-    end
+    loc, list = best()
     p loc, list.size
   end
 

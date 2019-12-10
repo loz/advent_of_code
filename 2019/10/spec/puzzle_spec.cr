@@ -82,4 +82,21 @@ describe Puzzle do
     puzzle.los_count({3,4}).should eq 8
   end
 
+  it "can determine the best location" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+    .#..#
+    .....
+    #####
+    ....#
+    ...##
+    EOF
+
+    puzzle.map_los
+
+    loc, seen = puzzle.best()
+    loc.should eq({3,4})
+    seen.size.should eq 8
+  end
+
 end
