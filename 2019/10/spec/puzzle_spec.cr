@@ -64,6 +64,27 @@ describe Puzzle do
 
     puzzle.line_of_sight?({4,2}, {3,2}).should eq true
     puzzle.line_of_sight?({4,2}, {2,2}).should eq false
+
+
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+    ......#.#.
+    #..#.#....
+    ..#######.
+    .#.#.###..
+    .#..#.....
+    ..#....#.#
+    #..#....#.
+    .##.#..###
+    ##...#..#.
+    .#....####
+    EOF
+
+    #puts "="*30
+    puzzle.line_of_sight?({1,8}, {2,7}).should eq true
+    puzzle.line_of_sight?({1,8}, {3,6}).should eq false
+    puzzle.line_of_sight?({1,8}, {2,5}).should eq true
+    puzzle.line_of_sight?({1,8}, {3,2}).should eq false
   end
 
   it "can calculate number in line of sight" do
@@ -97,6 +118,38 @@ describe Puzzle do
     loc, seen = puzzle.best()
     loc.should eq({3,4})
     seen.size.should eq 8
+  end
+
+  it "can sort visible by angle" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+    .#....#####...#..
+    ##...##.#####..##
+    ##...#...#.#####.
+    ..#.....#...###..
+    ..#.#.....#....##
+    EOF
+
+    puzzle.map_los
+
+    loc, visible = puzzle.best()
+
+    #puts
+    #puzzle.debug(loc)
+    sorted = puzzle.sort(loc, visible)
+
+    puzzle.sort(loc, sorted)
+
+    sorted[0].should eq({8,1})
+    sorted[1].should eq({9,0})
+    sorted[2].should eq({9,1})
+    sorted[3].should eq({10,0})
+    sorted[4].should eq({9,2})
+    sorted[5].should eq({11,1})
+    sorted[6].should eq({12,1})
+    sorted[7].should eq({11,2})
+    sorted[8].should eq({15,1})
+    
   end
 
 end

@@ -54,6 +54,7 @@ class Puzzle
   end
 
   def points_between(src, dest)
+    #print "Points #{src} -> #{dest}"
     locs = [] of Tuple(Int32, Int32)
     sc_x, sc_y = src
     ds_x, ds_y = dest
@@ -79,9 +80,9 @@ class Puzzle
     else
       #puts "----"
       (1..dlx-1).each do |x|
-        xdy = x * dy
+        xdy = x * dly
         if xdy % dx == 0
-          y = (xdy / dx).to_i
+          y = (xdy / dlx).to_i
           nx = sc_x + (x*drx)
           ny = sc_y + (y*dry)
           locs << {nx, ny}
@@ -93,6 +94,21 @@ class Puzzle
 
   def best
     visible.max_by { |l, v|  v.size }
+  end
+
+  def sort(origin, list)
+    ox, oy = origin
+    list.sort_by do |rock|
+      rx, ry = rock
+      dx = ox-rx
+      dy = oy-ry
+      angle = Math.atan2(dx, dy)
+      angle = 0.0 - angle #invert direction
+      angle = (Math::PI + Math::PI + angle) if angle < 0
+      #angle = (0.0 - angle).abs
+      #puts "#{origin} -> #{rock} :#{dx},#{dy} -> #{angle}"
+      angle
+    end
   end
 
   def debug(loc)
@@ -118,7 +134,10 @@ class Puzzle
     loc, list = best()
 
     debug(loc)
+    puts list.size
 
+    sorted = sort(loc, list)
+    p sorted[199]
     #p loc, list.size
     #visible.each do |l, v|
     #  puts "#{l} -> #{v.size}"
