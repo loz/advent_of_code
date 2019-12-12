@@ -24,12 +24,26 @@ class Puzzle
 
   def result
     puts "Running."
-    1000.times do
-      print "."
-      step
+    initial = @moons.sum {|m| energy(m) }
+    start = @moons.map {|m| m }
+    puts "Initial Energy: #{initial}"
+    count = 0
+    batch_size = 1_000_000
+    n = 0
+    while true
+      n += 1
+      batch_size.times do
+        step
+        count +=1
+        if @moons.sum {|m| energy(m)} == 0
+          if @moons == start
+            puts "Repeat @ #{count}"
+            return
+          end
+        end
+      end
+      puts "#{n*batch_size} steps"
     end
-    total = @moons.sum {|m| energy(m) }
-    puts "Total Energy: #{total}"
   end
   
   def energy(moon)
