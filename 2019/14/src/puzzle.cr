@@ -19,6 +19,7 @@ class Puzzle
       rneeds, gives = recipe
       if amt >= rneeds
         save = amt//rneeds
+        rem = amt % rneeds
         gives.each do |item|
           ig, val = item
           if ig == "ORE"
@@ -26,6 +27,10 @@ class Puzzle
           else
             leftover[ig] += save * val
           end
+        end
+        if rem != 0
+          #"REMAINDER: #{rem}x#{ing}"
+          leftover[ing] += rem
         end
         #p "#{ing}:#{amt} => #{rneeds} -> #{gives}"
       else
