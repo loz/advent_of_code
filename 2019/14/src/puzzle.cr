@@ -10,6 +10,36 @@ class Puzzle
     end
   end
 
+  def savings(wastes)
+    saving = 0
+    leftover = Hash(String,Int32).new(0)
+
+    wastes.each do |ing, amt|
+      recipe = @recipes[ing]
+      rneeds, gives = recipe
+      if amt >= rneeds
+        save = amt//rneeds
+        gives.each do |item|
+          ig, val = item
+          if ig == "ORE"
+            saving += save * val
+          else
+            leftover[ig] += save * val
+          end
+        end
+        #p "#{ing}:#{amt} => #{rneeds} -> #{gives}"
+      else
+        leftover[ing] += amt
+      end
+    end
+    if saving != 0
+      save, left = savings(leftover)
+      return {saving + save, left}
+    else
+      return {0, leftover}
+    end
+  end
+
   def process_line(line)
     source = [] of Tuple(String,Int32)
     ins, out = line.split(" => ")
@@ -22,20 +52,24 @@ class Puzzle
   end
 
   def result
-    res = refine(1)
-    p res
+    res, waste = refine(1)
+    p res, waste
+    save, waste = savings(waste)
+    p save, waste
+    best = res["ORE"] - save
+    p "BEST: #{best}"
   end
 
   def refine(nfuel)
     ingredients = {"FUEL" => nfuel}
-    refine_r(ingredients)
+    waste = Hash(String,Int32).new(0)
+    refine_r(ingredients, waste)
   end
 
-  def refine_r(ingredients, best = 999_999_999)
-    return {"ORE" => best} if ingredients["ORE"]? && ingredients["ORE"] > best
-    return ingredients if only_ore?(ingredients)
+  def refine_r(ingredients, waste)
+    return {ingredients, waste} if only_ore?(ingredients)
     new_ingredients = {} of String => Int32
-    ingredients.each do |name,count|
+    ingredients.each do |name, count|
       if name == "ORE"
         new_ingredients = merge_ingredients(new_ingredients, {"ORE" => count})
       else
@@ -43,13 +77,15 @@ class Puzzle
         new_ingredients = merge_ingredients(new_ingredients, apply_recipe(recipe, count, name))
       end
     end
-    return new_ingredients if only_ore?(new_ingredients)
+    return {new_ingredients, waste} if only_ore?(new_ingredients)
     if ingredients == new_ingredients
-      #new_ingredients = refine_remainder(ingredients)
-      return explore_refinements(ingredients, best)
+      new_ingredients, waste = refine_remainder(ingredients, waste)
+      #return explore_refinements(ingredients, best)
+      #puts "HTL: #{ingredients}"
+      #raise "Not Refinable"
     end
     #puts "GEN :> #{new_ingredients}"
-    return refine_r(new_ingredients, best)
+    return refine_r(new_ingredients, waste)
   end
 
   def explore_refinements(ingredients, best)
@@ -94,36 +130,41 @@ class Puzzle
         total = result["ORE"]
         #raise "Result"
         if total < best
-          puts "NEW BEST:> #{total}"
+          #puts "NEW BEST:> #{total}"
           best = total
         end
     end
     {"ORE" => best}
   end
 
-  def refine_remainder(ingredients)
+  def refine_remainder(ingredients, waste)
     #puts "REFINING REMAINEDER"
+    #new_ingredients = {} of String => Int32
+    #ingredients.each do |name,count|
+    #  if name == "ORE"
+    #    new_ingredients = merge_ingredients(new_ingredients, {"ORE" => count})
+    #  else
+    #    recipe = @recipes[name]
+    #    new_ingredients = merge_ingredients(new_ingredients, apply_recipe(recipe, count, name))
+    #  end
+    #end
+    #ingredients = new_ingredients
     new_ingredients = {} of String => Int32
-    ingredients.each do |name,count|
-      if name == "ORE"
-        new_ingredients = merge_ingredients(new_ingredients, {"ORE" => count})
+    ingredients.each do |ing, have|
+      if ing == "ORE" #Does not refine
+        new_ingredients[ing] = have
       else
-        recipe = @recipes[name]
-        new_ingredients = merge_ingredients(new_ingredients, apply_recipe(recipe, count, name, true))
-      end
-    end
-    ingredients = new_ingredients
-    new_ingredients = {} of String => Int32
-    ingredients.each do |k, v|
-      if @recipes[k]?
-        recipe = @recipes[k]
+        #print "#{ing}x#{have} =>?"
+        recipe = @recipes[ing]
         needed, gives = recipe
-        new_ingredients[k] = needed
-      else #ORE
-        new_ingredients[k] = v
+        #print " N:#{needed} => #{gives}"
+        new_ingredients[ing] = needed
+        #this is waste
+        waste[ing] += (needed - have)
+        #puts
       end
     end
-    new_ingredients
+    {new_ingredients, waste}
   end
 
   def merge_ingredients(ingredientsa, ingredientsb)
@@ -141,7 +182,7 @@ class Puzzle
     ingredients.all? {|k,v| k == "ORE" || v == 0 }
   end
 
-  def apply_recipe(recipe, remain, name, allowore = false)
+  def apply_recipe(recipe, remain, name)
     produced = {} of String => Int32
     #puts "Apply: #{recipe} to #{remain} x #{name}"
     consume, produce = recipe
@@ -149,7 +190,7 @@ class Puzzle
       #print ">"
       produce.each do |compound|
         comp, compn = compound
-        return {name => remain} if !allowore && comp == "ORE" #don't breakdown ORE until end
+        #return {name => remain} if !allowore && comp == "ORE" #don't breakdown ORE until end
         if produced[comp]?
           produced[comp] += compn
         else
@@ -159,7 +200,7 @@ class Puzzle
       remain -= consume
     end
     if remain > 0
-      produced[name] = remain
+      produced[name] = remain #left over
     end
     #puts "> #{produced}"
     produced
