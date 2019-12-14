@@ -98,7 +98,6 @@ describe Puzzle do
   end
 
   it "refines second example" do
-    #puts "\n\n=======================\n\n"
     puzzle = Puzzle.new
     puzzle.process <<-EOF
     9 ORE => 2 A
@@ -114,4 +113,24 @@ describe Puzzle do
 
     ingredients.should eq({"ORE" => 165})
   end
+
+  it "can calculate the max fuel for 13312/fuel" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+    157 ORE => 5 NZVS
+    165 ORE => 6 DCFZ
+    44 XJWVT, 5 KHKGT, 1 QDVJ, 29 NZVS, 9 GPVTF, 48 HKGWZ => 1 FUEL
+    12 HKGWZ, 1 GPVTF, 8 PSHF => 9 QDVJ
+    179 ORE => 7 PSHF
+    177 ORE => 5 HKGWZ
+    7 DCFZ, 7 PSHF => 2 XJWVT
+    165 ORE => 2 GPVTF
+    3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT
+    EOF
+
+    max, _ = puzzle.max_for(1_000_000_000_000)
+    max.should eq 82892753
+  end
+
+
 end

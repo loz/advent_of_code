@@ -1,8 +1,8 @@
 class Puzzle
 
-  property ingredients = [] of Tuple(String, Int32)
+  property ingredients = [] of Tuple(String, UInt64)
 
-  property recipes = {} of String => Tuple(Int32,Array(Tuple(String,Int32)))
+  property recipes = {} of String => Tuple(UInt64,Array(Tuple(String,UInt64)))
 
   def process(str)
     str.each_line do |line|
@@ -11,21 +11,21 @@ class Puzzle
   end
 
   def savings(wastes)
-    saving = 0
-    leftover = Hash(String,Int32).new(0)
+    saving = 0.to_u64
+    leftover = Hash(String,UInt64).new(0.to_u64)
 
     wastes.each do |ing, amt|
       recipe = @recipes[ing]
       rneeds, gives = recipe
       if amt >= rneeds
-        save = amt//rneeds
-        rem = amt % rneeds
+        save = (amt.to_u64)//rneeds.to_u64
+        rem = (amt.to_u64) % rneeds.to_u64
         gives.each do |item|
           ig, val = item
           if ig == "ORE"
-            saving += save * val
+            saving += save * val.to_u64
           else
-            leftover[ig] += save * val
+            leftover[ig] += save * val.to_u64
           end
         end
         if rem != 0
@@ -41,39 +41,74 @@ class Puzzle
       save, left = savings(leftover)
       return {saving + save, left}
     else
-      return {0, leftover}
+      return {0.to_u64, leftover}
     end
   end
 
   def process_line(line)
-    source = [] of Tuple(String,Int32)
+    source = [] of Tuple(String,UInt64)
     ins, out = line.split(" => ")
     ins.split(", ").each do |ins|
       in_n, in_i = ins.split(" ")
-      source << {in_i, in_n.to_i}
+      source << {in_i, in_n.to_u64}
     end
     out_n, out_i = out.split(" ")
-    @recipes[out_i] = {out_n.to_i,source}
+    @recipes[out_i] = {out_n.to_u64,source}
+  end
+
+  def max_for(total_ore, givenwaste = {} of String => UInt64)
+    res, waste = refine(1)
+    cost = res["ORE"]
+    save, waste = savings(waste)
+    efficient = cost - save
+    created = total_ore//efficient
+    left = total_ore % efficient
+
+    #now created , made created * waste 
+    allwaste = Hash(String,UInt64).new(0.to_u64)
+    givenwaste.each {|ing, amt| allwaste[ing] = amt}
+    waste.each do |ing, amt|
+      allwaste[ing] += amt * created
+    end
+    
+    bonus, bwaste = savings(allwaste)
+    remaining = left + bonus
+    bonus, bwaste = savings(bwaste)
+    remaining += bonus
+    #p created, left, allwaste
+    #p savings(allwaste)
+    if remaining < efficient
+      #p "REMAINING: #{remaining}"
+      return {created, bwaste, remaining}
+    else
+      rmax, rwaste, rrem = max_for(remaining, bwaste)
+      {rmax + created, rwaste, rrem}
+    end
   end
 
   def result
     res, waste = refine(1)
-    p res, waste
     save, waste = savings(waste)
-    p save, waste
     best = res["ORE"] - save
     p "BEST: #{best}"
+
+    tril, waste, rem = max_for(1_000_000_000_000)
+    puts "1Tril: #{tril}, #{rem} left over"
+    puts waste
+    save, waste = savings(waste)
+    p save, waste
+    #p refine_r({"FUEL" => 1}, waste)
   end
 
   def refine(nfuel)
     ingredients = {"FUEL" => nfuel}
-    waste = Hash(String,Int32).new(0)
+    waste = Hash(String,UInt64).new(0.to_u64)
     refine_r(ingredients, waste)
   end
 
   def refine_r(ingredients, waste)
     return {ingredients, waste} if only_ore?(ingredients)
-    new_ingredients = {} of String => Int32
+    new_ingredients = {} of String => UInt64
     ingredients.each do |name, count|
       if name == "ORE"
         new_ingredients = merge_ingredients(new_ingredients, {"ORE" => count})
@@ -154,10 +189,10 @@ class Puzzle
     #  end
     #end
     #ingredients = new_ingredients
-    new_ingredients = {} of String => Int32
+    new_ingredients = {} of String => UInt64
     ingredients.each do |ing, have|
       if ing == "ORE" #Does not refine
-        new_ingredients[ing] = have
+        new_ingredients[ing] = have.to_u64
       else
         #print "#{ing}x#{have} =>?"
         recipe = @recipes[ing]
@@ -175,9 +210,9 @@ class Puzzle
   def merge_ingredients(ingredientsa, ingredientsb)
     ingredientsb.each do |k,v|
       if ingredientsa[k]?
-        ingredientsa[k] += v
+        ingredientsa[k] += v.to_u64
       else
-        ingredientsa[k] = v
+        ingredientsa[k] = v.to_u64
       end
     end
     ingredientsa
@@ -188,7 +223,7 @@ class Puzzle
   end
 
   def apply_recipe(recipe, remain, name)
-    produced = {} of String => Int32
+    produced = {} of String => UInt64
     #puts "Apply: #{recipe} to #{remain} x #{name}"
     consume, produce = recipe
     while remain >= consume
@@ -205,10 +240,10 @@ class Puzzle
       remain -= consume
     end
     if remain > 0
-      produced[name] = remain #left over
+      produced[name] = remain.to_u64 #left over
     end
     #puts "> #{produced}"
     produced
-  end
+ end
 
 end
