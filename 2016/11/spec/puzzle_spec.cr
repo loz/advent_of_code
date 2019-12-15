@@ -3,7 +3,43 @@ require "./spec_helper"
 
 describe Puzzle do
 
+  describe "Possible Elevators" do
+    it "generates the possible elevator filling for a floor" do
+      puzzle = Puzzle.new
+      options = puzzle.generate_lifts([{:y, :microchip},{:y, :generator},{:z, :microchip}])
+      options.should contain([{:z, :microchip}])
+      options.should contain([{:y, :generator}])
+      options.should_not contain([{:y, :microchip}])
+      options.should contain([{:y, :microchip},{:y, :generator}])
+      options.should_not contain([{:y, :generator}, {:z, :microchip}])
+      options.should_not contain([{:z, :microchip}, {:y, :generator}])
+
+      options.size.should eq 4 #No Duplicates
+    end
+  end
+
   describe "Valid Floor States" do
+
+    it "can tell that a lift can move" do
+      puzzle = Puzzle.new
+      puzzle.lift_can_move?([{:x, :microchip}], [{:y, :microchip}]).should eq true
+
+    end
+
+    it "can tell that a lift cannot move" do
+      puzzle = Puzzle.new
+      puzzle.lift_can_move?([{:y, :microchip}], [{:y, :generator},{:z, :microchip}]).should eq false
+    end
+
+    it "can tell if a lift can visit a floor" do
+      puzzle = Puzzle.new
+      puzzle.lift_can_visit?([{:x, :microchip}], [{:y, :microchip}]).should eq true
+    end
+
+    it "can tell if a lift can NOT visit a floor" do
+      puzzle = Puzzle.new
+      puzzle.lift_can_visit?([{:x, :generator}], [{:y, :microchip}]).should eq false
+    end
 
     it "all initial states are valid" do
       puzzle = Puzzle.new
