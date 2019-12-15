@@ -85,9 +85,11 @@ class Puzzle
 
   def next_states(states, visited)
     newstates = [] of Array(Array(Tuple(Symbol,Symbol)))
+    #We are visiting
+    states.each { |s| visited[s] = true }
+    generated = {} of Array(Array(Tuple(Symbol,Symbol))) => Bool
+
     states.each do |state|
-      #We are visiting
-      visited << state
 
       state.each do |floor|
         #puts floor
@@ -108,7 +110,10 @@ class Puzzle
             end
           end
           #puts "=" * 50
-          newstates << newstate unless visited.includes?(newstate)
+          unless visited[newstate]? || generated[newstate]?
+            generated[newstate] = true
+            newstates << newstate 
+          end
         end
       end
     end
@@ -125,13 +130,13 @@ class Puzzle
     state = INPUT.dup
     step = 0
     
-    visited = [] of Array(Array(Tuple(Symbol,Symbol)))
+    visited = {} of Array(Array(Tuple(Symbol,Symbol))) => Bool
     nextstates = [state]
 
     10.times do 
     nextstates, visited = next_states(nextstates,visited)
     step += 1
-    puts "Step #{step} #{nextstates.size} new states, #{visited.size} visited"
+    puts "Step #{step} #{nextstates.size} new states, #{visited.keys.size} visited"
     if nextstates.any? {|s| target?(s) }
       puts "FOUND!"
       raise "STOP"
