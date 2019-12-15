@@ -16,7 +16,7 @@ class Puzzle
 
   def valid?(elevator, floor)
     superset = elevator + floor
-    not_mixed_elevator?(elevator) && (
+    not_invalid_elevator?(elevator) && (
       all_microchip?(superset) ||
       all_generator?(superset) ||
       all_unpaired_same?(superset)
@@ -60,10 +60,16 @@ class Puzzle
     (gens - chips).empty?  || (chips-gens).empty?
   end
 
-  def not_mixed_elevator?(elevator)
+  def not_invalid_elevator?(elevator)
     elevator.empty? ||
     all_microchip?(elevator) ||
-    all_generator?(elevator)
+    all_generator?(elevator) ||
+    paired_items?(elevator)
+  end
+
+  def paired_items?(set)
+    first = set.first
+    set.all? {|i| i[0] == first[0] }
   end
 
   def all_microchip?(set)

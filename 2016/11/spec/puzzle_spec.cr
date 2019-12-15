@@ -102,6 +102,13 @@ describe Puzzle do
       puzzle.valid?(elevator, Set.new([{:y, :microchip},{:y, :generator},{:z, :microchip}])).should eq true
     end
 
+    it "does permit paired generator and chip in elevator" do
+      puzzle = Puzzle.new
+      elevator = Set.new([] of Tuple(Symbol,Symbol))
+
+      puzzle.valid?(Set.new([{:x, :generator}, {:x, :microchip}]), Set.new([{:y, :microchip}])).should eq true
+    end
+
     it "does not permit mix of items in the elevator" do
       puzzle = Puzzle.new
       elevator = Set.new([] of Tuple(Symbol,Symbol))
