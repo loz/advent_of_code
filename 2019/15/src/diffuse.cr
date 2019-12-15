@@ -78,6 +78,6 @@ class Diffuse
       minutes += 1
     end
     dump_map
-    puts "Tool #{minutes-1} minutes"
+    puts "Took #{minutes-1} minutes"
   end
 end
