@@ -67,7 +67,7 @@ class Diffuse
     minutes = 0
     while !nodes.empty?
       dump_map
-      sleep 0.01
+      sleep 0.05
       newnodes = [] of Tuple(Int32, Int32)
       nodes.each do |n|
         newnodes += new_nodes(n)
