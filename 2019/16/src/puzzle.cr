@@ -45,6 +45,22 @@ class Puzzle
     newdigits
   end
 
+  # NTH digit always
+  # N 0's folloed by SUM(N next digits)
+  # SKIP N 0s
+  # - SUM(N next digits)
+  # SKIP N 0s
+  # ... until end of string
+  # [1,2,3,4,5,6,7,8]
+  # 1: [1], _ -[3], _ [5], _ -[7] _
+  # 2: _ [2,3], _ _, -[6, 7], _
+  # 3: _ _ [3,4,5] _ _ _ 
+  # 4: _ _ _ [4, 5, 6, 7] _
+  # 5: _ _ _ _ [5, 6, 7, 8]
+  # 6: _ _ _ _ _ [6, 7, 8]
+  # 7: _ _ _ _ _ _ [7, 8]
+  # 8: _ _ _ _ _ _ _ [8]
+
   def optimised_fft(digits)
     #The LAST 4 digits is always
     #SUM:4, SUM:3, SUM:2, LAST
