@@ -17,6 +17,16 @@ describe Puzzle do
     digits.should eq [0,1,0,2,9,4,9,8]
   end
 
+  it "can calculate optimised version" do
+    puzzle = Puzzle.new
+
+    #input = [1,2,3,4,5,6,7,8]
+    input = [2,5,6,7,2,4,5,2,9]
+    digits = puzzle.fft(input)
+    optimum = puzzle.optimised_fft(input)
+    optimum.should eq digits
+  end
+
   pending "calculates sum with n repetitions" do
     #When repeating, before modding, it will be
     #d1,d2,d3....  will repeat up to 4 * digits 

@@ -9,25 +9,63 @@ class Puzzle
   def result
     #puts @digits
     #Does first 8 only matter
-    digits = @digits
-    puts digits[0,8].join
-    100.times do |n|
-      print "*#{n} ->"
-      digits = @digits * n
-      puts fft(digits)[0,8].join
+   # digits = @digits
+   # puts digits[0,8].join
+   # 100.times do |n|
+   #   print "*#{n} ->"
+   #   digits = @digits * n
+   #   puts fft(digits)[0,8].join
+   # end
+   gen([1,2,3,4])
+   puts "="*40
+   gen([1,2,3,4,1,2,3,4])
+   puts "="*40
+   gen([1,2,3,4,5,1,2,3,4,5])
+   puts "="*40
+   gen([9,1,2,3,4,5,6,7,8,9])
+   puts "="*40
+   optimised_fft([9,1,2,3,4,5,6,7,8,9])
+
+  end
+
+  def gen(digits)
+    1.times do
+      digits = fft(digits)
+      puts digits[0,8].join
     end
-    #100.times do
-    #  digits = fft(digits)
-    #  puts digits[0,8].join
-    #end
-    #print "@100: "
-    #puts digits[0,8].join
+    print "@100: "
+    puts digits[0,8].join
   end
 
   def fft(digits)
     newdigits = [] of Int32
     digits.each_with_index do |_,idx|
       newdigits << sumof(digits, idx+1)
+    end
+    newdigits
+  end
+
+  def optimised_fft(digits)
+    #The LAST 4 digits is always
+    #SUM:4, SUM:3, SUM:2, LAST
+    #N-5 digit SUM:5
+    #N-6 digit SUM:N-6 + 4
+    #N-7 digit SUM:N-7 + 3
+    #N-8 digit SUM:N-8 + 2
+    #N-9 digit SUM:N-9 + 1
+
+    p digits
+
+    newdigits = [] of Int32
+    len = digits.size
+    digits.each_with_index do |_,idx|
+      s_start = idx
+      s_end = [idx+4,len-1].min
+      #p [s_start, s_end]
+      #subset = digits[idx,len-idx]
+      subset = digits[s_start,4]
+      p subset
+      newdigits << (subset.sum % 10)
     end
     newdigits
   end
@@ -41,6 +79,8 @@ class Puzzle
     # sub digit chars
     # skip digit chars
     # until > size
+    print "#{digits[digit-1]} => "
+    print "0*n + " * (digit-1)
     length = digits.size
     pos =  digit-1 #skip digit -1 chars
     total = 0
@@ -50,7 +90,7 @@ class Puzzle
       case mode
         when :add
           total += digits[pos]
-          #print "1*#{digits[pos]} + "
+          print "1*#{digits[pos]} + "
           pos += 1
           inmode += 1
           if inmode == digit
@@ -60,9 +100,10 @@ class Puzzle
         when :skip
           pos += digit
           modes.rotate!
+          print "0*n + " * digit
         when :sub
           total -= digits[pos]
-          #print "-1*#{digits[pos]} + "
+          print "-1*#{digits[pos]} + "
           pos += 1
           inmode += 1
           if inmode == digit
@@ -71,7 +112,7 @@ class Puzzle
           end
       end
     end
-    #puts
+    puts " => #{total}"
     (total.abs) % 10
   end
 
