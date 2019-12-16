@@ -22,28 +22,47 @@ class Puzzle
     end
   end
 
+  def map_axis(moons, a)
+    moons.map do |moon|
+      loc, vel = moon
+      {loc[a], vel[a]}
+    end
+  end
+
   def result
     puts "Running."
     initial = @moons.sum {|m| energy(m) }
     start = @moons.map {|m| m }
+    startx = map_axis(@moons, 0)
+    starty = map_axis(@moons, 1)
+    startz = map_axis(@moons, 2)
     puts "Initial Energy: #{initial}"
     count = 0
     batch_size = 1_000_000
     n = 0
-    while true
+    repx = 0.to_u64
+    repy = 0.to_u64
+    repz = 0.to_u64
+    while repx == 0 || repy == 0 || repz == 0
       n += 1
-      batch_size.times do
         step
         count +=1
-        if @moons.sum {|m| energy(m)} == 0
-          if @moons == start
-            puts "Repeat @ #{count}"
-            return
-          end
-        end
-      end
-      puts "#{n*batch_size} steps"
+        nx = map_axis(@moons, 0)
+        ny = map_axis(@moons, 1)
+        nz = map_axis(@moons, 2)
+        repx = count if nx == startx && repx == 0
+        repy = count if ny == starty && repy == 0
+        repz = count if nz == startz && repz == 0
     end
+    puts "X: #{repx}"
+    puts "Y: #{repy}"
+    puts "Z: #{repz}"
+    max = [repx,repy,repz].max.to_u64
+    n = max.to_u64
+    while (n % repx) != 0 || (n % repy) != 0 || (n % repz) != 0
+        n += max
+    end
+    puts "Common Cycle :#{n}"
   end
   
   def energy(moon)
