@@ -17,20 +17,33 @@ describe Puzzle do
     digits.should eq [0,1,0,2,9,4,9,8]
   end
 
-  it "can calculate optimised version" do
+  it "can calculate offset version" do
     puzzle = Puzzle.new
 
-    #input = [1,2,3,4,5,6,7,8]
-    input = [2,5,6,7,2,4,5,2,9]
-    digits = puzzle.fft(input)
-    optimum = puzzle.optimised_fft(input)
-    optimum.should eq digits
-  end
+    offset = 10
+    repeat = 3
 
-  pending "calculates sum with n repetitions" do
-    #When repeating, before modding, it will be
-    #d1,d2,d3....  will repeat up to 4 * digits 
-    # from here we have a set of repeating combos (d1 * 1, d2 * 0,...)
-    # so just * x where x wil give you the number
+    input = [2,5,6,7,2,4,5,2,9]
+    slow = input * repeat
+
+    #puts "==== SLOW ==="
+    #puts slow
+    10.times do
+      slow = puzzle.fft(slow)
+      #p slow
+    end
+
+    fast = input * repeat
+    fast = fast[offset, fast.size]
+
+    #puts "==== FAST ==="
+    #puts fast
+    10.times do
+      fast = puzzle.offset_fft(offset, fast)
+      #p fast
+    end
+    offset_slow = slow[offset,10]
+    offset_fast = fast[0,10]
+    offset_fast.should eq offset_slow
   end
 end
