@@ -46,4 +46,35 @@ describe Puzzle do
     offset_fast = fast[0,10]
     offset_fast.should eq offset_slow
   end
+
+  it "can shortcut offset, when offset > 50%" do
+    puzzle = Puzzle.new
+
+    offset = 15
+    repeat = 3
+
+    input = [2,5,6,7,2,4,5,2,9]
+    slow = input * repeat
+    slow = slow[offset, slow.size]
+
+    #puts "==== SLOW ==="
+    #puts slow
+    10.times do
+      slow = puzzle.offset_fft(offset, slow)
+      #p slow
+    end
+
+    fast = input * repeat
+    fast = fast[offset, fast.size]
+
+    #puts "==== FAST ==="
+    #puts fast
+    10.times do
+      fast = puzzle.shortcut_offset_fft(offset, fast)
+      #p fast
+    end
+    offset_slow = slow[0,10]
+    offset_fast = fast[0,10]
+    offset_fast.should eq offset_slow
+  end
 end

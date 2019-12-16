@@ -14,19 +14,11 @@ class Puzzle
 
     puts offset, repeat, digits.size
     100.times do |n|
-      digits = offset_fft(offset, digits)
+      digits = shortcut_offset_fft(offset, digits)
       print "."
     end
     puts
     puts digits[0,8].join
-    #Does first 8 only matter
-   # digits = @digits
-   # puts digits[0,8].join
-   # 100.times do |n|
-   #   print "*#{n} ->"
-   #   digits = @digits * n
-   #   puts fft(digits)[0,8].join
-   # end
   end
 
   def gen(digits)
@@ -102,6 +94,23 @@ class Puzzle
     end
     #puts " => #{total}"
     (total.abs) % 10
+  end
+
+  def shortcut_offset_fft(offset, digits)
+    #Always Offset ZERO then SUM when shortcut as offset > 50%
+    total = digits.size
+    newdigits = Array(Int32).new(total, 0)
+    current = total-1
+    lastdigit = digits[current]
+    newdigits[current] = lastdigit
+    while current > 0
+      current -= 1
+      digit = digits[current]
+      lastdigit = (digit + lastdigit) % 10
+      #lastdigit = (digits[current] + lastdigit) % 10
+      newdigits[current] = lastdigit
+    end
+    newdigits
   end
 
   def sumof(digits, digit)
