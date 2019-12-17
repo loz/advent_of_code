@@ -3,6 +3,8 @@ require "./intcode"
 class VacuumRobot
   property image = [] of Array(Char)
   property curline = [] of Char
+  property input = [] of Int64
+  property lastch = '?'
 
   DELTA = {
     :N => { 0,-1},
@@ -30,15 +32,26 @@ class VacuumRobot
     }
   }
 
+  def shift
+    @input.shift
+  end
+
   def <<(item)
     ch = item.chr
+
+    print ch
     case item
       when '\n'
+        if @lastch == ch
+          print "\033[0;0f"
+          @lastch = ""
+        end
         @image << @curline
         @curline = [] of Char
       else
         @curline << ch
     end
+    @lastch = ch
   end
 
   def locate_robot(screen)
