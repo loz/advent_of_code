@@ -163,4 +163,50 @@ class VacuumRobot
     end
     intersections
   end
+
+  def stringify(route)
+    route.join(":") + ":"
+  end
+
+  def replace_function(poss, name, rest)
+    sposs =  stringify(poss)
+    srest = stringify(rest)
+    match = srest.includes? sposs
+    if match
+      #puts "FOUND: #{poss}"
+      replace = [] of Array(String)
+      parts = srest.split(sposs)
+      parts.each do |part|
+        replace << part.chomp(":").split(":")
+      end
+      return replace
+    end
+    false
+  end
+
+  def remaining_functions(fragments)
+    fragments.each do |fragment|
+      options = poss_function(fragment, 20)
+      p options
+    end
+    fragments
+  end
+
+  def poss_function(route, limit, name = "A")
+    #assume max (limit/2) + 1 (chars + comma, could be less with 2digit nums
+    array_limit = (limit//2)+1
+    array_limit = [route.size, array_limit].min
+
+    while array_limit > 0
+      poss = route[0,array_limit]
+      rest = route[array_limit, route.size]
+      options = replace_function(poss, name, rest)
+      if options
+        return {poss, [options]}
+      end
+      array_limit -= 1
+    end
+
+    return {poss, [] of Array(String)}
+  end
 end

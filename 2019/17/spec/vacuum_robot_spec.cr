@@ -63,4 +63,36 @@ describe VacuumRobot do
     route = robot.build_route.join (",")
     route.should eq "R,8,R,8,R,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2"
   end
+
+  it "can extract largest function below a given size" do
+    robot = VacuumRobot.new
+    route = ["R","8","R","8","R","4","R","4","R","8","L","6","L","2","R","4","R","4","R","8","R","8","R","8","L","6","L","2"]
+    function = robot.poss_function(route, 15)
+    fn, options = function
+    fn.should eq ["R", "8", "R", "8", "R"]
+    options.should contain [
+      ["4", "R", "4", "R", "8", "L", "6", "L", "2", "R", "4", "R", "4"],
+      ["8", "L", "6", "L", "2"]
+      ]
+  end
+
+  it "can extract remaining function from a frament set" do
+    robot = VacuumRobot.new
+    fragments = [
+      ["R", "8", "R", "9"],
+      ["L", "7", "R", "9"],
+      ["L", "6", "L", "6"]
+    ]
+    functions = robot.remaining_functions(fragments)
+    functions.should eq false
+    fragments = [
+      ["R","4","R","4","R","8","L","6","L","2","R","4","R","4","R","8"],
+      ["L","6","L","2"]
+    ]
+
+    functions = robot.remaining_functions(fragments)
+    b, c = functions
+    b.should eq ["R", "4", "R", "4", "R", "8"]
+    c.should eq ["L", "6", "L", "2"]
+  end
 end
