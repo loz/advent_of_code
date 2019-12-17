@@ -13,13 +13,7 @@ class Puzzle
     robot = VacuumRobot.new
     machine.execute([] of Int64, robot)
     puts robot.render
-    intersections = robot.locate_intersections
-    p intersections
-    total = intersections.sum do |i|
-      x,y = i
-      x*y
-    end
-    p total
+    p robot.build_route
   end
 
 end

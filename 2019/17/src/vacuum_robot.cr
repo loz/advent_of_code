@@ -4,6 +4,13 @@ class VacuumRobot
   property image = [] of Array(Char)
   property curline = [] of Char
 
+  DELTA = {
+    :N => { 0,-1},
+    :S => { 0, 1},
+    :E => { 1, 0},
+    :W => {-1, 0}
+  }
+
   TURN = {
     :N => {
       :W => "L",
@@ -48,17 +55,13 @@ class VacuumRobot
   def determine_turn(dir, pos, screen)
     neighbors = neighbors(pos, screen)
     option = neighbors.find do |n|
-      _, ch = n
-      ch == '#'
+      newdir, ch = n
+      ch == '#' && TURN[dir][newdir]?
     end
     if option
       newdir, _ = option
-      if TURN[dir][newdir]?
-        turn = TURN[dir][newdir]
-        return {newdir, turn}
-      else
-        return {:END, ""} #NO MOVE POSS
-      end
+      turn = TURN[dir][newdir]
+      return {newdir, turn}
     else
       return {:END, ""}
     end
@@ -79,19 +82,45 @@ class VacuumRobot
   def determine_distance(dir, pos, screen)
     maxy = screen.size - 1
     maxx = screen.first.size - 1
-    {0, pos}
+    delta = DELTA[dir]
+    x, y = pos
+    dx, dy = delta
+    done = false
+    distance = 0
+    while !done 
+      nx = x + dx
+      ny = y + dy
+      if nx < 0 || ny < 0 || nx > maxx || ny > maxy
+        #Would exit map
+        done = true
+      else
+        newchar = screen[ny][nx]
+        if newchar == '#'
+          x = nx
+          y = ny
+          distance += 1
+        else
+          done = true
+        end
+      end
+    end
+    {distance, {x,y}}
   end
 
   def build_route
     route = [] of String
-    screen = @image.reject {|l| l.empty? }
+    screen = (@image + [@curline]).reject {|l| l.empty? }
+
     loc = locate_robot(screen)
     dir, pos = loc
     while dir != :END
       turn = determine_turn(dir, pos, screen)
       dir, move = turn
-      dst, pos = determine_distance(dir, pos, screen)
-      route << move
+      if dir != :END
+        route << move
+        dst, pos = determine_distance(dir, pos, screen)
+        route << dst.to_s
+      end
     end
 
     route
