@@ -4,6 +4,25 @@ class VacuumRobot
   property image = [] of Array(Char)
   property curline = [] of Char
 
+  TURN = {
+    :N => {
+      :W => "L",
+      :E => "R",
+      },
+    :S => {
+      :W => "R",
+      :E => "L",
+    },
+    :E => {
+      :N => "L",
+      :S => "R",
+    },
+    :W => {
+      :S => "L",
+      :N => "R",
+    }
+  }
+
   def <<(item)
     ch = item.chr
     case item
@@ -13,6 +32,69 @@ class VacuumRobot
       else
         @curline << ch
     end
+  end
+
+  def locate_robot(screen)
+    screen.each_with_index do |row, y|
+      row.each_with_index do |ch, x|
+        if ch == '^' 
+          return {:N, {x,y}}
+        end
+      end
+    end
+    {:N, {-1,-1}} #Should not happen
+  end
+
+  def determine_turn(dir, pos, screen)
+    neighbors = neighbors(pos, screen)
+    option = neighbors.find do |n|
+      _, ch = n
+      ch == '#'
+    end
+    if option
+      newdir, _ = option
+      if TURN[dir][newdir]?
+        turn = TURN[dir][newdir]
+        return {newdir, turn}
+      else
+        return {:END, ""} #NO MOVE POSS
+      end
+    else
+      return {:END, ""}
+    end
+  end
+
+  def neighbors(pos, screen)
+    maxy = screen.size - 1
+    maxx = screen.first.size - 1
+    neighbors = [] of Tuple(Symbol,Char)
+    x,y = pos
+    neighbors << {:N, screen[y-1][x]} unless y == 0
+    neighbors << {:S, screen[y+1][x]} unless y == maxy
+    neighbors << {:W, screen[y][x-1]} unless x == 0
+    neighbors << {:E, screen[y][x+1]} unless x == maxx
+    neighbors
+  end
+
+  def determine_distance(dir, pos, screen)
+    maxy = screen.size - 1
+    maxx = screen.first.size - 1
+    {0, pos}
+  end
+
+  def build_route
+    route = [] of String
+    screen = @image.reject {|l| l.empty? }
+    loc = locate_robot(screen)
+    dir, pos = loc
+    while dir != :END
+      turn = determine_turn(dir, pos, screen)
+      dir, move = turn
+      dst, pos = determine_distance(dir, pos, screen)
+      route << move
+    end
+
+    route
   end
   
   def render
