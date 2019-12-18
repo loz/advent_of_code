@@ -9,53 +9,44 @@ class Puzzle
     machine.process(str)
   end
 
-  def run_prog
+  def run_prog(route)
     robot = VacuumRobot.new
-   # puts robot.render
-   # route = robot.build_route
-   # puts route
-    main = "A,B,B,A,C,A,A,C,B,C"
-    fa = "R,8,L,12,R,8"
-    fb = "R,12,L,8,R,10"
-    fc = "R,8,L,8,L,8,R,8,R,10"
+    dict, zipped = robot.do_zip(route)
+    mapping = ["A","B","C"]
+    main = zipped.map {|z| mapping[z] }.join(",")
 
-    p main.size
-    p fa.size
-    p fb.size
-    p fc.size
-
+    input = [] of Int32
     input = main.chars.map {|c| c.ord }
     input << 10 
-    input += fa.chars.map {|c| c.ord }
-    input << 10
-    input += fb.chars.map {|c| c.ord }
-    input << 10
-    input += fc.chars.map {|c| c.ord }
-    input << 10
+    dict.each do |fn|
+      input += fn.chars.map {|c| c.ord }
+      input << 10
+    end
     input << 'n'.ord  #No Feed
     input << 10
-
 
     i64 = input.map {|i| i.to_i64}
 
     robot.input = i64
-
     machine.memory[0] = 2
     output = [] of Int64
+
     machine.execute(robot, output)
-    puts output
+    puts "Dust Gathered: #{output.last}"
   end
 
   def map_screen
     input = [] of Int64
     robot = VacuumRobot.new
     machine.execute(input, robot)
-    puts robot.render
-    route = robot.build_route
-    puts route
+    #puts robot.render
+    robot.build_route
   end
 
   def result
-    run_prog
+    machine.save_memory
+    route = map_screen
+    machine.restore_memory
+    run_prog(route)
   end
 end

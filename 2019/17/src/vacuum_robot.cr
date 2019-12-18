@@ -39,11 +39,11 @@ class VacuumRobot
   def <<(item)
     ch = item.chr
 
-    print ch
+    #print ch
     case item
       when '\n'
         if @lastch == ch
-          print "\033[0;0f"
+          #print "\033[0;0f"
           @lastch = ""
         end
         @image << @curline
@@ -183,7 +183,6 @@ class VacuumRobot
 
   def find_fn(route, upto)
     padroute = route + ",,,,"
-    print upto, ":>"
     upto = [route.size, upto].min
     while upto > 0
       unless upto == route.size 
@@ -209,107 +208,31 @@ class VacuumRobot
   end
 
   def do_zip(route)
-    p route
-    max = 20
-    dict, rest, zipped = zip_function(route, max)
-    20.times do
-      dict, rest, zipped = zip_function(route, max)
-      while rest != ""
-      #10.times do
-        dict, rest, zipped = zip_function(rest, 20, dict, zipped)
-      end
-      if dict.size == 3
-        return {dict, zipped}
-      else
-        max = dict.first.size - 1
-      end
-      p dict
-    end
-    {dict, rest}
+    zip_function(route.join(","), 20)
   end
 
   def zip_function(route, upto, dict = [] of String, zipped = [] of Int32)
+    return {dict, zipped} if route == ""
+    if dict.size > 3
+      return {[] of String, [] of Int32} 
+    end
     #Try dictionary first
     dict.each_with_index do |seq, idx|
-      if route.starts_with?(seq)
-        zipped << idx
-        rest = route[seq.size, route.size]
-        return {dict, rest, zipped}
+      if route == seq
+        return {dict, zipped + [idx]}
+      elsif route.starts_with?(seq)
+        rest = route[seq.size+1, route.size]
+        return zip_function(rest, 20, dict, zipped + [idx])
       end
     end
-    fn, rest = find_fn(route, upto)
-    unless fn == ""
-      idx = dict.size
-      dict << fn
-      zipped << idx
+    upto.downto(1) do |n|
+      fn, rest = find_fn(route, n)
+      unless fn == ""
+        idx = dict.size
+        d, z = zip_function(rest, 20, dict + [fn], zipped + [idx])
+        return {d,z} unless d.empty?
+      end
     end
-    {dict, rest, zipped}
+    return {[] of String, [] of Int32}
   end
-#
-#  def replace_function(poss, rest)
-#    sposs =  stringify(poss)
-#    srest = stringify(rest)
-#    puts "?:>#{sposs} in #{srest}"
-#    match = srest.includes? sposs
-#    if match
-#      #puts "FOUND: #{poss}"
-#      replace = [] of Array(String)
-#      parts = srest.split(sposs)
-#      parts.each do |part|
-#        replace << part.chomp(":").split(":")
-#      end
-#      return replace
-#    end
-#    [] of Array(String)
-#  end
-#
-#  def remaining_functions(fragments)
-#    fragments = fragments.dup
-#    fragment = fragments.shift
-#
-#    options = poss_function(fragment, 20, fragments)
-#    unless options.empty?
-#      poss, rest = options
-#      rest.each do |item|
-#        item.each do |r|
-#          p r
-#        end
-#      end
-#      p poss, rest
-#      #rest.each do |f|
-#          #other = f.first
-#          #if rest.all?(other)
-#          #  puts "FOUND: #{poss} & #{other}"
-#          #end
-#      #end
-#    end
-#    fragments
-#  end
-#
-#  def poss_function(route, limit, fragments = [] of Array(String))
-#    #assume max (limit/2) + 1 (chars + comma, could be less with 2digit nums
-#    array_limit = (limit//2)+1
-#    array_limit = [route.size, array_limit].min
-#    while array_limit > 0
-#      poss = route[0,array_limit]
-#      #Try remaining string
-#      rest = route[array_limit, route.size]
-#      options = replace_function(poss, rest)
-#      unless options.empty?
-#        return {poss, [options]}
-#      else
-#        #Try fragments
-#        puts ":> Fragments"
-#        fragments.each do |fragment|
-#          options = replace_function(poss, fragment)
-#          if options
-#            p options
-#          end
-#        end
-#      end
-#      array_limit -= 1
-#    end
-#
-#    return {poss, [] of Array(String)}
-#  end
 end

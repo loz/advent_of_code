@@ -65,34 +65,34 @@ describe VacuumRobot do
   end
 
   it "can extract largest function below a given size" do
-    robot = VacuumRobot.new
-    route = ["R","8","R","8","R","4","R","4","R","8","L","6","L","2","R","4","R","4","R","8","R","8","R","8","L","6","L","2"]
-    dict, rest, zipped = robot.zip_function(route.join(","), 15)
-    dict.first.should  eq "R,8,R,8,R"
-    zipped.should eq [0]
-    rest = "4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2"
+    #robot = VacuumRobot.new
+    #route = ["R","8","R","8","R","4","R","4","R","8","L","6","L","2","R","4","R","4","R","8","R","8","R","8","L","6","L","2"]
+    #dict, rest, zipped = robot.zip_function(route.join(","), 15)
+    #dict.first.should  eq "R,8,R,8,R"
+    #zipped.should eq [0]
+    #rest = "4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2"
   end
 
   it "can compress known fn" do
     robot = VacuumRobot.new
     zipped = [0]
     dict = ["R,8"]
-    rest = "R,8,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2"
+    rest = "R,8,R,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2"
 
-    dict, rest, zipped = robot.zip_function(rest, 15, dict, zipped)
+    result = robot.zip_function(rest, 15, dict, zipped)
+    result.should_not eq false
+    if result
+      dict, zipped = result
 
-    zipped.should eq [0,0]
-    rest = "4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2"
+      zipped.should eq [0,0,1,2,1,0,0,2]
+      dict.should eq [
+        "R,8",
+        "R,4,R,4,R,8",
+        "L,6,L,2"
+      ]
+    end
   end
 
-  it "can limit to 3 functions" do
-    robot = VacuumRobot.new
-    route = "R,8,R,8,R,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2"
-    dict, zipped = robot.do_zip(route)
-
-    dict.size.should eq 3
-    zipped.should eq [0,1,0,2,0,0,0,]
-  end
 
   #it "can extract remaining function from a frament set" do
   #  robot = VacuumRobot.new
