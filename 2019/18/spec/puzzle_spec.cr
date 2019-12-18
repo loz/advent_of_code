@@ -16,6 +16,7 @@ describe Puzzle do
     puzzle.start.should eq({15,1}) 
     puzzle.at(7,1).should eq 'e'
     puzzle.spaces.should eq 45
+    puzzle.keys.should eq Set{'f','e','b','a','c','d'}
   end
 
   it "can determine where to explore" do

@@ -12,6 +12,7 @@ class Puzzle
   property maze = [] of Array(Char)
   property start = {0,0}
   property spaces = 0
+  property keys = Set(Char).new
 
   def process(str)
     str.lines.each do |line|
@@ -66,6 +67,7 @@ class Puzzle
       row.each_with_index do |ch, x|
         @start = {x,y} if ch == '@'
         @spaces += 1 if ch != '#'
+        @keys << ch if ch.ascii_lowercase?
       end
     end
   end
@@ -83,16 +85,39 @@ class Puzzle
     frontier = [{start, keys}]
     distances = {} of State => Int32
 
-    3.times do
-    if frontier.any?
+    distances[{start, keys}] = 0
+
+    #1000.times do
+    #if frontier.any?
+    while frontier.any?
       new_frontier = [] of State
       frontier.each do |state|
         states = neighbors(state)
-        p states
+        state_distance = distances[state]
+        states.each do |nstate|
+          if distances[nstate]?
+            if distances[nstate] > state_distance + 1
+              #Shorter
+              raise "Shorter Path"
+            end
+          else
+            #New
+            distances[nstate] = state_distance + 1
+            new_frontier << nstate
+          end
+        end
       end
+      frontier = new_frontier
+   # else
+   #   break
     end
+    #end
+    allkeys = distances.select do |state, cost|
+      _, keys = state
+      keys == @keys
     end
-    p frontier
+    shortest = allkeys.min_by {|state, cost| cost }
+    p shortest
   end
 
   def result
