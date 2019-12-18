@@ -153,6 +153,13 @@ class Puzzle
     robostates = @robots.dup
 
 
+    #WORKS SOME TIMES (inc for my input, but is not always best)
+    # -> Change:
+    # -> instead of rotate robot
+    # -> for each robot, build distances
+    # -> pick the best out of those [least moves]
+    # -> Then re-run
+    # -> In some cases this will pick shorter letters
     cost = 0
     1000.times do
       if keys == @keys
