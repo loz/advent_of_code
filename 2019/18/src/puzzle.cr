@@ -1,7 +1,6 @@
 class Puzzle
   alias Coord = Tuple(Int32,Int32)
   alias State = Tuple(Coord, Set(Char))
-  alias RState = Tuple(Coord, Hash(State, Int32))
 
   DELTAS = [
     {-1, 0},
@@ -151,21 +150,20 @@ class Puzzle
   def explore_robots
     keys = Set(Char).new
     
-    robostates = [] of RState
-    robots.each do |robot|
-      rstate = {robot, keys}
-      robostates << {robot, { rstate => 0 }}
-    end
+    robostates = @robots.dup
 
 
+    cost = 0
     1000.times do
       if keys == @keys
-        raise "STOP"
+        puts "FOUND ALL KEYS @#{cost} STEPS"
+        break
       end
-      quadrant = robostates.shift
-      robot, distances = quadrant
-      frontier = [{robot, keys}]
-      puts "SWITCH: #{frontier}"
+      robot = robostates.shift
+      rstate = {robot,keys}
+      frontier = [rstate]
+      distances = {rstate => 0 }
+      puts "SWITCH: @#{cost} -> #{frontier}"
    # #if frontier.any?
     while frontier.any?
       new_frontier = [] of State
@@ -187,44 +185,18 @@ class Puzzle
       end
       frontier = new_frontier
     end
-    #    state_distance = distances[state]
-    #    #p state
-    #    robots, keys = state
-    #    robots.each do |robot|
-    #      xrobots = robots - Set{robot}
-    #      #puts "X:> #{xrobots}"
-    #      #puts "R:> #{{robot, keys}}"
-    #      moves = neighbors({robot, keys})
-    #      moves.each do |move|
-    #        mrobot, nkeys = move
-    #        nrobots = xrobots + Set{mrobot}
-    #        nstate = {nrobots, nkeys}
-    #        #p "M: #{nstate}"
-    #        if distances[nstate]?
-    #          if distances[nstate] > state_distance + 1
-    #            #Shorter
-    #            raise "Shorter Path"
-    #          end
-    #        else
-    #          #New
-    #          distances[nstate] = state_distance + 1
-    #          new_frontier << nstate
-    #        end
-    #      end
-    #    end
-    #  end
-   # else
-   #   break
-    #end
+    bestlet = distances.max_by {|k, v| _, let = k; let.size }
+    bstate, _ = bestlet
+    _, keys = bstate
+    bestkeys = distances.select {|k,v| _, keyset = k; keyset == keys }
+    beststate = bestkeys.min_by {|k, v| v }
+    bstate, statecost = beststate
+    robot, _ = bstate
+    #p robot
+    cost += statecost
+    robostates << robot
     end
 
-    p robots
-    #allkeys = distances.select do |state, cost|
-    #  _, keys = state
-    #  keys == @keys
-    #end
-    #shortest = allkeys.min_by {|state, cost| cost }
-    #p shortest
   end
 
   def result
