@@ -1,6 +1,6 @@
 class Puzzle
   alias Coord = Tuple(Int32,Int32)
-  alias State = Tuple(Coord, Array(Char))
+  alias State = Tuple(Coord, Set(Char))
 
   DELTAS = [
     {-1, 0},
@@ -32,7 +32,7 @@ class Puzzle
       ch = at(nx, ny)
       if can_visit?(nx, ny, keys)
         if ch.ascii_lowercase?
-          states << { {nx, ny}, keys + [ch] }
+          states << { {nx, ny}, keys + Set.new([ch]) }
         else
           states << { {nx, ny}, keys }
         end
@@ -79,9 +79,9 @@ class Puzzle
   end
 
   def explore
-    keys = [] of Char
+    keys = Set(Char).new
     frontier = [{start, keys}]
-    distances = {} State => Int33
+    distances = {} of State => Int32
 
     3.times do
     if frontier.any?

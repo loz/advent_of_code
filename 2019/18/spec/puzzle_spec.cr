@@ -28,10 +28,10 @@ describe Puzzle do
     ########################
     EOF
 
-    states = puzzle.new_candidates({ {15,1}, [] of Char })
+    states = puzzle.new_candidates({ {15,1}, Set.new([] of Char )})
     states.size.should eq 2
-    states.should contain({ {14,1} ,[] of Char})
-    states.should contain({ {16,1} ,[] of Char})
+    states.should contain({ {14,1} ,Set.new([] of Char)})
+    states.should contain({ {16,1} ,Set.new([] of Char)})
   end
 
   it "does not consider door without key visitable" do
@@ -44,8 +44,8 @@ describe Puzzle do
     ########################
     EOF
     
-    states = puzzle.new_candidates({ {14,1}, [] of Char })
-    states.should_not contain({ {13,1} ,[] of Char})
+    states = puzzle.new_candidates({ {14,1}, Set.new([] of Char) })
+    states.should_not contain({ {13,1} , Set.new([] of Char) })
   end
 
   it "does consider door with its key visitable" do
@@ -58,8 +58,8 @@ describe Puzzle do
     ########################
     EOF
     
-    states = puzzle.new_candidates({ {14,1}, ['a'] })
-    states.should contain({ {13,1} ,['a'] })
+    states = puzzle.new_candidates({ {14,1}, Set.new(['a']) })
+    states.should contain({ {13,1} ,Set.new(['a']) })
   end
 
   it "captures keys when present" do
@@ -72,7 +72,7 @@ describe Puzzle do
     ########################
     EOF
     
-    states = puzzle.new_candidates({ {16,1}, [] of Char })
-    states.should contain({ {17,1} ,['a'] })
+    states = puzzle.new_candidates({ {16,1}, Set.new([] of Char) })
+    states.should contain({ {17,1} ,Set.new(['a']) })
   end
 end
