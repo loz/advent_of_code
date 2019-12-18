@@ -76,4 +76,28 @@ describe Puzzle do
     states = puzzle.new_candidates({ {16,1}, Set.new([] of Char) })
     states.should contain({ {17,1} ,Set.new(['a']) })
   end
+
+  it "can modify the map for robots" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+    #######
+    #a.#Cd#
+    ##...##
+    ##.@.##
+    ##...##
+    #cB#Ab#
+    #######
+    EOF
+
+    puzzle.deploy_robots
+    puzzle.robots.should contain({2,2})
+    puzzle.robots.should contain({4,2})
+    puzzle.robots.should contain({2,4})
+    puzzle.robots.should contain({4,4})
+    puzzle.at(3,2).should eq '#'
+    puzzle.at(3,4).should eq '#'
+    puzzle.at(2,3).should eq '#'
+    puzzle.at(4,3).should eq '#'
+    puzzle.at(3,3).should eq '#'
+  end
 end

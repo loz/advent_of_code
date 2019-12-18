@@ -1,6 +1,7 @@
 class Puzzle
   alias Coord = Tuple(Int32,Int32)
   alias State = Tuple(Coord, Set(Char))
+  alias RState = Tuple(Coord, Hash(State, Int32))
 
   DELTAS = [
     {-1, 0},
@@ -8,11 +9,19 @@ class Puzzle
     {0, -1},
     {0,  1}
   ]
+
+  ROBOTS = [
+    {-1, -1},
+    { 1,  1},
+    {-1,  1},
+    { 1, -1}
+  ]
   
   property maze = [] of Array(Char)
   property start = {0,0}
   property spaces = 0
   property keys = Set(Char).new
+  property robots = Array(Coord).new
 
   def process(str)
     str.lines.each do |line|
@@ -20,6 +29,25 @@ class Puzzle
     end
     analyse
     @curpos = @start
+  end
+
+  def deploy_robots
+    ROBOTS.each do |delta|
+      dx, dy = delta
+      x, y = start
+      rx = x + dx
+      ry = y + dy
+      @robots << {rx,ry}
+    end
+    DELTAS.each do |delta|
+      dx, dy = delta
+      x, y = start
+      nx = x + dy
+      ny = y + dx
+      @maze[ny][nx] = '#'
+    end
+    x, y = start
+    @maze[y][x] = '#'
   end
 
   def neighbors(state)
@@ -120,8 +148,88 @@ class Puzzle
     p shortest
   end
 
+  def explore_robots
+    keys = Set(Char).new
+    
+    robostates = [] of RState
+    robots.each do |robot|
+      rstate = {robot, keys}
+      robostates << {robot, { rstate => 0 }}
+    end
+
+
+    1000.times do
+      if keys == @keys
+        raise "STOP"
+      end
+      quadrant = robostates.shift
+      robot, distances = quadrant
+      frontier = [{robot, keys}]
+      puts "SWITCH: #{frontier}"
+   # #if frontier.any?
+    while frontier.any?
+      new_frontier = [] of State
+      frontier.each do |state|
+        states = neighbors(state)
+        state_distance = distances[state]
+        states.each do |nstate|
+          if distances[nstate]?
+            if distances[nstate] > state_distance + 1
+              #Shorter
+              raise "Shorter Path"
+            end
+          else
+            #New
+            distances[nstate] = state_distance + 1
+            new_frontier << nstate
+          end
+        end
+      end
+      frontier = new_frontier
+    end
+    #    state_distance = distances[state]
+    #    #p state
+    #    robots, keys = state
+    #    robots.each do |robot|
+    #      xrobots = robots - Set{robot}
+    #      #puts "X:> #{xrobots}"
+    #      #puts "R:> #{{robot, keys}}"
+    #      moves = neighbors({robot, keys})
+    #      moves.each do |move|
+    #        mrobot, nkeys = move
+    #        nrobots = xrobots + Set{mrobot}
+    #        nstate = {nrobots, nkeys}
+    #        #p "M: #{nstate}"
+    #        if distances[nstate]?
+    #          if distances[nstate] > state_distance + 1
+    #            #Shorter
+    #            raise "Shorter Path"
+    #          end
+    #        else
+    #          #New
+    #          distances[nstate] = state_distance + 1
+    #          new_frontier << nstate
+    #        end
+    #      end
+    #    end
+    #  end
+   # else
+   #   break
+    #end
+    end
+
+    p robots
+    #allkeys = distances.select do |state, cost|
+    #  _, keys = state
+    #  keys == @keys
+    #end
+    #shortest = allkeys.min_by {|state, cost| cost }
+    #p shortest
+  end
+
   def result
-    explore
+    deploy_robots
+    explore_robots
   end
 
 end
