@@ -10,15 +10,20 @@ class Puzzle
   end
 
   def run_prog(route)
+    full = route.join(",")
+    puts "Full Route: #{full}"
     robot = VacuumRobot.new
     dict, zipped = robot.do_zip(route)
     mapping = ["A","B","C"]
     main = zipped.map {|z| mapping[z] }.join(",")
+    
+    puts "Main: #{main}"
 
     input = [] of Int32
     input = main.chars.map {|c| c.ord }
     input << 10 
-    dict.each do |fn|
+    dict.each_with_index do |fn, idx|
+      puts "#{mapping[idx]}: #{fn}"
       input += fn.chars.map {|c| c.ord }
       input << 10
     end
@@ -39,7 +44,7 @@ class Puzzle
     input = [] of Int64
     robot = VacuumRobot.new
     machine.execute(input, robot)
-    #puts robot.render
+    puts robot.render
     robot.build_route
   end
 
