@@ -32,6 +32,95 @@ describe Puzzle do
     nexto.should contain({2,8})
   end
 
+  it "does not consider external portals in level 0" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+             A           
+             A           
+      #######.#########  
+      #######.........#  
+      #######.#######.#  
+      #######.#######.#  
+      #######.#######.#  
+      #####  B    ###.#  
+    BC...##  C    ###.#  
+      ##.##       ###.#  
+      ##...DE  F  ###.#  
+      #####    G  ###.#  
+      #########.#####.#  
+    DE..#######...###.#  
+      #.#########.###.#  
+    FG..#########.....#  
+      ###########.#####  
+                 Z       
+                 Z       
+    EOF
+
+    nexto = puzzle.recursive_neighbors({0,{2,8}})
+    nexto.should contain({0,{3,8}})
+    nexto.should_not contain({-1,{9,6}})
+    nexto.should_not contain({0,{9,6}})
+    nexto.should_not contain({1,{9,6}})
+  end
+
+  it "considers internal portals in level 0, going to next level" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+             A           
+             A           
+      #######.#########  
+      #######.........#  
+      #######.#######.#  
+      #######.#######.#  
+      #######.#######.#  
+      #####  B    ###.#  
+    BC...##  C    ###.#  
+      ##.##       ###.#  
+      ##...DE  F  ###.#  
+      #####    G  ###.#  
+      #########.#####.#  
+    DE..#######...###.#  
+      #.#########.###.#  
+    FG..#########.....#  
+      ###########.#####  
+                 Z       
+                 Z       
+    EOF
+
+    nexto = puzzle.recursive_neighbors({0, {9,6}})
+    nexto.should contain({0, {9,5}})
+    nexto.should contain({1, {2,8}})
+  end
+
+  it "considers external portals in a level to go to the prior level" do
+    puzzle = Puzzle.new
+    puzzle.process <<-EOF
+             A           
+             A           
+      #######.#########  
+      #######.........#  
+      #######.#######.#  
+      #######.#######.#  
+      #######.#######.#  
+      #####  B    ###.#  
+    BC...##  C    ###.#  
+      ##.##       ###.#  
+      ##...DE  F  ###.#  
+      #####    G  ###.#  
+      #########.#####.#  
+    DE..#######...###.#  
+      #.#########.###.#  
+    FG..#########.....#  
+      ###########.#####  
+                 Z       
+                 Z       
+    EOF
+
+    nexto = puzzle.recursive_neighbors({5,{2,8}})
+    nexto.should contain({5,{3,8}})
+    nexto.should contain({4,{9,6}})
+  end
+
   it "locates start and end" do
     puzzle = Puzzle.new
     puzzle.process <<-EOF

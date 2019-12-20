@@ -1,4 +1,5 @@
 alias Coord = Tuple(Int32,Int32)
+alias State = Tuple(Int32, Coord)
 
 class Puzzle
 
@@ -171,9 +172,70 @@ class Puzzle
     distances[b]
   end
 
+  def shortest_recursive_path(a,b)
+    distances = { a => 0 }
+    frontier = [ a ]
+    while !frontier.empty?
+      new_frontier = [] of State
+      frontier.each do |loc|
+        if loc == b #FOUND
+          return distances[loc]
+        end
+        links = recursive_neighbors(loc)
+        links.each do |neighbor|
+          next if distances[neighbor]? #Seen/Visited, Was Cheaper
+          distances[neighbor] = distances[loc] + 1
+          new_frontier << neighbor
+        end
+      end
+      frontier = new_frontier
+    end
+    distances[b]
+  end
+
   def result
     short = shortest_path(start, finish)
     puts "Shortest Path #{start} -> #{finish}: #{short}"
+    rstart = {0, start}
+    rfinish = {0, finish}
+    short = shortest_recursive_path(rstart, rfinish)
+    puts "Recursive Shortest Path #{rstart} -> #{rfinish}: #{short}"
+  end
+
+  def internal_portal?(loc)
+    top, bottom = inner_corners
+    minx, miny = top
+    maxx, maxy = bottom
+    x, y = loc
+    ((x == minx || x == maxx) && y >= miny && y <= maxy) ||
+    ((y == miny || y == maxy) && x >= minx && x <= maxx)
+  end
+
+  def recursive_neighbors(state)
+    level, loc = state
+    shared = [] of State
+    x, y = loc
+    DELTAS.each do |delta|
+      dx, dy = delta
+      nx = x + dx
+      ny = y + dy
+      nloc = {nx, ny}
+      cell = @maze[ny][nx]
+      if cell == '.'
+        shared << {level, nloc}
+      end
+    end
+    if @portal_map[loc]?
+      nloc = @portal_map[loc]
+      if internal_portal?(loc)
+        #Down a Level
+        shared << {(level + 1), nloc}
+      elsif level != 0
+        #Up a Level, if not zero
+        shared << {(level - 1), nloc}
+      end
+    end
+    shared
   end
 
   def neighbors(loc)
