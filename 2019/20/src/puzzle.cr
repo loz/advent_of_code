@@ -9,9 +9,22 @@ class Puzzle
     {0,  1}
   ]
 
+  SURROUND = [
+    {-1, 0},
+    { 1, 0},
+    {0, -1},
+    {0,  1},
+    {-1, -1},
+    { 1,  1},
+    {-1,  1},
+    { 1, -1}
+  ]
+
   property maze = [] of String
   property portals = {} of String => Array(Coord)
   property portal_map = {} of Coord => Coord
+  property outer_corners = [] of Coord
+  property inner_corners = [] of Coord
 
   def process(str)
     str.each_line do |line|
@@ -19,6 +32,7 @@ class Puzzle
     end
     locate_portals
     map_portals
+    find_corners
   end
 
   def start
@@ -40,6 +54,52 @@ class Puzzle
       @portal_map[a] = b
       @portal_map[b] = a
     end
+  end
+  
+  def bounds(corners)
+    cminx = @maze.first.size
+    cmaxx = 0
+    cminy = @maze.size
+    cmaxy = 0
+    corners.each do |c|
+      x, y = c
+      cminx = x if x < cminx
+      cminy = y if y < cminy
+      cmaxx = x if x > cmaxx
+      cmaxy = y if y > cmaxy
+    end
+    [{cminx, cminy}, {cmaxx, cmaxy}]
+  end
+
+  def find_corners
+    #For # spaces
+    #Outer corners have *5* space/UPPER surrounding neighbors
+    #Inner corners have *1* space/UPPER surrounding neighbor
+    outers = [] of Coord
+    inners = [] of Coord
+    @maze.each_with_index do |row, y|
+      row.each_char_with_index do |ch, x|
+        if ch == '#'
+          spaces = 0
+          SURROUND.each do |delta|
+            dx, dy = delta
+            nx = x + dx
+            ny = y + dy
+            #p loc
+            spaces += 1 if @maze[ny][nx] == ' '
+            spaces += 1 if @maze[ny][nx].ascii_uppercase?
+          end
+          loc = {x, y}
+          if spaces == 1
+            inners << loc
+          elsif spaces == 5
+            outers << loc
+          end
+        end
+      end
+    end
+    @outer_corners = bounds(outers) 
+    @inner_corners = bounds(inners)
   end
 
   def add_portal(name, loc)
