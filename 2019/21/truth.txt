@@ -1,0 +1,74 @@
+         A B C D T J
+         0 0 0 1 0 0
+NOT D T          0
+NOT T J            1   #JUMP unless we see reason not to
+NOT A T          1
+NOT T T          0
+AND B T          0
+AND C T          0
+NOT T T          1
+AND T J            1    #JUMP!
+
+         A B C D T J
+         1 0 0 0 0 0
+NOT D T          1
+NOT T J            0   #DO NOT JUMP
+NOT A T          0
+NOT T T          1
+AND B T          0
+AND C T          0
+NOT T T          1
+AND T J            0    
+
+
+         A B C D T J
+         1 1 1 1 0 0
+NOT D T          0
+NOT T J            1   #MAYBE
+NOT A T          0
+NOT T T          1
+AND B T          1
+AND C T          1
+NOT T T          0
+AND T J            0     
+
+
+Part TWO
+
+Want Choices
+
+ABCDEFGHI J
+0??1????? 1  #BEST CASE jump at hole
+10?10??1? 1  #NEXT BEST
+  110100?1? 1  
+
+0??1????? 1  #BEST CASE jump at hole
+0??10??1? OK
+0??110??1 OK
+0??111??? OK PROBS
+
+0??10??0? BAD
+10?110?10 SOLVED
+
+0??110?00 BAD
+10?111010 SOLVED
+
+PRECIDENT
+ABCDEFGHI J
+
+10?1???1? 1  #NEXT BEST
+0??1????? 1  #BEST CASE jump at hole
+
+
+0??1????? 1  #BEST CASE jump at hole
+0??10??1?
+0??110??1
+0??111???
+
+10?10??1? 1  #NEXT BEST
+10?110??1
+10?110?1?
+10?111???
+
+
+110100?1? 1  
