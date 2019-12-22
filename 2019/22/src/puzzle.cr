@@ -2,12 +2,17 @@ alias Rule = Tuple(Symbol, Int32)
 
 class Puzzle
   property rules = [] of Rule
-  property deck = [] of Int32
-  property desk = [] of Int32
+  property deck = [] of UInt64
+  property desk = [] of UInt64
+  property cards : UInt64
+
+  def initialize(@cards = 0.to_u64)
+  end
 
   def deck=(newdeck)
     @deck = newdeck
     @desk = newdeck.dup
+    @cards = newdeck.size.to_u64
   end
 
   def process(str)
@@ -18,11 +23,11 @@ class Puzzle
 
   def parse_rules(line)
     if line == "deal into new stack"
-      {:deal_new_stack, 0}
+      {:dns, 0}
     else
       matches = line.match /deal with increment (\d+)/
       if matches
-        {:deal_with_increment, matches[1].to_i}
+        {:dwi, matches[1].to_i}
       else
         matches = line.match /cut ([-]{0,1}\d+)/
         if matches
@@ -38,7 +43,7 @@ class Puzzle
     increments = [] of Int32
     @rules.each do |rule|
       fn, n = rule
-      if fn == :deal_with_increment
+      if fn == :dwi
         increments << n
       end
     end
@@ -55,52 +60,249 @@ class Puzzle
     return true
   end
 
-  def result
+  def result_test
+    self.deck = (0...10).to_a
+    puts " - 9 - "
+    p self.deck
+    deal_with_increment(9)
+    p self.deck
+    rev = (0...10).to_a.map do |n|
+      reverse_digit_deal_with_increment(9,n)
+    end
+    puts "What Mapped to X?"
+    puts rev
+    puts "*"*30
+
+    puts " - 3 - "
+    self.deck = (0...10).to_a
+    p self.deck
+    deal_with_increment(3)
+    p self.deck
+    rev = (0...10).to_a.map do |n|
+      reverse_digit_deal_with_increment(3,n)
+    end
+    puts "What Mapped to X?"
+    puts rev
+    puts "*"*30
+
+    puts " - 7 - "
+    self.deck = (0...10).to_a
+    p self.deck
+    deal_with_increment(7)
+    p self.deck
+    rev = (0...10).to_a.map do |n|
+      reverse_digit_deal_with_increment(7,n)
+    end
+    puts "What Mapped to X?"
+    puts rev
+    puts "*"*30
+  end
+
+  def result_search_unshuffled
     count = if ARGV.empty?
-      10007
+      10007.to_u64
     else
-      ARGV[0].to_i
+      ARGV[0].to_u64
     end
     if !acceptable_deck?(count)
       puts "Cannot Shuffle #{count} as increments overlap"
       exit 0
     end
     puts "Shuffling #{count} Cards using #{@rules.size} rules:"
-    self.deck = (0...count).to_a
+    self.deck = (0...count).to_a.map {|n| n.to_u64}
     shuffle
-    find = @deck.index(2019)
+    find = @deck.index(2019.to_u64)
     puts "Card 2019 @ #{find}"
-    #find_repetition
+    self.deck = (0...count).to_a.map {|n| n.to_u64}
+    #offset = 0
+    #seen = {@deck.dup => true}
+    #10000.times do
+    #  seen, offset = find_repeat_shuffle(seen, offset)
+    #end
+    find_repetition(@deck.dup)
+    
   end
 
-  def find_repetition
-    seen = {@deck.dup => true}
+  def result_part2
+    count = if ARGV.empty?
+      119315717514047
+    else
+      ARGV[0].to_i64
+    end
+
+    @cards = count
+
+    puts "2020 for 1 itteration:"
+    puts calculate(2020)
+  end
+
+  def result
+    result_search_unshuffled
+  end
+
+  def find_repetition(unshuffled)
     repcount = 12000
     found = false
     repcount.times do |t|
       shuffle
-      if seen[@deck.dup]?
+      if @deck == unshuffled
         puts "Repeated after #{t} shuffles"
         found = true
         break
       end
-      seen[@deck.dup] = true
     end
     puts "No Repeats Found after #{repcount} shuffles :(" if !found
   end
 
-  def shuffle(deck = nil)
+  def shuffle
+    #puts @deck
     rules.each do |rule|
       fn, n = rule
       case fn
         when :cut
           cut n
-        when :deal_new_stack
+        when :dns
           deal_new_stack
-        when :deal_with_increment
+        when :dwi
           deal_with_increment n
       end
+      #puts "#{fn} #{@deck} @#{n}"
     end
+  end
+
+  def reverse_digit_cut(n, card)
+    n = cards + n if n < 0
+    newcard = (card + n) % cards
+    #p "Invert Cut: #{card}th of #{cards} (CUT: @#{n}) -> #{newcard}"
+    newcard
+  end
+  
+  def reverse_digit_deal_new_stack(card)
+    newcard = (cards - card) -1
+    #p "Invert Stack: #{card}th of #{cards} -> #{newcard}"
+    newcard
+  end
+
+  def reverse_digit_deal_with_increment(n, card)
+  "
+- 9 -
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+What Mapped to X?
+[0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+******************************
+9 => 1 because 9 * 9 = 81  % 10 -> 1
+1> 10 * (9-1) = 80 | + 1 = 81 // 9 -> 9
+
+6 => 4 because 6 * 9 = 54 % 10 -> 4
+4> 10 * (9-4) = 50 | + 4 = 54 // 9 -> 6
+
+1 => 9 because 9 * 1 = 9 % 10 -> 9
+9> 10 * (9-9) = 0 | + 9 = 9 // 9 -> 1
+
+- 3 - 
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[0, 7, 4, 1, 8, 5, 2, 9, 6, 3]
+What Mapped to X?
+[0, 3, 6, 9, 2, 5, 8, 1, 4, 7]
+******************************
+7 => 1 because 7 * 3 = 21, 21 % 10 -> 1
+1> 10 * (3-1) = 20  | + 1 = 21  // 3  -> 7
+
+4 => 2 because 4 * 3 = 12   % 10 -> 2
+2> 10 * (3-2) = 10  | + 2 = 12  // 3  -> 4
+
+8 => 4 because 8 * 3 = 24  % 10 -> 4
+4> 10 * (3-1) = 20  | + 4 = 24  // 3  -> 8
+
+- 7 -
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[0, 3, 6, 9, 2, 5, 8, 1, 4, 7]
+
+7 => 9 because 7 * 7 = 49 % 10 -> 9
+9>  10 * (7-2) = 50 | + 9 = 59   !!!
+          7-3  = 40
+9> 70 - (9*7)|63 = 7
+
+6 => 2 because 7 * 6 = 42 % 10 -> 2
+2>  10 * (7-2) = 50 | + 2 = 52   !!!
+          7-3  = 40
+2> 70 - (2*7)|14 = 56 -> 6
+
+1 => 7 because 7 * 1 = 7 % 7 -> 7
+7>  10 * (7-0) = 70 | + 7 = 77 // 7 -> 11 -> 1
+
+"
+    # ORIGINAL FORMULA: cursor = (pos * n) % cards 
+    # REVERSE:  cursor = (pos * n) % cards
+    #           cursor = 0 - ((pos * n) % cards)
+    #cursor = CARDS - ((card * n) % cards)
+
+    #modn = card % n
+    #unmod = (cards * (n - modn)) + card
+    inv = inverse_mod(card, n, cards)
+    oldpos = inv//n
+    #unmod = (n * 10) - (n * card )
+    #oldpos = (unmod // n) % cards
+    #oldpos = unmod % cards
+
+    
+    # ORIGINAL FORMULA: cursor = (pos * n) % cards 
+    #p "Invert Deal: #{card}th of #{cards} (INC: @#{n}-> #{newcard}th"
+    oldpos
+  end
+
+  def inverse_mod(target, n, max)
+    max.times do |m|
+      poss = m * n
+      #puts "#{m} -> #{mod} v #{target}" 
+      return poss if poss % max == target
+    end
+    return -1
+  end
+
+  def calculate(card)
+    reverse = rules.reverse
+    reverse.each do |rule|
+      #print "#{card} "
+      fn, n = rule
+      case fn
+        when :cut
+          card = reverse_digit_cut n, card
+        when :dns
+          card = reverse_digit_deal_new_stack card
+        when :dwi
+          card = reverse_digit_deal_with_increment n, card
+      end
+      #puts "#{fn} #{card} @#{n}"
+    end
+    card
+  end
+
+  def find_repeat_shuffle(seen = nil, offset = 0)
+    seen = {@deck.dup => true} unless seen
+    t = 0
+    found = false
+    rules.each do |rule|
+      fn, n = rule
+      case fn
+        when :cut
+          cut n
+        when :dns
+          deal_new_stack
+        when :dwi
+          deal_with_increment n
+      end
+      if seen[@deck.dup]?
+        puts "Repeated after #{offset+t} steps"
+        found = true
+        break
+      end
+      seen[@deck.dup] = true
+      t += 1
+    end
+    puts "No Repeats Found in #{offset+t} steps" if !found
+    return {seen, offset+t}
   end
 
   def deal_new_stack
@@ -132,14 +334,24 @@ class Puzzle
   end
 
   def deal_with_increment(n)
+    #cards = @deck.size
+    #newdeck = Array(Int32).new(cards, -1)
+    #cursor = 0
+    #cards.times do |pos|
+    #  newdeck[cursor] = @deck[pos]
+    #  cursor = (cursor + n ) % cards
+    #end
+    #@deck = newdeck
     cards = @deck.size
-    newdeck = Array(Int32).new(cards, -1)
-    cursor = 0
     cards.times do |pos|
-      newdeck[cursor] = @deck[pos]
-      cursor = (cursor + n ) % cards
+      cursor = (pos * n) % cards
+      #p "#{pos} -> #{cursor}"
+      @desk[cursor] = @deck[pos]
+      #cursor = (cursor + n ) % cards
     end
-    @deck = newdeck
+    tmp = @deck
+    @deck = @desk
+    @desk = tmp
   end
 
 end
