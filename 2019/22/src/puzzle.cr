@@ -112,75 +112,54 @@ class Puzzle
     return true
   end
 
-  def result_test
-    @cards = 10
-    print "            "
-    10.times do |n|
-      print " #{n}"
+  def expand_refs(n, refs)
+    if refs[n]?
+      val, mul, div = refs[n]
+      #puts "Expanding #{n}.. -> #{val} - #{mul}*#{div}.."
+      expand_refs(val,refs) - (expand_refs(div, refs) * mul )
+    else
+      Solution.new(Operand.new(1.to_i64,n.to_i64))
     end
-    puts
-    print "CUT -4 FROM:"
-    10.times do |n|
-      from = reverse_digit_cut(-4,n)
-      print " #{from}"
-    end
-    puts
-    print "CUT  3 FROM:"
-    10.times do |n|
-      from = reverse_digit_cut(3,n)
-      print " #{from}"
-    end
-    puts
-    print "DNS    FROM:"
-    10.times do |n|
-      from = reverse_digit_deal_new_stack(n)
-      print " #{from}"
-    end
-    puts
-    print "DWI  3 FROM:"
-    10.times do |n|
-      from = reverse_digit_deal_with_increment(3,n)
-      print " #{from}"
-    end
-    puts
-    print "DWI  7 FROM:"
-    10.times do |n|
-      from = reverse_digit_deal_with_increment(7,n)
-      print " #{from}"
-    end
-    puts
-    print "DWI  9 FROM:"
-    10.times do |n|
-      from = reverse_digit_deal_with_increment(9,n)
-      print " #{from}"
-    end
-    puts
-
   end
 
-  def result_search_unshuffled
-    count = if ARGV.empty?
-      10007.to_i64
+  def calculate_congurent_values
+    values = @rules.select do |rule|
+      fn, n = rule
+      fn == :dwi
+    end.map {|rule| fn, n = rule; n }
+    values.uniq!
+    values.each do |n|
+      cache_congurent(n)
+    end
+  end
+
+  def cache_congurent(n)
+    print  "Calculating Congruent for #{n} (mod #{cards}) -> "
+    ##ASSUME cards prime, and GCD(mod,cards) == 1 otherwise overlaps
+    refs = {} of Int64 => Tuple(Int64,Int64,Int64)
+    val = cards
+    div = n.to_i64
+    mul = val // div
+    rem = val % div
+    refs[rem] = {val,mul,div}
+    while rem > 1
+      #puts "#{val} = #{mul}*#{div} + #{rem}"
+      val = div
+      div = rem
+      rem = val % div
+      mul = val // div
+      refs[rem] = {val,mul,div}
+    end
+    #puts "#{val} = #{mul}*#{div} + #{rem}"
+    v = expand_refs(1, refs).for(n)
+    print v
+    if v < 0
+      v = cards + v
+      puts " -> #{v}"
     else
-      ARGV[0].to_i64
+      puts
     end
-    if !acceptable_deck?(count)
-      puts "Cannot Shuffle #{count} as increments overlap"
-      exit 0
-    end
-    puts "Shuffling #{count} Cards using #{@rules.size} rules:"
-    self.deck = (0...count).to_a.map {|n| n.to_i64}
-    shuffle
-    find = @deck.index(2019.to_i64)
-    puts "Card 2019 @ #{find}"
-    self.deck = (0...count).to_a.map {|n| n.to_i64}
-    #offset = 0
-    #seen = {@deck.dup => true}
-    #10000.times do
-    #  seen, offset = find_repeat_shuffle(seen, offset)
-    #end
-    find_repetition(@deck.dup)
-    
+    @congruent[n.to_i64] = v
   end
 
   def result_part2
@@ -196,51 +175,6 @@ class Puzzle
     puts calculate(2020)
   end
 
-  def expand_refs(n, refs)
-    if refs[n]?
-      val, mul, div = refs[n]
-      #puts "Expanding #{n}.. -> #{val} - #{mul}*#{div}.."
-      expand_refs(val,refs) - (expand_refs(div, refs) * mul )
-    else
-      Solution.new(Operand.new(1.to_i64,n.to_i64))
-    end
-  end
-
-  def calculate_w_values
-    values = @rules.select do |rule|
-      fn, n = rule
-      fn == :dwi
-    end.map {|rule| fn, n = rule; n }
-    values.uniq!
-    values.each do |n|
-      print  "Calculating Congruent for #{n} (mod #{cards}) -> "
-      ##ASSUME cards prime, and GCD(mod,cards) == 1 otherwise overlaps
-      refs = {} of Int64 => Tuple(Int64,Int64,Int64)
-      val = cards
-      div = n.to_i64
-      mul = val // div
-      rem = val % div
-      refs[rem] = {val,mul,div}
-      while rem > 1
-        #puts "#{val} = #{mul}*#{div} + #{rem}"
-        val = div
-        div = rem
-        rem = val % div
-        mul = val // div
-        refs[rem] = {val,mul,div}
-      end
-      #puts "#{val} = #{mul}*#{div} + #{rem}"
-      v = expand_refs(1, refs).for(n)
-      print v
-      if v < 0
-        v = cards - v
-        puts " -> #{v}"
-      else
-        puts
-      end
-      @congruent[n.to_i64] = v
-    end
-  end
 
   def result
     count = if ARGV.empty?
@@ -250,23 +184,9 @@ class Puzzle
       ARGV[0].to_i64
     end
     @cards = count
-    calculate_w_values
+    calculate_congurent_values
     #result_test
     #result_search_unshuffled
-  end
-
-  def find_repetition(unshuffled)
-    repcount = 12000
-    found = false
-    repcount.times do |t|
-      shuffle
-      if @deck == unshuffled
-        puts "Repeated after #{t} shuffles"
-        found = true
-        break
-      end
-    end
-    puts "No Repeats Found after #{repcount} shuffles :(" if !found
   end
 
   def shuffle
@@ -298,48 +218,12 @@ class Puzzle
     newcard
   end
 
-  def chinese_remainder(mods, rems)
-    max = 1
-    mods.each {|m| max = max * m }
-    series = rems.zip(mods).map {|r,m| r.step(to: max, by: m).to_a }
-    return nil if series.empty?
-    inall = series.first
-    series.each {|s| inall &= s }
-    return nil if inall.empty?
-    return inall.first
-  end
-
   def reverse_digit_deal_with_increment(n, card)
     #  n * C === card % cards
     #  Linear Congruence
     #  n and cards are co-prime otherwise overlaps..
-    mods = [] of Int64
-    rems = [] of Int64
-    val = cards
-    div = n.to_i64
-    rem = val % div
-    while rem > 1
-      mods << div
-      rems << rem
-      val = div
-      div = rem
-      rem = val % div
-    end
-    puts "***"
-    print ":>#{cards} % #{n} -> "
-    crem = chinese_remainder(mods, rems)
-    puts crem
-
-    card
-  end
-
-  def inverse_mod(target, n, max)
-    max.times do |m|
-      poss = m * n
-      #puts "#{m} -> #{mod} v #{target}" 
-      return poss if poss % max == target
-    end
-    return -1
+    v = @congruent[n]
+    (card * v) % cards
   end
 
   def calculate(card)
@@ -360,57 +244,13 @@ class Puzzle
     card
   end
 
-  def find_repeat_shuffle(seen = nil, offset = 0)
-    seen = {@deck.dup => true} unless seen
-    t = 0
-    found = false
-    rules.each do |rule|
-      fn, n = rule
-      case fn
-        when :cut
-          cut n
-        when :dns
-          deal_new_stack
-        when :dwi
-          deal_with_increment n
-      end
-      if seen[@deck.dup]?
-        puts "Repeated after #{offset+t} steps"
-        found = true
-        break
-      end
-      seen[@deck.dup] = true
-      t += 1
-    end
-    puts "No Repeats Found in #{offset+t} steps" if !found
-    return {seen, offset+t}
-  end
-
   def deal_new_stack
     @deck.reverse!
   end
 
   def cut(n)
-    #puts @deck.size
-    #puts @desk.size
-    #puts "===="
     cards = @deck.size
     n = cards + n if n < 0
-    #m = cards - n
-    ##First Part (up to end of deck)
-    #(0...m).each do |loc|
-    #  #puts "#{loc} <- #{loc+n} of #{cards}"
-    #  @desk[loc] = @deck[loc+n]
-    #end
-    ##Second PArt
-    #(0...n).each do |loc|
-    #  mloc = m + loc
-    #  #puts "#{mloc} <- #{loc} of #{cards}"
-    #  @desk[mloc] = @deck[loc]
-    #end
-    #tmp = @deck
-    #@deck = @desk
-    #@desk = tmp
     @deck = @deck[n,@deck.size] + @deck[0,n]
   end
 

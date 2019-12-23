@@ -90,6 +90,9 @@ describe Puzzle do
       puzzle = Puzzle.new
       original = (0...10).to_a.map {|n| n.to_i64}
 
+      puzzle.cards = 10
+      puzzle.cache_congurent(3)
+
       puzzle.deck = original.dup
       puzzle.deal_with_increment(3)
 
@@ -102,6 +105,9 @@ describe Puzzle do
 
     it "works for bug #1 (inc 9)" do
       puzzle = Puzzle.new
+
+      puzzle.cards = 10
+      puzzle.cache_congurent(9)
 
       puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.deal_with_increment(9)
@@ -120,6 +126,9 @@ describe Puzzle do
 
     it "works for bug #2 (inc 7)" do
       puzzle = Puzzle.new
+
+      puzzle.cards = 10
+      puzzle.cache_congurent(7)
 
       puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.deal_with_increment(7)
@@ -216,6 +225,7 @@ describe Puzzle do
     puzzle.deck = original.dup
     puzzle.shuffle
 
+    puzzle.calculate_congurent_values
     rev = (0...10).map do |n|
       digit = puzzle.calculate(n)
       original[digit]
