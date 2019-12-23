@@ -12,6 +12,15 @@ describe NetworkIO do
     node.shift.should eq 35
   end
 
+  describe NetworkIO::Node do
+    it "is idle with not input" do
+      node = NetworkIO::Node.new(12)
+      node.idle?.should eq false
+      node.shift #ID
+      node.idle?.should eq true
+    end
+  end
+
   it "returns -1 when there is no packet for a node" do
     net = NetworkIO.new
     node = net.node(30)
@@ -38,11 +47,13 @@ describe NetworkIO do
     node_a.shift.should eq -1  #No More Packet
   end
 
-  it "does not route unavailable addresses" do
+  it "routes 255 to the NAT" do
     net = NetworkIO.new
 
     net << 255
     net << 35
     net << 40
+
+    net.nat.packet.should eq({35,40})
   end
 end

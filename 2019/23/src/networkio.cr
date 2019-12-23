@@ -3,11 +3,35 @@ class NetworkIO
   class ErrorUnroutable < Exception
   end
 
+  alias Packet = Tuple(Int64,Int64)
+
+  class Nat
+    property packet : Packet | Nil
+    property seen = {} of Packet => Bool
+
+    def monitor(net)
+      net.each_node do |node|
+        return unless node.idle?
+      end
+      packet.try do |pac|
+        if @seen[pac]?
+          puts "Repeating #{pac}"
+          raise "Rep"
+        end
+        puts "Sending NAT Packet #{packet} -> Node 0"
+        x, y = pac
+        node0 = net.node(0)
+        node0 << x
+        node0 << y
+        @seen[pac] = true
+      end
+    end
+  end
+
   class Node
     
     @buffer = [] of Int64
     @id : Int64
-
     def id
       @id
     end
@@ -21,9 +45,13 @@ class NetworkIO
       @buffer << val
     end
 
+    def idle?
+      @buffer.empty?
+    end
+
     def shift
       sleep 0.01
-      if @buffer.empty?
+      if idle?
         #print ":#{@id}:" unless @id == 0
         -1
       else
@@ -38,11 +66,19 @@ class NetworkIO
   @target : Int64 
   @packet_x : Int64 
 
+  property nat = Nat.new
+
   def initialize(numnodes = 50)
     @target = 0.to_i64
     @packet_x = 0.to_i64
     numnodes.times do |n|
       @nodes << Node.new(n)
+    end
+  end
+  
+  def each_node(&block)
+    @nodes.each do |node|
+      yield node
     end
   end
 
@@ -61,7 +97,10 @@ class NetworkIO
   end
 
   def send_packet(target, x, y)
-    if @nodes[target]?
+    if target == 255.to_i64
+      puts "NAT packet {#{x},#{y}}"
+      nat.packet = {x, y}
+    elsif @nodes[target]?
       puts "Sending #{target} with packet {#{x},#{y}}"
       thenode = node(target)
       thenode << x
