@@ -2,17 +2,17 @@ alias Rule = Tuple(Symbol, Int32)
 
 class Puzzle
   property rules = [] of Rule
-  property deck = [] of UInt64
-  property desk = [] of UInt64
-  property cards : UInt64
+  property deck = [] of Int64
+  property desk = [] of Int64
+  property cards : Int64
 
-  def initialize(@cards = 0.to_u64)
+  def initialize(@cards = 0.to_i64)
   end
 
   def deck=(newdeck)
     @deck = newdeck
     @desk = newdeck.dup
-    @cards = newdeck.size.to_u64
+    @cards = newdeck.size.to_i64
   end
 
   def process(str)
@@ -100,20 +100,20 @@ class Puzzle
 
   def result_search_unshuffled
     count = if ARGV.empty?
-      10007.to_u64
+      10007.to_i64
     else
-      ARGV[0].to_u64
+      ARGV[0].to_i64
     end
     if !acceptable_deck?(count)
       puts "Cannot Shuffle #{count} as increments overlap"
       exit 0
     end
     puts "Shuffling #{count} Cards using #{@rules.size} rules:"
-    self.deck = (0...count).to_a.map {|n| n.to_u64}
+    self.deck = (0...count).to_a.map {|n| n.to_i64}
     shuffle
-    find = @deck.index(2019.to_u64)
+    find = @deck.index(2019.to_i64)
     puts "Card 2019 @ #{find}"
-    self.deck = (0...count).to_a.map {|n| n.to_u64}
+    self.deck = (0...count).to_a.map {|n| n.to_i64}
     #offset = 0
     #seen = {@deck.dup => true}
     #10000.times do
@@ -171,7 +171,7 @@ class Puzzle
   end
 
   def reverse_digit_cut(n, card)
-    n = cards + n if n < 0
+    n = (cards + n) if n < 0
     newcard = (card + n) % cards
     #p "Invert Cut: #{card}th of #{cards} (CUT: @#{n}) -> #{newcard}"
     newcard

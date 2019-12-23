@@ -6,15 +6,15 @@ describe Puzzle do
   describe "deal into new stack" do
     it "reverses the deck" do
       puzzle = Puzzle.new
-      puzzle.deck = (0...10).to_a
+      puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.deal_new_stack
       puzzle.deck.should eq [9,8,7,6,5,4,3,2,1,0]
     end
 
-    it "calculates nth card reversing" do
+    it "can determine what position nth position came from" do
       puzzle = Puzzle.new
 
-      original = (0...10).to_a
+      original = (0...10).to_a.map {|n| n.to_i64}
 
       puzzle.deck = original.dup
       puzzle.deal_new_stack
@@ -30,14 +30,14 @@ describe Puzzle do
   describe "cut N" do
     it "cuts the deck at N cards" do
       puzzle = Puzzle.new
-      puzzle.deck = (0...10).to_a
+      puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.cut(4)
       puzzle.deck.should eq [4,5,6,7,8,9,0,1,2,3]
     end
 
     it "cuts with -ve N" do
       puzzle = Puzzle.new
-      puzzle.deck = (0...10).to_a
+      puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.cut(-3)
       puzzle.deck.should eq [7,8,9,0,1,2,3,4,5,6]
     end
@@ -45,7 +45,7 @@ describe Puzzle do
     it "calculates nth card cutting N" do
       puzzle = Puzzle.new
 
-      original = (0...10).to_a
+      original = (0...10).to_a.map {|n| n.to_i64}
 
       puzzle.deck = original.dup
       puzzle.cut(4)
@@ -60,7 +60,7 @@ describe Puzzle do
     it "calculates nth card cutting -N" do
       puzzle = Puzzle.new
 
-      original = (0...10).to_a
+      original = (0...10).to_a.map {|n| n.to_i64}
       
       puzzle.deck = original.dup
       puzzle.cut(-3)
@@ -77,18 +77,18 @@ describe Puzzle do
   describe "deal with increment N" do
     it "deals out card every n spaces, looping round" do
       puzzle = Puzzle.new
-      puzzle.deck = (0...10).to_a
+      puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.deal_with_increment(3)
       puzzle.deck.should eq [0,7,4,1,8,5,2,9,6,3]
 
-      puzzle.deck = (0...10).to_a
+      puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.deal_with_increment(9)
       puzzle.deck.should eq [0,9,8,7,6,5,4,3,2,1]
     end
 
     it "calculates nth card with increment N" do
       puzzle = Puzzle.new
-      original = (0...10).to_a
+      original = (0...10).to_a.map {|n| n.to_i64}
 
       puzzle.deck = original.dup
       puzzle.deal_with_increment(3)
@@ -103,10 +103,10 @@ describe Puzzle do
     it "works for bug #1 (inc 9)" do
       puzzle = Puzzle.new
 
-      puzzle.deck = (0...10).to_a
+      puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.deal_with_increment(9)
 
-      original = [2, 3, 4, 5, 6, 7, 8, 9, 0, 1]
+      original = [2, 3, 4, 5, 6, 7, 8, 9, 0, 1].map {|i| i.to_i64}
 
       puzzle.deck = original.dup
       puzzle.deal_with_increment(9)
@@ -121,18 +121,13 @@ describe Puzzle do
     it "works for bug #2 (inc 7)" do
       puzzle = Puzzle.new
 
-      puts "*" * 50
-      puzzle.deck = (0...10).to_a
-      p puzzle.deck
+      puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
       puzzle.deal_with_increment(7)
-      p puzzle.deck
 
-      original = [2, 3, 4, 5, 6, 7, 8, 9, 0, 1]
+      original = [2, 3, 4, 5, 6, 7, 8, 9, 0, 1].map {|i| i.to_i64}
 
       puzzle.deck = original.dup
-      p puzzle.deck
       puzzle.deal_with_increment(7)
-      p puzzle.deck
 
       (0...10).each do |n|
         odigit = puzzle.reverse_digit_deal_with_increment(7, n)
@@ -150,7 +145,7 @@ describe Puzzle do
     deal into new stack
     EOF
 
-    puzzle.deck = (0...10).to_a
+    puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
     puzzle.shuffle
     puzzle.deck.should eq [0,3,6,9,2,5,8,1,4,7]
   end
@@ -163,7 +158,7 @@ describe Puzzle do
     deal into new stack
     EOF
 
-    puzzle.deck = (0...10).to_a
+    puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
     puzzle.shuffle
     puzzle.deck.should eq [3,0,7,4,1,8,5,2,9,6]
   end
@@ -176,7 +171,7 @@ describe Puzzle do
     cut -2
     EOF
 
-    puzzle.deck = (0...10).to_a
+    puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
     puzzle.shuffle
     puzzle.deck.should eq [6,3,0,7,4,1,8,5,2,9]
   end
@@ -196,14 +191,13 @@ describe Puzzle do
     cut -1
     EOF
 
-    puzzle.deck = (0...10).to_a
+    puzzle.deck = (0...10).to_a.map {|n| n.to_i64}
     puzzle.shuffle
     puzzle.deck.should eq [9,2,5,8,1,4,7,0,3,6]
   end
 
   it "can calculate a single card destination for a shuffle" do
     puzzle = Puzzle.new
-    ####deal with increment 7
     puzzle.process <<-EOF
     deal into new stack
     cut -2
@@ -217,14 +211,14 @@ describe Puzzle do
     cut -1
     EOF
 
-    original = (0...10).to_a
+    original = (0...10).to_a.map {|n| n.to_i64}
 
     puzzle.deck = original.dup
     puzzle.shuffle
 
     rev = (0...10).map do |n|
       digit = puzzle.calculate(n)
-      digit
+      original[digit]
     end
     
     rev.should eq puzzle.deck
