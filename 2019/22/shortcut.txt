@@ -1,0 +1,10 @@
+Theory: 
+
+  Each operations is now a simple FN
+
+  for each operation, so short cut having done it N times
+  * N wihthin the function
+
+  DWI -> also * N  (before final modulus)
+  DNS -> mod N by 2, and then it's 1 or 0 switches
+  CUT -> not sure on this, but probably % of itters / cards / cutsize
