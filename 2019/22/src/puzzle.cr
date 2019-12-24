@@ -168,15 +168,49 @@ class Puzzle
     else
       ARGV[0].to_i64
     end
-
     @cards = count
-
-    puts "2020 for 1 itteration:"
-    puts calculate(2020)
+    calculate_congurent_values
+    
+    seen = {2020.to_i64 => true}
+    puts "Seeking Repeated Location"
+    loc = 2020
+    itter = 0.to_u64
+    1000.times do 
+      100.times do
+        10000.times do
+          itter += 1
+          loc = calculate(loc)
+          if loc == 2020
+            puts "Repeated after #{itter} itterations"
+            break;
+          end
+          seen[loc.to_i64] = true
+        end
+        print "."
+      end
+      puts "Searched #{itter} @#{loc}"
+    end
   end
 
+  def result_part1
+    count = if ARGV.empty?
+      #119315717514047
+      10007.to_i64
+    else
+      ARGV[0].to_i64
+    end
+    self.deck = (0...count).to_a.map {|c| c.to_i64 }
+    puts "Shuffling #{count} cards.."
+    shuffle
+    found = self.deck.index(2019)
+    puts "2019 card -> : #{found}"
+  end
 
   def result
+    result_part2
+  end
+
+  def result_test
     count = if ARGV.empty?
       #119315717514047
       10007.to_i64
@@ -185,6 +219,10 @@ class Puzzle
     end
     @cards = count
     calculate_congurent_values
+
+    puts "Reverse of 1822 Should Be 2019"
+    actual = calculate(1822)
+    puts "Actual: #{actual}"
     #result_test
     #result_search_unshuffled
   end
@@ -223,7 +261,7 @@ class Puzzle
     #  Linear Congruence
     #  n and cards are co-prime otherwise overlaps..
     v = @congruent[n]
-    (card * v) % cards
+    ((card.to_u128 * v.to_u128) % cards).to_i64
   end
 
   def calculate(card)
