@@ -170,6 +170,26 @@ class Puzzle
     end
     @cards = count
     calculate_congurent_values
+
+    shufcount = 101741582076661
+
+    loc = 2020
+    puts loc
+    loc = calculate(loc)
+    puts loc
+    puts ">%d" % (shufcount % loc)
+    puts "->%d" % calculate(shufcount % loc)
+    loc = calculate(loc)
+    puts loc
+    puts ">%d" % (shufcount % loc)
+    puts "->%d" % calculate(shufcount % loc)
+    loc = calculate(loc)
+    puts loc
+    puts ">%d" % (shufcount % loc)
+    puts "->%d" % calculate(shufcount % loc)
+
+
+    return
     
     seen = {2020.to_i64 => true}
     puts "Seeking Repeated Location"

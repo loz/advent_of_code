@@ -4,5 +4,7 @@ m = 101741582076661
 p typeof(n)
 p typeof(m)
 
-p typeof(n).MAX
-p typeof(m).MAX
+p n % m
+
+p m
+p n-1-m
