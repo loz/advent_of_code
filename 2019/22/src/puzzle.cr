@@ -303,6 +303,8 @@ class Puzzle
   end
 
   def power_fn(fn1, repeats, val)
+    return fn1.apply(val) if repeats == 1
+    return val if repeats == 0
     mul = 2.to_i64
     fmx = fn1.apply(fn1)
     while mul**2 < repeats
@@ -311,10 +313,11 @@ class Puzzle
     end
     count = repeats // mul
     rem = repeats % mul
-    p "#{repeats} = #{count} * f(#{mul}) + #{rem}"
-    count.times { val = fmx.apply(val) }
-    rem.times { val = fn1.apply(val) }
-    val
+    #p "#{repeats} = #{count} * f(#{mul}) + #{rem}"
+    #count.times { val = fmx.apply(val) }
+    #rem.times { val = fn1.apply(val) }
+    val = power_fn(fmx, count, val)
+    power_fn(fn1, rem, val)
   end
 
   def result_fold
