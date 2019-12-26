@@ -8,3 +8,7 @@ p n % m
 
 p m
 p n-1-m
+
+puts 18 % 10
+puts -18 % 10
+puts (20 - 18) % 10

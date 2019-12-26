@@ -1,5 +1,27 @@
 alias Rule = Tuple(Symbol, Int32)
 
+class Func
+  property of_c : Int32
+  property plus_n : Int32
+  property mod : Int64
+
+  def initialize(@of_c, @plus_n, @mod)
+  end
+
+  def apply(c : Int32)
+    ((c * @of_c) + @plus_n) % @mod
+  end
+
+  def apply(f : Func)
+    fc = f.of_c
+    fn = f.plus_n
+
+    a = (fc * @of_c) % @mod
+    b = ((@of_c * fn) + @plus_n) % @mod
+    Func.new(a, b, @mod)
+  end
+end
+
 class Solution
   property operands = {} of Int64 => Int64
 
@@ -133,6 +155,11 @@ class Puzzle
     end
   end
 
+  def congruent(n)
+    cache_congurent(n) unless @congruent[n.to_i64]?
+    @congruent[n.to_i64]
+  end
+
   def cache_congurent(n)
     print  "Calculating Congruent for #{n} (mod #{cards}) -> "
     ##ASSUME cards prime, and GCD(mod,cards) == 1 otherwise overlaps
@@ -165,6 +192,7 @@ class Puzzle
   def result_part2
     count = if ARGV.empty?
       119315717514047
+      10007.to_i64
     else
       ARGV[0].to_i64
     end
@@ -173,21 +201,66 @@ class Puzzle
 
     shufcount = 101741582076661
 
-    loc = 2020
-    puts loc
-    loc = calculate(loc)
-    puts loc
-    puts ">%d" % (shufcount % loc)
-    puts "->%d" % calculate(shufcount % loc)
-    loc = calculate(loc)
-    puts loc
-    puts ">%d" % (shufcount % loc)
-    puts "->%d" % calculate(shufcount % loc)
-    loc = calculate(loc)
-    puts loc
-    puts ">%d" % (shufcount % loc)
-    puts "->%d" % calculate(shufcount % loc)
+    a = calculate(0)
+    puts "0:> #{a}"
+    b = calculate(1)
+    puts "1:> #{b}"
 
+    a = forward_shuffle(0)
+    puts "0:> #{a}"
+    b = forward_shuffle(1)
+    puts "1:> #{b}"
+
+    # k*b + c  => c'
+    #  a' = k * d + 0
+    #  b' = k * d + 1
+    ab = a*b
+    puts a*b
+    puts (a*b) % cards
+
+    ar = calculate(a)
+    puts "< 0:> #{ar}"
+    br = calculate(b)
+    puts "< 1:> #{br}"
+
+
+    c = 2020
+    a = forward_shuffle(c)
+    puts "a:> #{a}"
+    kb = a - c
+    puts "kb:> #{kb}"
+    
+    k = 1
+    b = kb
+    k = kb // 7
+    b = congruent(7) #* (kb//7)
+    puts "k: #{k}"
+    puts "b: #{b}"
+      
+    kcb = (k*c) + b
+
+    puts "k*c +b:> #{kcb % cards}"
+    abk = (a-b)//k
+    puts "c = (a-b)//k  #{(abk % cards)}"
+
+    twice = 2020
+    puts "before: #{twice}"
+    twice = forward_shuffle(twice)
+    puts "once  : #{twice}"
+    twice = forward_shuffle(twice)
+    puts "twice : #{twice}"
+    puts "k*(k*c+b) + b -> #{k*((k*c)+b) + b}"
+
+    tena = 2020
+    shuffs = 11
+    shuffs.times { tena = forward_shuffle(tena) }
+    puts "#{shuffs} shuff: #{tena}"
+
+    k1 = shuffs * k
+    b1 = shuffs * b
+
+    nc = ((k1 * c * shuffs) + b1) % cards
+    puts "nc: #{nc}" 
 
     return
     
@@ -226,8 +299,46 @@ class Puzzle
     puts "2019 card -> : #{found}"
   end
 
+  def result_fold
+    @cards = 10007
+    fn = fold_fn
+    p fn
+    twice = 2020
+    puts "before: #{twice}"
+    twice = forward_shuffle(twice)
+    puts "once  : #{twice}"
+    twice = forward_shuffle(twice)
+    puts "twice : #{twice}"
+
+    twice = 2020
+    twice = fn.apply(twice)
+    puts "fn 1  : #{twice}"
+    twice = fn.apply(twice)
+    puts "fn 2  : #{twice}"
+
+    fn2 = fn.apply(fn)
+    p fn2
+    val = 2020
+    val = fn2.apply(val)
+    puts "fn2(n)  : #{val}"
+
+    fn4 = fn2.apply(fn2)
+    val = 2020
+    val = fn4.apply(val)
+    puts "fn4(n)  : #{val}"
+    
+    val = 2020
+    4.times do 
+      val = forward_shuffle(val)
+    end
+    puts "4 times : #{val}"
+
+
+  end
+
   def result
-    result_part2
+    result_fold
+    #result_part2
   end
 
   def result_test
@@ -263,41 +374,109 @@ class Puzzle
     end
   end
 
-  def reverse_digit_cut(n, card)
-    n = (cards + n) if n < 0
-    newcard = (card + n) % cards
+  def forward_digit_cut(n, card)
+    (card - n.to_i64) % cards
+  end
+
+  def reverse_digit_cut(n, card, mulx = 1)
+    #n = ((cards * mulx) + (n * mulx)) if n < 0
+    #n = cards + n if n < 0
+    #newcard = ((card ** mulx) + n).to_i64 % cards
+    card = card ** mulx
+    n = n**mulx
+    newcard = (card + n.to_i64) % cards
     #p "Invert Cut: #{card}th of #{cards} (CUT: @#{n}) -> #{newcard}"
     newcard
   end
+
+  def forward_digit_deal_new_stack(card)
+    (-1 - card).to_i64  % cards
+  end
   
-  def reverse_digit_deal_new_stack(card)
-    newcard = (cards - card) -1
+  def reverse_digit_deal_new_stack(card, mulx=1)
+    #newcard = card
+    #newcard = (cards - card) -1 if (mulx % 2 == 1)
+    card = card ** mulx
+    newcard = (-1 - card).to_i64  % cards
     #p "Invert Stack: #{card}th of #{cards} -> #{newcard}"
     newcard
   end
 
-  def reverse_digit_deal_with_increment(n, card)
+  def forward_digit_deal_with_increment(n, card)
+    (card * n) % cards
+  end
+
+  def reverse_digit_deal_with_increment(n, card, mulx=1)
     #  n * C === card % cards
     #  Linear Congruence
     #  n and cards are co-prime otherwise overlaps..
-    v = @congruent[n]
+    #v = @congruent[n] * mulx
+    card = card ** mulx
+    n = n**mulx
+    v = congruent(n)
     ((card.to_u128 * v.to_u128) % cards).to_i64
   end
 
-  def calculate(card)
+  def fold_cut(n, card)
+    #puts "fold_cut #{n} #{card.inspect}"
+    Func.new(card.of_c, (card.plus_n - n) % cards, cards)
+  end
+
+  def fold_deal_new_stack(card)
+    #puts "fold_dns #{card.inspect}"
+    Func.new(card.of_c * -1, (-1 * card.plus_n) -1, cards)
+  end
+
+  def fold_deal_with_increment(n, card)
+    #puts "fold_dwi #{n} #{card.inspect}"
+    Func.new((card.of_c * n) % cards, (card.plus_n * n) % cards, cards)
+  end
+
+  def fold_fn
+    card = Func.new(1, 0, cards) 
+    rules.each do |rule|
+      fn, n = rule
+      case fn
+        when :cut
+          card = fold_cut n, card
+        when :dns
+          card = fold_deal_new_stack card
+        when :dwi
+          card = fold_deal_with_increment n, card
+      end
+    end
+    card
+  end
+
+  def calculate(card, mulx = 1)
     reverse = rules.reverse
     reverse.each do |rule|
       #print "#{card} "
       fn, n = rule
       case fn
         when :cut
-          card = reverse_digit_cut n, card
+          card = reverse_digit_cut n, card, mulx
         when :dns
-          card = reverse_digit_deal_new_stack card
+          card = reverse_digit_deal_new_stack card, mulx
         when :dwi
-          card = reverse_digit_deal_with_increment n, card
+          card = reverse_digit_deal_with_increment n, card, mulx
       end
       #puts "#{fn} #{card} @#{n}"
+    end
+    card
+  end
+
+  def forward_shuffle(card)
+    rules.each do |rule|
+      fn, n = rule
+      case fn
+        when :cut
+          card = forward_digit_cut n, card
+        when :dns
+          card = forward_digit_deal_new_stack card
+        when :dwi
+          card = forward_digit_deal_with_increment n, card
+      end
     end
     card
   end
