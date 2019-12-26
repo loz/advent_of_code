@@ -1,24 +1,27 @@
 alias Rule = Tuple(Symbol, Int32)
 
 class Func
-  property of_c : Int32
-  property plus_n : Int32
+  property of_c : Int64
+  property plus_n : Int64
   property mod : Int64
 
-  def initialize(@of_c, @plus_n, @mod)
+  def initialize(of_c, plus_n, mod)
+    @of_c = of_c.to_i64
+    @plus_n = plus_n.to_i64
+    @mod = mod.to_i64
   end
 
-  def apply(c : Int32)
-    ((c * @of_c) + @plus_n) % @mod
+  def apply(c : Int64)
+    (((c.to_i128 * @of_c.to_i128) + @plus_n) % @mod).to_i64
   end
 
   def apply(f : Func)
     fc = f.of_c
     fn = f.plus_n
 
-    a = (fc * @of_c) % @mod
-    b = ((@of_c * fn) + @plus_n) % @mod
-    Func.new(a, b, @mod)
+    a = (fc.to_i128 * @of_c) % @mod
+    b = ((@of_c.to_i128 * fn.to_i128) + @plus_n.to_i128) % @mod
+    Func.new(a.to_i64, b.to_i64, @mod)
   end
 end
 
@@ -299,41 +302,31 @@ class Puzzle
     puts "2019 card -> : #{found}"
   end
 
-  def result_fold
-    @cards = 10007
-    fn = fold_fn
-    p fn
-    twice = 2020
-    puts "before: #{twice}"
-    twice = forward_shuffle(twice)
-    puts "once  : #{twice}"
-    twice = forward_shuffle(twice)
-    puts "twice : #{twice}"
-
-    twice = 2020
-    twice = fn.apply(twice)
-    puts "fn 1  : #{twice}"
-    twice = fn.apply(twice)
-    puts "fn 2  : #{twice}"
-
-    fn2 = fn.apply(fn)
-    p fn2
-    val = 2020
-    val = fn2.apply(val)
-    puts "fn2(n)  : #{val}"
-
-    fn4 = fn2.apply(fn2)
-    val = 2020
-    val = fn4.apply(val)
-    puts "fn4(n)  : #{val}"
-    
-    val = 2020
-    4.times do 
-      val = forward_shuffle(val)
+  def power_fn(fn1, repeats, val)
+    mul = 2.to_i64
+    fmx = fn1.apply(fn1)
+    while mul**2 < repeats
+      mul = mul * 2
+      fmx = fmx.apply(fmx)
     end
-    puts "4 times : #{val}"
+    count = repeats // mul
+    rem = repeats % mul
+    p "#{repeats} = #{count} * f(#{mul}) + #{rem}"
+    count.times { val = fmx.apply(val) }
+    rem.times { val = fn1.apply(val) }
+    val
+  end
 
-
+  def result_fold
+    #@cards = 10007
+    @cards = 119315717514047
+    fn = fold_fn
+    repeats = 101741582076661
+    card = 49174686993380
+    val = card
+    val = power_fn(fn, repeats, val)
+    puts "#{repeats} shuffles -> #{val}"
+  
   end
 
   def result
@@ -419,17 +412,17 @@ class Puzzle
 
   def fold_cut(n, card)
     #puts "fold_cut #{n} #{card.inspect}"
-    Func.new(card.of_c, (card.plus_n - n) % cards, cards)
+    Func.new(card.of_c, (card.plus_n - n.to_i64) % cards, cards)
   end
 
   def fold_deal_new_stack(card)
     #puts "fold_dns #{card.inspect}"
-    Func.new(card.of_c * -1, (-1 * card.plus_n) -1, cards)
+    Func.new(card.of_c * -1.to_i64, (-1.to_i64 * card.plus_n) -1.to_i64, cards)
   end
 
   def fold_deal_with_increment(n, card)
     #puts "fold_dwi #{n} #{card.inspect}"
-    Func.new((card.of_c * n) % cards, (card.plus_n * n) % cards, cards)
+    Func.new((card.of_c * n.to_i64) % cards, (card.plus_n * n.to_i64) % cards, cards)
   end
 
   def fold_fn
