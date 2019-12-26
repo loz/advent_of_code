@@ -323,13 +323,16 @@ class Puzzle
   def result_fold
     #@cards = 10007
     @cards = 119315717514047
-    fn = fold_fn
     repeats = 101741582076661
-    card = 49174686993380
-    val = card
+
+    fn = reverse_fold_fn
+    val = 2020.to_i64
+    val = power_fn(fn, repeats, val)
+    puts "#{repeats} reverse shuffles -> #{val}"
+
+    fn = fold_fn
     val = power_fn(fn, repeats, val)
     puts "#{repeats} shuffles -> #{val}"
-  
   end
 
   def result
@@ -426,6 +429,39 @@ class Puzzle
   def fold_deal_with_increment(n, card)
     #puts "fold_dwi #{n} #{card.inspect}"
     Func.new((card.of_c * n.to_i64) % cards, (card.plus_n * n.to_i64) % cards, cards)
+  end
+
+  def reverse_fold_cut(n, card)
+    Func.new(card.of_c, (card.plus_n + n.to_i64) % cards, cards)
+  end
+
+  def reverse_fold_deal_new_stack(card)
+    Func.new(card.of_c * -1.to_i64, (-1.to_i64 * card.plus_n) -1.to_i64, cards)
+  end
+
+  def reverse_fold_deal_with_increment(n, card)
+    #puts "fold_dwi #{n} #{card.inspect}"
+    v = congruent(n)
+    nc = (card.of_c.to_i128 * v.to_i128) % cards
+    nn = (card.plus_n.to_i128 * v.to_i128) % cards
+    Func.new(nc.to_i64, nn.to_i64, cards)
+  end
+
+  def reverse_fold_fn
+    fold_fn
+    card = Func.new(1, 0, cards) 
+    rules.reverse.each do |rule|
+      fn, n = rule
+      case fn
+        when :cut
+          card = reverse_fold_cut n, card
+        when :dns
+          card = reverse_fold_deal_new_stack card
+        when :dwi
+          card = reverse_fold_deal_with_increment n, card
+      end
+    end
+    card
   end
 
   def fold_fn
