@@ -5,6 +5,16 @@ class Puzzle:
   REQ = set(['byr', 'iyr', 'eyr', 'hgt', 'hcl', 'ecl', 'pid'])
   OPT = set(['cid'])
 
+  RULES = {
+    'byr': r"^(19[2-9][0-9]|200[0-2])$",
+    'iyr': r"^20(1[0-9]|20)$",
+    'eyr': r"^20(2[0-9]|30)$",
+    'hgt': r"^(1([5-8][0-9]|9[0-3])cm)|((59|6[0-9]|7[0-6])in)$",
+    'hcl': r"^#[0-9a-f]{6}$",
+    'ecl': r"^(amb|blu|brn|gry|grn|hzl|oth)$",
+    'pid': r"^[0-9]{9}$"
+  }
+
   def process(self, text):
     self.passports = []
     lines = text.split('\n')
@@ -30,39 +40,11 @@ class Puzzle:
     mandleft = Puzzle.REQ - passkeys
     if len(mandleft) != 0:
       return False
-    return (self.valid_yr(passport['byr'], 1920, 2002) and
-            self.valid_yr(passport['iyr'], 2010, 2020) and
-            self.valid_yr(passport['eyr'], 2020, 2030) and
-            self.valid_hgt(passport['hgt']) and
-            self.valid_hcl(passport['hcl']) and
-            self.valid_ecl(passport['ecl']) and
-            self.valid_pid(passport['pid']))
-
-  def valid_yr(self, byr, start, end):
-   b = int(byr)
-   return b >= start and b <= end
-
-  def valid_hgt(self, hgt):
-    match = re.match(r"([0-9]+)(in|cm)", hgt)
-    if not match:
-      return False
-    val, unit =  match.groups()
-    val = int(val)
-    if unit == 'cm':
-      return val >= 150 and val <= 193
-    else:
-      return val >= 59 and val <= 76
-
-  def valid_hcl(self, hcl):
-    match = re.match(r"^#[0-9a-f]{6}$", hcl) 
-    return bool(match)
-
-  def valid_pid(self, pid):
-    match = re.match(r"^[0-9]{9}$", pid) 
-    return bool(match)
-
-  def valid_ecl(self, ecl):
-    return ecl in ['amb', 'blu', 'brn', 'gry', 'grn', 'hzl', 'oth']
+    for key in Puzzle.RULES:
+      rule = Puzzle.RULES[key]
+      if not re.match(rule, passport[key]):
+        return False 
+    return True
 
   def result(self):
     totalValid = 0
