@@ -1,9 +1,9 @@
 class Puzzle:
 
-  def process(this, text):
+  def process(self, text):
     pass
 
-  def result(this):
+  def result(self):
     pass
 
 if __name__ == '__main__':
