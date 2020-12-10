@@ -56,10 +56,51 @@ class Puzzle:
     #nm -> (n)m
     return self._count_permutations(diffs[1:nn])
 
-  def count_permutations(self):
+  def count_permutations_slow(self):
     diffs = self.differences()
     return self._count_permutations(diffs)
 
+  def count_permutations(self):
+    diffs = self.differences()
+    runs = self.find_runs(diffs)
+    print runs
+    runs = filter(lambda r: r[0] > 1, runs)
+    print runs
+    perms = 1
+    for run in runs:
+      size, before, after = run
+      perm = 1 + int(((size-1)/2.0) * size) 
+      if before == 2:
+        perm = perm + 1
+      if after == 2:
+        perm = perm + 1
+      perms = perm * perms
+    return perms
+
+  def find_runs(self, diffs):
+    isRun = False
+    count = 0
+    previous = None
+    runs = []
+    for n in diffs:
+      if isRun:
+        if n == 1:
+          count = count + 1
+        else:
+          #Run ended
+          run = (count, previous, n)
+          runs.append(run)
+          count = 0
+          isRun = False
+          previous = n
+      else:
+        if n == 1:
+          #Run starting
+          count = 1
+          isRun = True
+        else:
+          previous = n
+    return runs
 
   def result2(self):
     diffs = self.differences()
