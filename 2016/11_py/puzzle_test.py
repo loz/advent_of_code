@@ -118,6 +118,19 @@ class TestPuzzle(unittest.TestCase):
     found = expected in moves
     self.assertTrue(found)
 
+  def test_generate_moves_move_lift_down_matched(self):
+    puzzle = puz.Puzzle()
+    _, state = INPUT
+    moves = puzzle.generate_moves((2, state))
+    expected = (1,[
+['thg', 'thc', 'plg', 'stg',],
+['plc', 'stc', 'prc', 'prg'],
+['rug', 'ruc'],
+[]
+])
+    found = expected in moves
+    self.assertTrue(found)
+
   def test_valid_state(self):
     puzzle = puz.Puzzle()
     _, state = INPUT
