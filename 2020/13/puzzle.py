@@ -15,7 +15,7 @@ class Puzzle:
         rem = bus - i
         while rem < 0:
           rem += first
-        remainders[bus] = rem
+        remainders[bus] = rem % first
     self.busses = filter(lambda b: b != 'x' and b !='\n',busses)
     self.busses = filter(lambda b: b != 'x' and b !='\n',busses)
     self.busses = map(lambda b: int(b), self.busses)
@@ -47,7 +47,8 @@ class Puzzle:
       div = mult / bus
       rem = (mult % bus)
       if (mult % bus) == target:
-        print i, '*', first, '=', mult, ' = ', div, '*', bus, ' r', rem, ' vs ', target
+        #print i, '*', first, '=', mult, ' = ', div, '* (', bus, ') r', rem, ' vs ', target
+        print 'x =', rem, '(mod',  bus ,')'
         return div
     raise 'Bugger'
 
@@ -71,28 +72,82 @@ class Puzzle:
     shared = [value for value in a if value in b]
     return shared
 
-  def result(self):
-    mults = {}
+  def result2(self):
     first = self.busses[0]
     for bus in self.busses:
       if not bus == self.busses[0]:
         fact = self.remfactor(bus)
         rem = self.remainders[bus]
-        print fact
-        nums = []
-        for i in range(100000):
-          #n = ((i * first) + fact ) * bus
-          n = fact + (i*first)
-          mult = (n * bus) + rem
-          nums.append(mult)
-        mults[bus] = nums
-
-    common = mults[self.busses[1]]
+    print 'Generating'
+    initial = True
+    common = []
+    itter = 10000
     for bus in self.busses:
-      if not bus == first:
-        print mults[bus]
-        common = self.intersect(common, mults[bus])
+      if not bus == self.busses[0]:
+        fact = self.remfactor(bus)
+        rem = self.remainders[bus]
+        print '.', 
+        maxx = fact + ((itter * first) * bus) + rem
+        print "max,", maxx
+        if initial:
+          for i in range(itter):
+            n = fact + (i*first)
+            mult = (n * bus) + rem
+            common.append(mult)
+          initial = False
+        else:
+          newcommon = []
+          for i in range(itter):
+            n = fact + (i*first)
+            mult = (n * bus) + rem
+            if mult in common:
+              newcommon.append(mult)
+          common = newcommon
     print "Min Common Factor:", min(common)
+
+  def extended_gcd(self,a,b):
+    (old_r, r) = (a, b)
+    (old_s, s) = (1, 0)
+    (old_t, t) = (0, 1)
+
+    while r != 0:
+      q = old_r / r
+      (old_r, r) = (r, old_r - (q*r))
+      (old_s, s) = (s, old_s - (q*s))
+      (old_t, t) = (t, old_t - (q*t))
+    #print "Co-effiencients", old_s, old_t
+    #print "GCD", old_r
+    #print "Quotients by GCD", t, s
+    return (old_s, old_t)
+
+  def result(self):
+    self.extended_gcd(17,13)
+    self.extended_gcd(102*13,19)
+    pairs = []
+    for key in self.remainders:
+      pairs.append((key, self.remainders[key]))
+    upper = 1
+    for bus in self.busses:
+      upper *= bus
+    print "Upper Search:", upper
+    pairs.sort(key=lambda p: p[1], reverse=False)
+    print pairs
+    last = pairs.pop(0)
+    print last
+    print "====="
+    for pair in pairs:
+      print last, pair
+      lm, lr = last
+      cm, cr = pair
+      (cl, cc) = self.extended_gcd(lm, cm)
+      print cl, cc
+      print lr, '*', cm, '*', cc, '+', cr, '*', lm, '*', cl
+      n = (lr * cm * cc) + (cr * lm * cl)
+      n = n % (lm * cm)
+      print '-> ', n
+      last = (n * cm, n)
+      print "=========="
+    print n % upper
 
 if __name__ == '__main__':
   puz = Puzzle()
