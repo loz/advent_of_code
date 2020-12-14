@@ -1,9 +1,38 @@
+def chinese_remainder(n, a):
+    sum = 0
+    prod = reduce(lambda a, b: a*b, n)
+
+    for n_i, a_i in zip(n, a):
+        print a_i, '(mod', n_i,')'
+        p = prod / n_i
+        sum += a_i * mul_inv(p, n_i) * p
+    return sum % prod
+
+
+def mul_inv(a, b):
+    b0 = b
+    x0, x1 = 0, 1
+    if b == 1: return 1
+    while a > 1:
+        q = a / b
+        a, b = b, a%b
+        x0, x1 = x1 - q * x0, x0
+    if x1 < 0: x1 += b0
+    return x1
+
+#if __name__ == '__main__':
+#    n = [3, 5, 7]
+#    a = [2, 3, 2]
+#    print chinese_remainder(n, a)
+
+
 class Puzzle:
 
   def process(self, text):
     lines = text.split('\n')
     self.depart = int(lines[0])
     busses = lines[1].split(',')
+    print busses
     offset = {}
     remainders = {}
     first = int(busses[0])
@@ -13,8 +42,7 @@ class Puzzle:
         bus = int(bus)
         offset[bus] = i
         rem = bus - i
-        while rem < 0:
-          rem += first
+        print first, i, ':>', bus, '-', i, ' = ', rem, '->', rem % first
         remainders[bus] = rem % first
     self.busses = filter(lambda b: b != 'x' and b !='\n',busses)
     self.busses = filter(lambda b: b != 'x' and b !='\n',busses)
@@ -120,34 +148,57 @@ class Puzzle:
     #print "Quotients by GCD", t, s
     return (old_s, old_t)
 
-  def result(self):
+  def result3(self):
     self.extended_gcd(17,13)
     self.extended_gcd(102*13,19)
     pairs = []
     for key in self.remainders:
       pairs.append((key, self.remainders[key]))
+    print self.busses
     upper = 1
     for bus in self.busses:
       upper *= bus
     print "Upper Search:", upper
-    pairs.sort(key=lambda p: p[1], reverse=False)
+    print pairs
+    pairs.sort(key=lambda p: p[0])
     print pairs
     last = pairs.pop(0)
     print last
     print "====="
+    modd, _ = last 
     for pair in pairs:
       print last, pair
       lm, lr = last
       cm, cr = pair
+      #if cr == 0:
+      #  cr == cm
       (cl, cc) = self.extended_gcd(lm, cm)
       print cl, cc
       print lr, '*', cm, '*', cc, '+', cr, '*', lm, '*', cl
       n = (lr * cm * cc) + (cr * lm * cl)
-      n = n % (lm * cm)
+      modd = modd * cm
+      modd = lm * cm
+      print '-> ', n, '%', modd
+      n = n % modd
       print '-> ', n
-      last = (n * cm, n)
+      last = (n * cm, n *cl)
       print "=========="
     print n % upper
+
+  def result(self):
+    print self.busses
+    print self.remainders
+    pairs = []
+    for key in self.remainders:
+      pairs.append((key, self.remainders[key]))
+    pairs.sort(key=lambda p: p[0])
+    n = []
+    a = []
+    for pair in pairs:
+      key, rem = pair
+      n.append(key)
+      a.append(rem)
+    print chinese_remainder(n,a)
 
 if __name__ == '__main__':
   puz = Puzzle()
