@@ -1,3 +1,5 @@
+import copy
+
 class Puzzle:
 
   def process(self, text):
@@ -17,7 +19,25 @@ class Puzzle:
           mem = mem.replace('mem[', '').replace(']', '')
           mem = int(mem)
           #print mem, '=', num
-          self.memory[mem] = self.apply_mask(num)
+          addrs = self.apply_mask(mem)
+          for addr in addrs:
+            self.memory[addr] = num
+
+  def _gen_variant(self, mask):
+    #No variant
+    xs = filter(lambda b: b == 'X', mask)
+    if len(xs) == 0:
+      bits = map(lambda b: str(b), mask)
+      return [int(''.join(bits), 2)]
+    variants = []
+    for i in range(len(mask)):
+      if mask[i] == 'X':
+        v1 = copy.copy(mask)       
+        v2 = copy.copy(mask)
+        v1[i] = 0
+        v2[i] = 1
+        return self._gen_variant(v1) + self._gen_variant(v2)
+    
 
   def apply_mask(self,num):
     bits = list("{0:b}".format(num))
@@ -34,14 +54,17 @@ class Puzzle:
       if cbits > 0:
         cbits -= 1
         bit = bits[cbits]
-      if msk == 'X':
+      if msk == '0':
         newbits.append(str(bit))
+      elif msk == '1':
+        newbits.append('1')
       else:
-        newbits.append(msk)
+        newbits.append('X')
     #reverse
     newbits.reverse()
-    newbin = ''.join(newbits)
-    return int(newbin, 2)
+    #print 'Addr', bits, self.mask, '->', newbits
+    #newbin = ''.join(newbits)
+    return self._gen_variant(newbits)
 
   def result(self):
     total = 0 
