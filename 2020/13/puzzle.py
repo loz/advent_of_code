@@ -43,7 +43,7 @@ class Puzzle:
         offset[bus] = i
         rem = bus - i
         print first, i, ':>', bus, '-', i, ' = ', rem, '->', rem % first
-        remainders[bus] = rem % first
+        remainders[bus] = rem % bus
     self.busses = filter(lambda b: b != 'x' and b !='\n',busses)
     self.busses = filter(lambda b: b != 'x' and b !='\n',busses)
     self.busses = map(lambda b: int(b), self.busses)
