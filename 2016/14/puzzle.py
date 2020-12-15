@@ -8,11 +8,21 @@ class Puzzle:
   def process(self, salt):
     self.salt = salt
     self.index = 0
+    self.seen = {}
+
+  def genhash(self, text):
+    if self.seen.has_key(text):
+      return self.seen[text]
+    hash = hashlib.md5(text).hexdigest()
+    for i in range(2016):
+      hash = hashlib.md5(hash).hexdigest()
+    self.seen[text] = hash
+    return hash
   
   def find_start(self):
     while True:
       text = self.salt + str(self.index)
-      hash = hashlib.md5(text).hexdigest()
+      hash = self.genhash(text)
       #print hash
       #print '333' in hash
       match = re.findall(START, hash)
@@ -27,7 +37,7 @@ class Puzzle:
     target = ch * 5
     for i in range(index+1, index+1+1000):
       text = self.salt + str(i)
-      hash = hashlib.md5(text).hexdigest()
+      hash = self.genhash(text)
       #print i, hash, target
       if target in hash:
         return True
