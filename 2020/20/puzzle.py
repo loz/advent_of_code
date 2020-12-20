@@ -144,16 +144,36 @@ class Puzzle:
       for x in range(dim):
         id = sequence[y][x]
         tile = self.find_orientation(id, x, y, sequence, dim)
-        row.append(tile)
+        row.append(self.crop(tile))
       tiles.append(row)
-    print '====== TILES ====='
+    #print '====== TILES ====='
+    themap = ''
     for row in tiles:
-      print row
+      size = len(row[0])
+      lines = [''] * size
+      #print lines
+      #print size
+      for tile in row:
+        #print tile
+        for y in range(size):
+          lines[y] += tile[y]
+      #print lines
+      themap += ('\n'.join(lines)) + '\n'
+      #print ''
+    #print themap
+    return themap
+  
+  def crop(self, tile):
+    #print '===CROP==='
+    lines = filter(lambda l: l.strip() != '', tile.split('\n'))
+    width = len(lines[0])
+    cropped = []
+    for y in range(1, len(lines)-1):
+      #print lines[y], lines[y][1:width-2]
+      cropped.append(lines[y][1:width-1])
+    #print '=========='
+    return cropped
 
-    return """ABC
-DEF
-GHI
-"""
 
   def find_sequence(self):
     dim = int(math.sqrt(len(self.tiles)))
@@ -280,7 +300,8 @@ GHI
     print 'Corners', corners, cmult
 
   def result(self):
-    puz.assemble_map()
+    mapimg = puz.assemble_map()
+    print mapimg
 
 
 if __name__ == '__main__':

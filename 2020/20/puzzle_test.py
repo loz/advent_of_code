@@ -192,6 +192,9 @@ matches on its 'top' and right'
 .#.###..##..##..####.##.
 ...###...##...#...#..###
 """
+    print '====== MAPIMG ======='
+    print mapimg
+    print '===================='
     #Order not guarenteed, so expected could be HMirror or VMirror or Rot90 RMirror, VMirror
     matched = False
     #print mapimg
