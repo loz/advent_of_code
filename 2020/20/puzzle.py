@@ -298,10 +298,91 @@ class Puzzle:
     for corner in corners:
       cmult *= corner
     print 'Corners', corners, cmult
+  
+  def find_seamonsters(self, mapimg):
+    lines = filter(lambda l: l.strip() != '', mapimg.split('\n'))
+    dim = len(lines[0])
+
+    mask = [
+      "                  # ",
+      "#    ##    ##    ###",
+      " #  #  #  #  #  #   "
+    ]
+    mwidth = len(mask[0])
+    mheight = 3
+    #print mask, dim, mwidth, mheight
+    locations = []
+    for x in range(dim-mwidth):
+      for y in range(dim-mheight):
+        if self.monster_at(x, y, mask, lines):
+          #print 'Found!', x, y
+          locations.append((x, y))
+    newlines = self.write_monster(locations, mask, lines)
+    return len(locations) > 0, '\n'.join(newlines)
+
+  def write_monster(self, locations, mask, lines):
+    newlines = map(lambda l: [c for c in l], lines)
+    for location in locations:
+      x, y = location
+      for dx in range(len(mask[0])):
+        for dy in range(3):
+          if mask[dy][dx] == '#':
+            newlines[y+dy][x+dx] = 'O'
+    newlines = map(lambda l: ''.join(l), newlines)
+    return newlines
+
+  def monster_at(self, x, y, mask, lines):
+    for dx in range(len(mask[0])):
+      for dy in range(3):
+        if mask[dy][dx] == '#':
+          if lines[y+dy][x+dx] != '#':
+            return False 
+          #print x+dx, y+dy, mask[dy][dx], 'v', lines[y+dy][x+dx]
+    return True
+
+  def print_map(self, mapimg):
+    print mapimg.replace('O', '\033[92mO\033[0m')
+
+  def calc_roughness(self, mapimg):
+    total = 0
+    for ch in mapimg:
+      if ch == '#':
+        total += 1
+    print 'Roughness:', total
 
   def result(self):
     mapimg = puz.assemble_map()
-    print mapimg
+    flipped = self.hmirror(mapimg)
+    found, result = self.find_seamonsters(mapimg)
+    if found:
+      print 'Found'
+      self.print_map(result)
+      self.calc_roughness(result)
+      exit()
+    for i in range(3):
+      mapimg = self.hmirror(self.rotate(mapimg))
+      found, result = self.find_seamonsters(mapimg)
+      if found:
+        print 'Found'
+        self.print_map(result)
+        self.calc_roughness(result)
+        exit()
+    mapimg = flipped
+    found, result = self.find_seamonsters(mapimg)
+    if found:
+      print 'Found'
+      self.print_map(result)
+      self.calc_roughness(result)
+      exit()
+    for i in range(3):
+      mapimg = self.hmirror(self.rotate(mapimg))
+      found, result = self.find_seamonsters(mapimg)
+      if found:
+        print 'Found'
+        self.print_map(result)
+        self.calc_roughness(result)
+        exit()
+
 
 
 if __name__ == '__main__':
