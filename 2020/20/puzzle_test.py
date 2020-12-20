@@ -161,6 +161,73 @@ matches on its 'top' and right'
       [],#bottom
     ]
     self.assertEqual(matches,expected)
+
+  def test_assembles_map(self):
+    puzzle = puz.Puzzle()
+    puzzle.process(EXAMPLE)
+    
+    mapimg = puzzle.assemble_map()
+    expected = """.#.#..#.##...#.##..#####
+###....#.#....#..#......
+##.##.###.#.#..######...
+###.#####...#.#####.#..#
+##.#....#.##.####...#.##
+...########.#....#####.#
+....#..#...##..#.#.###..
+.####...#..#.....#......
+#..#.##..#..###.#.##....
+#.####..#.####.#.#.###..
+###.#.#...#.######.#..##
+#.####....##..########.#
+##..##.#...#...#.#.#.#..
+...#..#..#.#.##..###.###
+.#.#....#.##.#...###.##.
+###.#...#..#.##.######..
+.#.#.###.##.##.#..#.##..
+.####.###.#...###.#..#.#
+..#.#..#..#.#.#.####.###
+#..####...#.#.#.###.###.
+#####..#####...###....##
+#.##..#..#...#..####...#
+.#.###..##..##..####.##.
+...###...##...#...#..###
+"""
+    #Order not guarenteed, so expected could be HMirror or VMirror or Rot90 RMirror, VMirror
+    matched = False
+    #print mapimg
+    if mapimg == expected:
+      matched = True
+    hmirror = puzzle.hmirror(mapimg)
+    #print hmirror
+    if hmirror == expected:
+      matched = True
+    vmirror = puzzle.vmirror(mapimg)
+    #print vmirror
+    if vmirror == expected:
+      matched = True
+    hvmirror = puzzle.hmirror(vmirror)
+    #print hvmirror
+    if hvmirror == expected:
+      matched = True
+
+    mapimg = puzzle.rotate(mapimg)
+    #print mapimg
+    if mapimg == expected:
+      matched = True
+    hmirror = puzzle.hmirror(mapimg)
+    #print hmirror
+    if hmirror == expected:
+      matched = True
+    vmirror = puzzle.vmirror(mapimg)
+    #print vmirror
+    if vmirror == expected:
+      matched = True
+    hvmirror = puzzle.hmirror(vmirror)
+    #print hvmirror
+    if hvmirror == expected:
+      matched = True
+
+    self.assertTrue(matched)
     
 
 if __name__ == '__main__':
