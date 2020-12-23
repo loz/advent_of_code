@@ -3,12 +3,12 @@ class Puzzle:
   def process(self, text):
     pass
 
-  def expand_pop(self, exp, n):
+  def expand_pop(self, exp, ncount):
     head, runend, rtype = exp
     rest = []
     if rtype == 'one':  #repeat n, n+1, n+2...
       popped = []
-      for i in range(n):
+      for i in range(ncount):
         popped.append(head)
         head += 1
       rest = [(head, runend, 'one')]
@@ -16,15 +16,26 @@ class Puzzle:
     elif rtype == 'two': #repeat n, n+1, n+3, n+5...
       rest = []
       popped = []
-      for i in range(n):
+      for i in range(ncount):
         if len(rest) == 0:
           rest = [head, head+1]
           head += 3
         n = rest.pop(0)
         popped.append(n)
+      print len(popped + rest), ncount
+      attempt = 0 
+      while (len(popped) + 1 + len(rest)) % (ncount+1) != 0:
+        attempt += 1
+        print len(popped + rest) + 1, (ncount+1)
+        print 'Not a multiple'
+        rest += [head, head+1]
+        head += 3
+        if attempt > 20:
+          print popped, rest, head, runend
+          exit()
       print popped, rest, head, runend
-      return (popped, rest + [(head, runend, 'two')])
       raise 'WIP'
+      return (popped, rest + [(head, runend, 'two')])
     else:
       raise 'Expand Pop Unhandled:' + rtype
     
@@ -116,7 +127,7 @@ class Puzzle:
     theround = 1
     for i in range(rounds):
       print 'move', theround
-      #print cups
+      print cups
       theround, cups = self.play(cups, dim, theround)
     #print 'Final', cups
     idx = cups.index(1)
