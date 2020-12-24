@@ -1,133 +1,96 @@
 class Puzzle:
 
-  def process(self, text):
-    pass
+  def process(self, string):
+    print 'Load', string
+    ints = []
+    for ch in string:
+      ints.append(int(ch))
+    self.dim = len(ints)
+    self.head = ints[0]
+    self.links = {}
+    for i in range(self.dim):
+      nx = i+1
+      if nx == self.dim:
+        nx = 0
+      #print i, ints[i], '->', ints[nx]
+      self.links[ints[i]] = ints[nx]
+    print self.links, self.dim
 
-  def expand_pop(self, exp, n):
-    head, runend, rtype = exp
-    rest = []
-    if rtype == 'one':  #repeat n, n+1, n+2...
-      popped = []
-      for i in range(n):
-        popped.append(head)
-        head += 1
-      rest = [(head, runend, 'one')]
-      return (popped, rest)
-    elif rtype == 'two': #repeat n, n+1, n+3, n+5...
-      rest = []
-      popped = []
-      for i in range(n):
-        if len(rest) == 0:
-          rest = [head, head+1]
-          head += 3
-        n = rest.pop(0)
-        popped.append(n)
-      print popped, rest, head, runend
-      return (popped, rest + [(head, runend, 'two')])
-      raise 'WIP'
-    else:
-      raise 'Expand Pop Unhandled:' + rtype
-    
+  def fillfrom(self, loc, upper):
+    origend = self.links[loc]
+    start = self.dim+1
+    endd = upper+1
+    head = loc
+    for i in range(start, endd):
+      self.links[head] = i
+      head = i
+    self.links[i] = origend
+    print 'Looping back', i, '->', origend
+    self.dim = upper
 
-  def expand_pick(self, pick, rest):
-    if type(pick[0]) != type(1):  #first expands
-      print 'Expand 1'
-      exp = pick.pop(0)
-      prest = pick
-      pick, exp = self.expand_pop(exp, 3)
-      #print pick, exp, prest, rest
-      return (pick, exp + prest + rest)
-    elif type(pick[1]) != type(1): #second expands
-      print 'Expand 2'
-    elif type(pick[2]) != type(1): #third expand
-      print 'Expand 3'
-    else: #no expand
-      return (pick, rest)
+  def trace(self, count, ffrom = None):
+    if ffrom == None:
+      ffrom = self.head
+    values = []
+    head = ffrom
+    for i in range(count):
+      values.append(head)
+      head = self.links[head]
+    return values
 
-  def play(self, cups, dim, theround):
-    pick = cups[1:4]
-    head = cups[0]
-    if type(head) == type(1):
-      dest = head - 1
-      if dest == 0:
-        dest = dim
-      #print 'cups', cups
-      #print 'pick', pick
-      #print 'dest', dest
-      rest = cups[4:]
-      pick, rest = self.expand_pick(pick, rest)
-      newcups = rest + [head]
-      while dest not in newcups:
-        dest -= 1
-        if dest == 0:
-          dest = dim
-      idx = newcups.index(dest)
-      newcups = newcups[0:idx+1] + pick + newcups[idx+1:]
-      theround += 1
-    else:
-      #Special ranger
-      print 'SPECIAL - EXPAND!', 
-      head, runend, rtype = head
-      if rtype == 'one': #repeat n, n+1, n+2...
-        repeat = (runend - head) / 4
-        print 'consume', repeat, 'times'
-        print 'insert', head - 1
-        idx = cups.index(head - 1)
-        thead = head
-        repcount = 0
-        while thead < runend-3:
-          repcount +=1
-          thead += 4
-        repcount -= 1
-        thead -= 4
-        headrun = thead
-        remainder = []
-        thead += 4
-        while thead <= runend:
-          remainder.append(thead)
-          thead += 1
+  def play(self):
+    current = self.head # links -> after set
+    first = self.links[current]  #insert link -> first
+    second = self.links[first]
+    third = self.links[second]
+    newhead = self.links[third]  #link to -> insertend
+    pick = [first, second, third]
+    #print current, first, second, third, 'newhead', newhead
+    insert = current - 1
+    if insert == 0:
+      insert = self.dim
+    while insert in pick:
+      insert -= 1
+      if insert == 0:
+        insert = self.dim
+    insertend = self.links[insert]
+    self.links[insert] = first
+    self.links[self.head] = self.links[third]
+    self.links[third] = insertend
+    self.head = newhead
 
-        print 'Runto', headrun, repcount, remainder
-        fourbit = [(head, headrun, 'four')]
-        twobit = [(head+1, headrun+3, 'two')]
-        theround += repeat
-        newcups = remainder + cups[1:idx+1] + twobit + cups[idx+1:] + fourbit
-      elif rtype == 'four':
-        repeat = (runend - head) / 4 / 4
-        print 'consume', repeat, 'times'
-        print head, head + 4, head + 8, '...'
-        thead = head
-        while thead < runend:
-          thead += 4
-
-        print head + (4 * 4 * repeat)
-        print thead
-        raise 'WIP'
-      else:
-        raise 'Unhandled Type' + rtype
-    return theround, newcups
-
-  def result(self, rounds, dim):
-    #cups = [3, 8, 9, 1, 2, 5, 4, 6, 7]
-    cups = [9, 4, 2, 3, 8, 7, 6, 1, 5, (10,999999,'one'), 1000000]
-    #subs = rounds / 100
-    #for s in range(100):
-    #  print '.'
-    theround = 1
+  def result(self, rounds):
     for i in range(rounds):
-      print 'move', theround
-      #print cups
-      theround, cups = self.play(cups, dim, theround)
-    #print 'Final', cups
-    idx = cups.index(1)
-    print '1@', idx
-    print cups[idx+1]
-    print cups[idx+2]
-    #after = cups[idx+1:] + cups[0:idx]
+      #print 'move', i+1
+      #print self.trace(9)
+      self.play()
+      #print puz.trace(101)
+    print 'Final', 
+    #print self.trace(9)
+    #idx = cups.index(1)
+    #print '1@', idx
+    #print cups[idx+1]
+    #print cups[idx+2]
+    after = self.trace(9, 1)
     #after = map(lambda a: str(a), after)
     #print 'Labels', ''.join(after)
+    print after[0]
+    print after[1]
+    print after[2]
+    print after[1] * after[2]
 
 if __name__ == '__main__':
   puz = Puzzle()
   #puz.result(1000)
-  puz.result(1000000, 1000000)
+  puz.process("942387615")
+  puz.fillfrom(5, 1000000)
+  #puz.process("389125467")
+  #puz.fillfrom(7, 1000000)
+  #puz.fillfrom(7, 100)
+  print 'Filled'
+  #puz.result(1000000)
+  #puz.result(100)
+  print puz.trace(101)
+  #exit()
+  #puz.result(10000000)
+  puz.result(10000000+1)
