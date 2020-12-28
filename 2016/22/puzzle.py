@@ -71,17 +71,17 @@ class Puzzle:
         neighbours.append((xdx,ydy))
     return neighbours
 
-  def can_move(self, src, dst, grid):
-    srcnode = grid[src]
-    dstnode = grid[dst]
+  def can_move(self, src, dst, modified):
+    srcnode = modified.get(src, self._grid[src])
+    dstnode = modified.get(dst, self._grid[dst])
     return dstnode['avail'] >= srcnode['used']
 
-  def gen_moves(self, empty, neighbours, grid):
+  def gen_moves(self, empty, neighbours, modified):
     moves = []
     for node in neighbours:
-      ngrid = copy.deepcopy(grid)
-      srcnode = ngrid[node]
-      dstnode = ngrid[empty]
+      nmodified = copy.deepcopy(modified)
+      srcnode = nmodified.get(node, copy.copy(self._grid[node]))
+      dstnode = nmodified.get(empty, copy.copy(self._grid[empty]))
       data = srcnode['used']
       goal = srcnode['goal']
       srcnode['used'] = 0
@@ -90,49 +90,52 @@ class Puzzle:
       dstnode['avail'] += data
       srcnode['goal'] = dstnode['goal']
       dstnode['goal'] = goal
-      moves.append((node, ngrid))
+      nmodified[node] = srcnode
+      nmodified[empty] = dstnode
+      moves.append((node, nmodified))
     return moves
 
   def hash(self, option):
     return str(option)
 
-  def goal_hit(self, grid):
-    node = grid[(0,0)]
-    return node['goal']
+  def goal_hit(self, modified):
+    if modified.has_key((0,0)):
+      node = modified[(0,0)]
+      return node['goal']
+    else:
+      return False
 
   def dump(self, grid):
-    for y in grid:
-      for x in grid[y]:
-        n = grid[y][x]
-        g = ''
-        if n['goal'] :
-          g = 'G'
-        print n['used'], '/', n['size'], g,  '--',
+    for y in range(self.height+1):
+      for x in range(self.width+1):
+        n = grid[(x,y)]
+        if n['used'] > 200:
+          print "##/##",
+        else:
+          print "%2d/%2d" % (n['used'], n['size']),
       print ''
 
   def result(self):
-    grid = self._grid
-    modified = []
     width, height = self.get_size()
-    print width, height
-    grid[(width,0)]['goal'] = True
-    print grid[(width, 0)]
-    empty = self.empty_nodes(grid)[0]
-    start = (empty, grid)
+    empty = self.empty_nodes(self._grid)[0]
+    print empty
+    self.dump(self._grid)
+    exit()
+    modified = {}
+    self._grid[(width,0)]['goal'] = True
+    start = (empty, modified)
     head = [start]
     discovered = {self.hash(start): True}
     tail = []
     depth = 0
     while len(head) > 0:
-      empty, grid  = head.pop(0)
-      #print empty
-      #self.dump(grid)
-      if self.goal_hit(grid):
+      empty, modified  = head.pop(0)
+      if self.goal_hit(modified):
         print 'Goal Reached', depth
         return
       neighbours = self.neighbours(empty)
-      neighbours = filter(lambda x: self.can_move(x,empty,grid), neighbours)
-      moves = self.gen_moves(empty, neighbours, grid)
+      neighbours = filter(lambda x: self.can_move(x,empty,modified), neighbours)
+      moves = self.gen_moves(empty, neighbours, modified)
       for move in moves:
         h = self.hash(move)
         if not discovered.has_key(h):
