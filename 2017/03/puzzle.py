@@ -42,27 +42,46 @@ class Puzzle:
         return (maxs - rem, mins)
     return (-99, -99)
 
-  def dump(self, size):
+  def gen1(self, size):
     print 'Size', size
     grid = {}
     for i in range(1, (size*size)+1):
       x, y = self.loc(i)
       grid[(x,y)] = i
-    
+    return grid
+
+  def gen2(self, size, upper):
+    grid = {(0,0): 1}
+    found = False
+    for i in range(2, (size*size) + 1):
+      x, y = self.loc(i)
+      val = self.nsum(x, y, grid)
+      if val > upper and not found:
+        print 'LARGE', val
+        found = True
+      grid[(x, y)] = val
+    return grid
+
+  def nsum(self, x, y, grid):
+    total = 0
+    deltas = [(-1,-1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+    for dxdy in deltas:
+      dx, dy = dxdy
+      total += grid.get((x+dx, y+dy), 0)
+    return total
+
+  def dump(self, size, grid):
     mins = -1 * (size/2)
     maxs = size/2
-    print mins, maxs
+    #print mins, maxs
     for y in range(mins, maxs+1):
       for x in range(mins, maxs+1):
-        print "%3d" % grid[(x,y)],
+        print "%8d" % grid[(x,y)],
       print ''
   
   def result(self):
-    self.dump(31)
-    x, y = self.loc(1024)
-    print 1024, x, y , '=', abs(x)+abs(y)
-    x, y = self.loc(265149)
-    print 265149, x, y , '=', abs(x)+abs(y)
+    grid = self.gen2(9, 265149)
+    self.dump(9, grid)
 
 if __name__ == '__main__':
   puz = Puzzle()
