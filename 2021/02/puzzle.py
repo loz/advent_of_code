@@ -3,6 +3,7 @@ class Puzzle:
   def __init__(self):
     self.horizontal = 0
     self.depth = 0
+    self.aim = 0
 
   def process(self, text):
     commands = text.split('\n')
@@ -16,10 +17,11 @@ class Puzzle:
     val = int(val)
     if op == 'forward':
       self.horizontal += val
+      self.depth += val * self.aim
     elif op == 'up':
-      self.depth -= val
+      self.aim -= val
     else: #down
-      self.depth += val
+      self.aim += val
 
 
   def result(self):

@@ -15,14 +15,22 @@ forward 2
     puzzle.process("""down 3
 down 6
 """)
-    self.assertEqual(puzzle.depth, 9)
+    self.assertEqual(puzzle.aim, 9)
 
   def test_puzzle_moves_up(self):
     puzzle = puz.Puzzle()
     puzzle.process("""up 2
 up 3
 """)
-    self.assertEqual(puzzle.depth, -5)
+    self.assertEqual(puzzle.aim, -5)
+
+  def test_puzzle_aim_changes_depth(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""forward 2
+down 3
+forward 5
+""")
+    self.assertEqual(puzzle.depth, 15)
 
 if __name__ == '__main__':
     unittest.main()
