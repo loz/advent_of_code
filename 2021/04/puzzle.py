@@ -35,6 +35,12 @@ class Puzzle:
         self.winning_score = self.score_board(self.winning_board) * number
         return
 
+  def play_bingo_to_loose(self):
+    while len(self.boards) > 1:
+      self.play_bingo()
+      del self.boards[self.winning_board]
+    self.play_bingo()
+
   def score_board(self, boardid):
     board = self.boards[boardid]
     score = 0
@@ -65,8 +71,12 @@ class Puzzle:
         if hit != None:
           row[hit] = '*'
 
-  def result(self):
+  def result1(self):
     self.play_bingo()
+    print self.winning_score
+
+  def result(self):
+    self.play_bingo_to_loose()
     print self.winning_score
 
 if __name__ == '__main__':
