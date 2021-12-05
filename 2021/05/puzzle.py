@@ -45,6 +45,21 @@ class Puzzle:
       y2 = max(start[1], end[1])
       for y in range(y1,y2+1):
         self.map[y][x] += 1
+    else: #Diagonal
+      x1 = start[0]
+      x2 = end[0]
+      y1 = start[1]
+      y2 = end[1]
+      y = y1
+      x = x1
+      size = max(x1,x2) - min(x1,x2)
+      dydx = (y2-y1)/size
+      dxdy = (x2-x1)/size
+      for s in range(size+1):
+        self.map[y][x] += 1
+        x += dxdy
+        y += dydx
+        
 
   def decode_coord(self, string):
     x, y = string.split(',')
@@ -65,7 +80,7 @@ class Puzzle:
     return map
 
   def result(self):
-    print self.to_str(10)
+    print self.to_str(100)
     print 'Danger Spots:', self.danger
 
 if __name__ == '__main__':

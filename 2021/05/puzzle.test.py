@@ -27,6 +27,17 @@ class TestPuzzle(unittest.TestCase):
 2...
 """)
 
+  def test_puzzle_draws_diag_lines(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""0,0 -> 3,3
+3,0 -> 0,3
+""")
+    self.assertEqual(puzzle.to_str(4), """1..1
+.11.
+.11.
+1..1
+""")
+
   def test_puzzle_draws_calculate_danger(self):
     puzzle = puz.Puzzle()
     puzzle.process("""0,0 -> 0,3
