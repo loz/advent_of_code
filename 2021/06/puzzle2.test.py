@@ -1,5 +1,5 @@
 import unittest
-import puzzle as puz
+import puzzle2 as puz
 
 class TestPuzzle(unittest.TestCase):
 

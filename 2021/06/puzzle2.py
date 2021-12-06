@@ -39,13 +39,6 @@ class Puzzle:
       self.known_growths[timer] = self._calculate_growth(timer, days)
       print self.known_growths[timer]
     return self.known_growths[timer]
-      #tmp = self.state
-      #self.state = [timer]
-      #for day in range(1,days+1):
-      #  self.tick()
-      #self.known_growths[timer] = len(self.state)
-      #self.state = tmp
-      #return self.known_growths[timer]
 
   def _calculate_growth(self, timer, days):
     growth = 1 #self
@@ -56,7 +49,7 @@ class Puzzle:
       return growth
     if remains != 0:
       newfish += 1
-    #print nest, 'S:', spawnat, 'N:', newfish
+    print 'S:', spawnat, 'N:', newfish
     for fish in range(newfish):
       growth += self._calculate_growth(8, spawnat-1-(7*fish))
     return growth
