@@ -8,73 +8,70 @@ class TestPuzzle(unittest.TestCase):
     puzzle.process("""ab ab | ab
 """)
     masks = puzzle.genmasks('ab')
-    mask = masks['ab']
-    self.assertEqual(mask, 0b0010010)
+    self.assertEqual(masks[1], set(['a','b']))
 
   def test_puzzle_finds_bitmask_for_7(self):
     puzzle = puz.Puzzle()
     puzzle.process("""ab ab | ab
 """)
     masks = puzzle.genmasks('abc')
-    mask = masks['abc']
-    self.assertEqual(mask, 0b1010010)
+    self.assertEqual(masks[7], set(['a','b', 'c']))
 
   def test_puzzle_finds_bitmask_for_4(self):
     puzzle = puz.Puzzle()
     puzzle.process("""ab ab | ab
 """)
     masks = puzzle.genmasks('abcd')
-    mask = masks['abcd']
-    self.assertEqual(mask, 0b0111010)
+    self.assertEqual(masks[4], set(['a','b', 'c', 'd']))
 
-  def test_puzzle_finds_bitmask_for_0(self):
+  def test_puzzle_finds_bitmask_for_8(self):
     puzzle = puz.Puzzle()
     puzzle.process("""ab ab | ab
 """)
-    masks = puzzle.genmasks('be fedb gbe gafceb')
-    mask = masks['abcefg']
-    self.assertEqual(mask, 0b1110111)
-
-  def test_puzzle_finds_bitmask_for_3(self):
-    puzzle = puz.Puzzle()
-    puzzle.process("""ab ab | ab
-""")
-    masks = puzzle.genmasks('be fedb gbe gedba')
-    mask = masks['abdeg']
-    self.assertEqual(mask, 0b1011011)
-
-  def test_puzzle_finds_bitmask_for_2(self):
-    puzzle = puz.Puzzle()
-    puzzle.process("""ab ab | ab
-""")
-    masks = puzzle.genmasks('be fedb gbe gafceb gedba gedca')
-    mask = masks['acdeg']
-    self.assertEqual(mask, 0b1011101)
-
-
-  def test_puzzle_finds_bitmask_for_5(self):
-    puzzle = puz.Puzzle()
-    puzzle.process("""ab ab | ab
-""")
-    masks = puzzle.genmasks('be fedb gbe gfdba')
-    mask = masks['abdfg']
-    self.assertEqual(mask, 0b1101011)
-
-  def test_puzzle_finds_bitmask_for_6(self):
-    puzzle = puz.Puzzle()
-    puzzle.process("""ab ab | ab
-""")
-    masks = puzzle.genmasks('be fedb gbe gfdcba')
-    mask = masks['abcdfg']
-    self.assertEqual(mask, 0b1101111)
+    masks = puzzle.genmasks('abcdefg')
+    self.assertEqual(masks[8], set(['a','b', 'c', 'd', 'e', 'f', 'g']))
 
   def test_puzzle_finds_bitmask_for_9(self):
     puzzle = puz.Puzzle()
     puzzle.process("""ab ab | ab
 """)
-    masks = puzzle.genmasks('be fedb gbe gfedba')
-    mask = masks['abdefg']
-    self.assertEqual(mask, 0b1111011)
+    masks = puzzle.genmasks('geb fedb gfecba gfedba gfdcba')
+    self.assertEqual(masks[9], set(['a','b', 'd', 'e', 'f', 'g']))
+
+  def test_puzzle_finds_bitmask_for_0(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""ab ab | ab
+""")
+    masks = puzzle.genmasks('geb fedb gfecba gfedba gfdcba')
+    self.assertEqual(masks[0], set(['a','b', 'c', 'e', 'f', 'g']))
+
+  def test_puzzle_finds_bitmask_for_6(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""ab ab | ab
+""")
+    masks = puzzle.genmasks('geb fedb gfecba gfedba gfdcba')
+    self.assertEqual(masks[6], set(['a','b', 'c', 'd', 'f', 'g']))
+
+  def test_puzzle_finds_bitmask_for_3(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""ab ab | ab
+""")
+    masks = puzzle.genmasks('geb fedb gfecba gfedba gfdcba gedba gfdba gedca')
+    self.assertEqual(masks[3], set(['a','b', 'd', 'e', 'g']))
+
+  def test_puzzle_finds_bitmask_for_5(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""ab ab | ab
+""")
+    masks = puzzle.genmasks('geb fedb gfecba gfedba gfdcba gedba gfdba gedca')
+    self.assertEqual(masks[5], set(['a','b', 'd', 'f', 'g']))
+
+  def test_puzzle_finds_bitmask_for_2(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""ab ab | ab
+""")
+    masks = puzzle.genmasks('geb fedb gfecba gfedba gfdcba gedba gfdba gedca')
+    self.assertEqual(masks[2], set(['a', 'c', 'd', 'e', 'g']))
 
   def test_puzzle_matches_1(self):
     puzzle = puz.Puzzle()

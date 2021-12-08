@@ -28,8 +28,64 @@ class Puzzle:
     skey.sort()
     return ''.join(skey)
     
-
   def genmasks(self, patterns):
+    #find 1, 4, 7, 8
+    unknown = self.map_sets(patterns)
+    known, unknown = self.find_1478(unknown)
+    known, unknown = self.find_906(known, unknown)
+    known = self.find_352(known, unknown)
+    return known
+
+  def find_1478(self, unknown):
+    known = {}
+    new_unknown = []
+    for item in unknown:
+      l = len(item)
+      if l == 2:
+        known[1] = item
+      elif l == 3:
+        known[7] = item
+      elif l == 4:
+        known[4] = item
+      elif l == 7:
+        known[8] = item
+      else:
+        new_unknown.append(item)
+    return known, new_unknown
+
+  def find_906(self, known, unknown):
+    new_unknown = []
+    for item in unknown:
+      if len(item) == 6:
+        #possible 9, 0, 6
+        if known[4].issubset(item):
+          known[9] = item
+        elif known[7].issubset(item):
+          known[0] = item
+        else:
+          known[6] = item
+      else:
+        new_unknown.append(item)
+
+    return known, new_unknown
+
+  def find_352(self, known, unknown):
+    new_unknown = []
+    for item in unknown:
+      if known[7].issubset(item):
+        known[3] = item
+      elif item.issubset(known[9]):
+        known[5] = item
+      else:
+        known[2] = item
+
+    return known
+
+  def map_sets(self, patterns):
+    sets = patterns.split(' ')
+    return map(lambda s: self.toset(s), sets)
+
+  def genmasks1(self, patterns):
     masks = {}
     known = []
     unknown = map(lambda p: self.toset(p), patterns.split(' '))
@@ -114,16 +170,24 @@ class Puzzle:
     print 'Total 1, 4, 7, 8s:', total
 
   def result(self):
+    total = 0
     for i in self.inputs:
-      print i
-    i = self.inputs[0]
-    pattern, digits = i
-    options = self.narrow_options(pattern)
-    for k in options:
-      print k, options[k]
-    options = self.narrow_options(pattern, options)
-    for k in options:
-      print k, options[k]
+      patterns, code = i
+      masks = self.genmasks(patterns)
+      dcode = self.decode(code, masks)
+      total += dcode
+      print patterns, code, dcode
+    print 'Total', total
+
+  def decode(self, code, masks):
+    setcode = self.map_sets(code)
+    dcode = 0
+    for digit in setcode:
+      for n in range(10):
+        if masks[n] == digit:
+          dcode *= 10
+          dcode += n
+    return dcode
 
 
 if __name__ == '__main__':
