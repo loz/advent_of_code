@@ -28,17 +28,17 @@ class Puzzle:
     #print 'Total Fish:', len(self.state)
     growth = 0
     for fish in self.state:
-      print fish
+      #print fish
       growth += self.calculate_growth(fish, 256)
     print 'Total Growth', growth
 
 
   # All 0, 1, 2, 3, 4, 5, 6, 7, 8 grow exactly the same
   def calculate_growth(self, timer, days, nest=''):
-    if timer not in self.known_growths:
-      self.known_growths[timer] = self._calculate_growth(timer, days)
-      print self.known_growths[timer]
-    return self.known_growths[timer]
+    if (timer,days) not in self.known_growths:
+      self.known_growths[(timer, days)] = self._calculate_growth(timer, days)
+      #print self.known_growths[(timer, days)]
+    return self.known_growths[(timer, days)]
       #tmp = self.state
       #self.state = [timer]
       #for day in range(1,days+1):
@@ -48,6 +48,8 @@ class Puzzle:
       #return self.known_growths[timer]
 
   def _calculate_growth(self, timer, days):
+    if (timer, days) in self.known_growths:
+      return self.known_growths[(timer, days)]
     growth = 1 #self
     spawnat = (days - timer)
     newfish = spawnat / 7
@@ -59,6 +61,7 @@ class Puzzle:
     #print nest, 'S:', spawnat, 'N:', newfish
     for fish in range(newfish):
       growth += self._calculate_growth(8, spawnat-1-(7*fish))
+    self.known_growths[(timer, days)] = growth
     return growth
 
 #  def _calculate_growth(self, timer, days, nest=''):
