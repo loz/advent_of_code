@@ -21,29 +21,54 @@ class Puzzle:
       for x in range(self.width):
         height = self.map[y][x]
         neighbours = self.neighbours(x,y)
-        larger = filter(lambda x: height >= x, neighbours)
+        larger = filter(lambda x: height >= x[1], neighbours)
         #print height, neighbours, larger
         if len(larger) == 0:
           lows.append(((x,y), height))
     return lows
+
+  def size_basin(self, low):
+    visited = []
+    tovisit = [low]
+    while len(tovisit) > 0:
+      loc = tovisit.pop()
+      visited.append(loc)
+      xy, h = loc
+      x, y = xy
+      neighbours = self.neighbours(x,y)
+      for n in neighbours:
+        if n[1] >= h and n[1] != 9:
+          if n not in visited and n not in tovisit:
+            tovisit.append(n)
+    print visited
+    return len(visited)
 
   def neighbours(self, x, y):
     deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
     values = []
     for d in deltas:
       dx, dy = d
-      if y + dy >= 0 and y + dy < self.height and x + dx >= 0 and x + dx < self.width:
-         values.append(self.map[y+dy][x+dx])
+      nx = x + dx
+      ny = y + dy
+      if ny >= 0 and ny < self.height and nx >= 0 and nx < self.width:
+         values.append(((nx,ny),self.map[ny][nx]))
     return values
 
   def result(self):
     lows = self.identify_lows()
     risk = 0
+    basins = []
     for low in lows:
-      print low
       xy, h = low
       risk += 1 + h
+      basin_size = self.size_basin(low)
+      print low, basin_size
+      basins.append(basin_size)
     print 'Risk', risk
+    print 'Basin', basins
+    basins.sort(reverse=True)
+    print 'Max:', basins[0] * basins[1] * basins[2]
+
 
 if __name__ == '__main__':
   puz = Puzzle()
