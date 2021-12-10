@@ -47,11 +47,10 @@ class Puzzle:
     print 'Severity:', self.severity()
 
   def result(self):
-    sev = -100
-    delay = 0
-    while sev != 0:
-      delay += 2
-      sev = self.runwait(delay)
+    wait = 0
+    while not self.safe_delay(wait):
+      print wait
+      wait +=1 
 
   def runwait(self, delay):
     self.reset()
@@ -63,6 +62,17 @@ class Puzzle:
     sev = self.severity()
     print '-> Severity:', sev
     return sev
+
+  def safe_delay(self, pico):
+    print pico
+    for r in self.ranges:
+      #print r, self.ranges[r]
+      m = (2 * self.ranges[r]) - 2
+      #print r, m
+      if (r + pico) % m == 0:
+        return False
+    #Does not get caught
+    return True
 
   def hits(self):
     return self.captures

@@ -64,6 +64,13 @@ class TestPuzzle(unittest.TestCase):
     self.assertTrue(6 in hits)
     self.assertEqual(puzzle.severity(), 24)
 
+  def test_can_calculate_safe_at_given_delay(self):
+    puzzle = puz.Puzzle()
+    puzzle.process(EXAMPLE)
+    self.assertFalse(puzzle.safe_delay(9))
+    self.assertTrue(puzzle.safe_delay(10))
+    
+
 
 if __name__ == '__main__':
     unittest.main()
