@@ -2,7 +2,9 @@ class Puzzle:
 
   def process(self, text):
     self.programs = 'abcdefghijklmnop'
-    ops = text.rstrip().split(',')
+    self.ops = text.rstrip().split(',')
+
+  def dance(self, ops):
     for op in ops:
       self.process_op(op)
 
@@ -10,7 +12,7 @@ class Puzzle:
     if len(op) > 0:
       code = op[0]
       rest = op[1:]
-      print code, rest, self.programs
+      #print code, rest, self.programs
       if code == 's':
         size = int(rest)
         left = self.programs[:-size]
@@ -40,7 +42,22 @@ class Puzzle:
       pass
 
   def result(self):
-    print self.programs
+    seen = {}
+    self.programs = 'abcdefghijklmnop'
+    for i in range(1000):
+      self.dance(self.ops)
+      if seen.get(self.programs, False):
+        print 'Repeat! @', i
+        oneb = 1000000000 % i
+        print '1B same as ', oneb
+        self.programs = 'abcdefghijklmnop'
+        for i in range(oneb):
+          self.dance(self.ops)
+        print '=>', self.programs
+        return
+      else:
+        seen[self.programs] = True
+      print self.programs
 
 if __name__ == '__main__':
   puz = Puzzle()
