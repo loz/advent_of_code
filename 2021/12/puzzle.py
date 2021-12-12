@@ -22,18 +22,22 @@ class Puzzle:
 
   def build_paths(self):
     curnode = 'start'
-    return self._paths_from_node(curnode, [])
+    return self._paths_from_node(curnode, [], None)
 
-  def _paths_from_node(self, node, visited):
+  def _paths_from_node(self, node, visited, twice):
     if node == 'end':
       return [visited + ['end']]
     options = self.nodes[node]
     paths = []
     for opt in options:
       if opt in visited and self.small_cave(opt):
-        pass
+        if opt == 'start' or twice != None:
+          pass
+        else:
+          print 'Again', opt, visited
+          paths += self._paths_from_node(opt, visited + [node], opt)
       else:
-        paths += self._paths_from_node(opt, visited + [node])
+        paths += self._paths_from_node(opt, visited + [node], twice)
     return paths
   
   def small_cave(self, label):

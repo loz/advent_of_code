@@ -26,6 +26,6 @@ A-end
 b-end
 """)
     paths = puzzle.build_paths()
-    self.assertEqual(len(paths), 10)
+    self.assertEqual(len(paths), 36)
 if __name__ == '__main__':
     unittest.main()
