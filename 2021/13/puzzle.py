@@ -28,13 +28,12 @@ class Puzzle:
     self.folds.append((axis,pos))
 
   def fold(self):
-    f = self.folds[0]
-    axis, pos = f
-    if axis == 'y':
-      self.fold_y(pos)
-    elif axis == 'x':
-      self.fold_x(pos)
-
+    for f in self.folds:
+      axis, pos = f
+      if axis == 'y':
+        self.fold_y(pos)
+      elif axis == 'x':
+        self.fold_x(pos)
 
   def fold_y(self, pos):
     newdots = set()
