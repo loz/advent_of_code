@@ -62,7 +62,8 @@ BC -> Y
 AB -> X
 BC -> Y
 """)
-    mmin, mmax = puzzle.min_max()
+    freqs = puzzle.pair_freqs()
+    mmin, mmax = puzzle.min_max(freqs)
     self.assertEqual(mmin, ('C', 2))
     self.assertEqual(mmax, ('A', 8))
 
