@@ -2,6 +2,7 @@ class Puzzle:
 
   def process(self, text):
     self.rows = []
+    self.steps = 0
     self.finished = False
     self.letters = []
     self.direction = (0, 1)
@@ -22,11 +23,13 @@ class Puzzle:
     dx, dy = self.direction
     x += dx
     y += dy
+    self.steps += 1
     while self.rows[y][x] != '+':
       sym = self.rows[y][x]
       if sym == ' ':
         self.finished = True
         return
+      self.steps += 1
       if sym != '|' and sym != '-':
         self.letters.append(sym)
       x += dx
@@ -52,6 +55,7 @@ class Puzzle:
     while not self.finished:
       self.travel()
     print ''.join(self.letters)
+    print 'Steps', self.steps
 
 if __name__ == '__main__':
   puz = Puzzle()

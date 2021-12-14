@@ -54,5 +54,18 @@ class TestPuzzle(unittest.TestCase):
     puzzle.travel()
     self.assertEqual(puzzle.letters, ['A', 'B', 'C'])
 
+  def test_puzzle_counts_steps(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""     |          
+     |  +--+    
+     A  |  C    
+ F---|----E|--+ 
+     |  |  |  D 
+     +B-+  +--+ 
+""")
+    while not puzzle.finished:
+      puzzle.travel()
+    self.assertEqual(puzzle.steps, 38)
+
 if __name__ == '__main__':
     unittest.main()
