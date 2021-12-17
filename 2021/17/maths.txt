@@ -1,0 +1,46 @@
+X
+1+2+3+4+5+6 = 21
+actually: 6+5+4+3+2+1
+
+Y=9
+
++9+8+7+6+5+4+3+2+1+0-1-2-3-4-5-6-7-8-9-10
+in X steps it's 'over target' and just needs to drop, but the rate of dropping can 'overshoot'
+45 heighta
+
+max height = n(n+1) / 2
+90 / 2 = 45
+does it fit?  max->top   
+range = 50->60
+so is there an x(x+1)/2 which is in the range 50-60?
+top -5, bottom -10
+
+09 -> 45 -> NO
+10 -> 10*11 / 2 -> 55 YES  AOK
+11 -> 11*12 / 2 -> 66 NO OVER
+
+10 -> 55.  Delta = 60->65  (10 NO, 11 NO too large) -> NO Fit!
+8 -> 8*9 = 36  == 41, 46
+  9 -> 45 = YES 
+7 -> 7*8 = 28  == 33, 38
+  8 -> 36 = YES
+6 -> 6*7 = 21 == 26, 31
+  7 -> 28 = YES
+5 -> 5*6 = 15 == 20, 25
+  6 -> 21 = YES
+4 -> 4*5 = 10 == 15, 20
+  5 -> 15 = YES
+3 -> 3*4 = 6 == 11, 16
+  4 = 10 = NO (low)
+  5 = 15 = YES 
+2 -> 2*3 = 3 == 8, 13
+  3 = 6 = NO (low)
+  4 = 10 = YES
+1 -> 1*2 = 1 == 6, 11
+  4 = YES
+
+
+  
+
+Variables are Independant (I think)
+
