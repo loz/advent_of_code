@@ -27,5 +27,13 @@ class TestPuzzle(unittest.TestCase):
     y = puzzle.max_height
     self.assertEqual(y, 45)
 
+  def test_puzzle_calculates_all_vectors(self):
+    puzzle = puz.Puzzle()
+    puzzle.define([20, 30], [-10, -5])
+    puzzle.simulate()
+    options = puzzle.options
+    print options
+    self.assertEqual(len(options), 112)
+
 if __name__ == '__main__':
     unittest.main()
