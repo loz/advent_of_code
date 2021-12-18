@@ -1,0 +1,37 @@
+[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]
+=> 
+
+[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]
+
+
+
+    [                  ]
+    /                  \
+  [ ]                  [ ]
+  / \                  / \
+ 3  [ ]               6  [ ]
+    / \                  / \
+   2  [ ]               5  [ ]
+      / \                  / \
+     1 [7 3]              4 [3 2]
+
+
+[7 3] explodes -> 1 and 6 increase
+
+LEFTMOST:
+  - Go UP, find RIGHMOST VALUE on LEFT BRANC
+    if TARGET == RIGHT, ***DOWN*** TO _right_ on LEFT 
+    else ASK PARENT (with self as new target)
+    if no PARENT, _STOP_
+
+RIGHTMOST
+  - if TARGET == LEFT, DOWN to _left_ on RIGHT
+    else ask PARENT (self new target)
+    if no PARENT -> _STOP_
+
+Traverse Down, RIGHT/LEFT
+  if Right/Left is literal, ADD HERE
+  else:
+    Traverse down RIGHT/LEFT
+
+
