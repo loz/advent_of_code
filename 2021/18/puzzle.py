@@ -1,8 +1,27 @@
+import math
+
 class SnailInt:
   def __init__(self, val):
     self.literal = True
     self.val = val
-  
+
+  def magnitude(self):
+    return self.val
+
+  def _split(self):
+    if self.val >= 10:
+      #print 'SPLIT HIT', self.val
+      newnum = SnailfishNumber()
+      left = int(math.floor(self.val / 2.0))
+      right = int(math.ceil(self.val / 2.0))
+      newnum.setleft(SnailInt(left))
+      newnum.setright(SnailInt(right))
+      #print 'Split', self.val, 'to', newnum.string()
+      self.parent.replace_child(self, newnum)
+      return True
+    else:
+      return False
+
   def add_on_left(self, num):
     self.val += num.val
 
@@ -17,6 +36,32 @@ class SnailfishNumber:
     self.literal = False
     self.parent = None
 
+  def add(self, other):
+    num = SnailfishNumber()
+    num.setleft(self)
+    num.setright(other)
+    num.reduce()
+    return num
+
+  def magnitude(self):
+    return 3 * self.left.magnitude() + 2 * self.right.magnitude()
+
+  def setleft(self, child):
+    child.parent = self
+    self.left = child
+
+  def setright(self, child):
+    child.parent = self
+    self.right = child
+
+  def replace_child(self, child, newchild):
+    if self.left == child:
+      self.setleft(newchild)
+    elif self.right == child:
+      self.setright(newchild)
+    else:
+      raise 'Not Child!'
+
   def parse(self, chars):
     token, chars = self.pull(chars)
     if token != '[':
@@ -25,11 +70,10 @@ class SnailfishNumber:
     if chars[0] == '[': #child
       child = SnailfishNumber()
       chars = child.parse(chars)
-      child.parent = self
-      self.left = child
+      self.setleft(child)
     else:
       token, chars = self.pull(chars)
-      self.left = SnailInt(int(token))
+      self.setleft(SnailInt(int(token)))
 
     token, chars = self.pull(chars)
     if token != ',':
@@ -37,12 +81,11 @@ class SnailfishNumber:
 
     if chars[0] == '[': #child
       child = SnailfishNumber()
-      child.parent = self
       chars = child.parse(chars)
-      self.right = child
+      self.setright(child)
     else:
       token, chars = self.pull(chars)
-      self.right = SnailInt(int(token))
+      self.setright(SnailInt(int(token)))
 
     token, chars = self.pull(chars)
     if token != ']':
@@ -61,8 +104,22 @@ class SnailfishNumber:
     return "(L= " + self.left.string() + ', R=' + self.right.string() + ')'
 
   def reduce(self):
-    exploded = self._explode(0)
-    print self.string()
+    while True:
+      #print '>>', self.string()
+      if self._explode(0):
+        next
+      else:
+        if self._split():
+          next
+        else:
+          return False
+
+  def _split(self):
+    #print 'Split', self.string()
+    if not self.left._split():
+      return self.right._split()
+    else:
+      return True
 
   def leftmost_add(self, num, target):
     #print 'L-Add', num.string(), target.string()
@@ -96,7 +153,7 @@ class SnailfishNumber:
           vright = self.left.right
           self.rightmost_add(vright, self.left)
           self.leftmost_add(vleft, self.left)
-          self.left = SnailInt(0)
+          self.setleft(SnailInt(0))
         return True
   
     if not self.right.literal:
@@ -107,7 +164,7 @@ class SnailfishNumber:
           vright = self.right.right
           self.rightmost_add(vright, self.right)
           self.leftmost_add(vleft, self.right)
-          self.right = SnailInt(0)
+          self.setright(SnailInt(0))
         return True
 
     #No explosion
@@ -132,7 +189,13 @@ class Puzzle:
       self.numbers.append(number)
 
   def result(self):
-    pass
+    value = self.numbers[0]
+    cur = 1
+    while cur < len(self.numbers):
+      value = value.add(self.numbers[cur])
+      cur += 1
+    print 'Final Value', value.string()
+    print 'Magnitude', value.magnitude()
 
 if __name__ == '__main__':
   puz = Puzzle()
