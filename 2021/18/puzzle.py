@@ -1,4 +1,5 @@
 import math
+import itertools as it
 
 class SnailInt:
   def __init__(self, val):
@@ -7,6 +8,10 @@ class SnailInt:
 
   def magnitude(self):
     return self.val
+
+  def copy(self):
+    newnum = SnailInt(self.val)
+    return newnum
 
   def _split(self):
     if self.val >= 10:
@@ -38,9 +43,15 @@ class SnailfishNumber:
 
   def add(self, other):
     num = SnailfishNumber()
-    num.setleft(self)
-    num.setright(other)
+    num.setleft(self.copy())
+    num.setright(other.copy())
     num.reduce()
+    return num
+
+  def copy(self): #Deep copy
+    num = SnailfishNumber()
+    num.setleft(self.left.copy())
+    num.setright(self.right.copy())
     return num
 
   def magnitude(self):
@@ -188,7 +199,7 @@ class Puzzle:
       number.parse(line)
       self.numbers.append(number)
 
-  def result(self):
+  def result1(self):
     value = self.numbers[0]
     cur = 1
     while cur < len(self.numbers):
@@ -196,6 +207,18 @@ class Puzzle:
       cur += 1
     print 'Final Value', value.string()
     print 'Magnitude', value.magnitude()
+
+  def result(self):
+    rmax = 0
+    for a, b in it.combinations(self.numbers, 2):
+      num1 = a.add(b)
+      num2 = b.add(a)
+      if num1.magnitude() > rmax:
+        rmax = num1.magnitude()
+      if num2.magnitude() > rmax:
+        rmax = num2.magnitude()
+      print num1.magnitude(), num2.magnitude()
+    print 'Max', rmax
 
 if __name__ == '__main__':
   puz = Puzzle()
