@@ -36,10 +36,14 @@ class Puzzle:
         counter += 1
     return orientations
 
-  def find_overlaps(self, set1, set2):
+  def find_overlaps(self, set1, set2, beacons):
     #For each orientation of set2:
     orientations = self.gen_orientations(set2)
-    for o_set in orientations:
+    obeacons = self.gen_orientations(beacons)
+    #print obeacons
+    for o in range(len(orientations)):
+      o_set = orientations[o]
+      o_bea = obeacons[o]
       #For each point in set1
       for p1 in set1:
           #For each point in o_set2
@@ -50,10 +54,11 @@ class Puzzle:
           if len(overlap) >= 12:
             #print 'Overlap!'
             #print (p1, p2), offset
-            return overlap, offsets
+            offset_bea = self.offset(o_bea, offset)
+            return overlap, offsets, offset_bea
             #offset between set1, o_set2 -> newset
             #overlaps = set1 and newset?
-    return set([]), []
+    return set([]), [], beacons
 
   def add_to_world(self, points):
     for p in points:
@@ -130,30 +135,45 @@ class Puzzle:
   def reduce(self, topair):
     paird = []
     while len(topair) > 1:
-      first = topair[0]
+      first = topair[0][0]
+      firstbeacons = topair[0][1]
       topair = topair[1:]
       #print 'Pairing', first
       didpair = False
       for other in topair:
-        overlaps, mapped = self.find_overlaps(first, other)
+        otherset, otherbeacons = other
+        overlaps, mapped, mappedbeacons = self.find_overlaps(first, otherset, otherbeacons)
         if len(overlaps) > 0:
           #merge
           newset = first | mapped
-          paird.append(newset)
+          newbeacons = firstbeacons | mappedbeacons
+          paird.append((newset, newbeacons))
           topair.remove(other)
           didpair = True
           break
       if not didpair:
         print 'Did not pair'
-        paird.append(first)
+        paird.append((first, firstbeacons))
     return paird + topair
 
   def result(self):
-    topair = [s for s in self.scanners]
+    # (set, [arr of beacon locations])
+    topair = [(s, set([(0,0,0)])) for s in self.scanners]
     while len(topair) > 1:
       print 'Now Have', len(topair), 'sets'
       topair = self.reduce(topair)
-    print len(topair[0]), 'beacons'
+    points, beacons = topair[0]
+    print len(points), 'beacons'
+    pairs = it.combinations(beacons, 2)
+    largest = 0
+    for pair in pairs:
+      p1, p2 = pair
+      distance = abs(p1[0]-p2[0]) + abs(p1[1]-p2[1]) + abs(p1[2]-p2[2])
+      print distance
+      if distance > largest:
+        largest = distance
+
+    print 'Furthest distance', largest
 
 if __name__ == '__main__':
   puz = Puzzle()

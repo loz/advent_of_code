@@ -93,7 +93,7 @@ class TestPuzzle(unittest.TestCase):
     set1 = puzzle.scanners[0]
     set2 = puzzle.scanners[1]
 
-    overlaps, mapped = puzzle.find_overlaps(set1, set2)
+    overlaps, mapped = puzzle.find_overlaps(set1, set2, [])
 
     self.assertEqual(overlaps, set([
       (-618,-824,-621),
