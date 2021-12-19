@@ -23,9 +23,37 @@ class Puzzle:
     self.ref = self.scanners[0]
     self.add_to_world(self.ref)
 
+  def gen_orientations(self, aset):
+    orientations = []
+    for i in range(24):
+      orientations.append(set([]))
+
+    for p in aset:
+      rotations = self.rotations(p)
+      counter = 0
+      for r in rotations:
+        orientations[counter].add(r)
+        counter += 1
+    return orientations
+
   def find_overlaps(self, set1, set2):
-    overlaps = []
-    return overlaps
+    #For each orientation of set2:
+    orientations = self.gen_orientations(set2)
+    for o_set in orientations:
+      #For each point in set1
+      for p1 in set1:
+          #For each point in o_set2
+        for p2 in o_set:
+          offset = (p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2])
+          offsets = self.offset(o_set, offset)
+          overlap = set1 & offsets
+          if len(overlap) >= 12:
+            #print 'Overlap!'
+            #print (p1, p2), offset
+            return overlap, offsets
+            #offset between set1, o_set2 -> newset
+            #overlaps = set1 and newset?
+    return set([]), []
 
   def add_to_world(self, points):
     for p in points:
@@ -45,10 +73,10 @@ class Puzzle:
       self.scanners[self.current].add((points[0], points[1], points[2]))
 
   def offset(self, coords, frompoint):
-    newcords = []
+    newcords = set([])
     for c in coords:
-      nc = [c[0]-frompoint[0], c[1]-frompoint[1], c[2]-frompoint[2]]
-      newcords.append(nc)
+      nc = (c[0]-frompoint[0], c[1]-frompoint[1], c[2]-frompoint[2])
+      newcords.add(nc)
     return newcords
 
   def rotations(self, point):
@@ -98,9 +126,34 @@ class Puzzle:
           x, y, z = rz90(x, y, z)
           rotations.add((x, y, z))
     return rotations
+  
+  def reduce(self, topair):
+    paird = []
+    while len(topair) > 1:
+      first = topair[0]
+      topair = topair[1:]
+      #print 'Pairing', first
+      didpair = False
+      for other in topair:
+        overlaps, mapped = self.find_overlaps(first, other)
+        if len(overlaps) > 0:
+          #merge
+          newset = first | mapped
+          paird.append(newset)
+          topair.remove(other)
+          didpair = True
+          break
+      if not didpair:
+        print 'Did not pair'
+        paird.append(first)
+    return paird + topair
 
   def result(self):
-    pass
+    topair = [s for s in self.scanners]
+    while len(topair) > 1:
+      print 'Now Have', len(topair), 'sets'
+      topair = self.reduce(topair)
+    print len(topair[0]), 'beacons'
 
 if __name__ == '__main__':
   puz = Puzzle()

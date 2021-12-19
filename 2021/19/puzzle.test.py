@@ -15,10 +15,8 @@ class TestPuzzle(unittest.TestCase):
 605,423,415
 515,917,-361
 """)
-    self.assertEqual(puzzle.scanners[0][0][0], 404)
-    self.assertEqual(puzzle.scanners[0][2][1], 591)
-    self.assertEqual(puzzle.scanners[1][0][2], 578)
-    self.assertEqual(puzzle.scanners[1][1][0], 605)
+    self.assertTrue((404,-588,-901) in puzzle.scanners[0])
+    self.assertTrue((605,423,415) in puzzle.scanners[1])
 
   def test_puzzle_adds_all_points_to_empty_world(self):
     puzzle = puz.Puzzle()
@@ -95,9 +93,9 @@ class TestPuzzle(unittest.TestCase):
     set1 = puzzle.scanners[0]
     set2 = puzzle.scanners[1]
 
-    overlaps = puzzle.find_overlaps(set1, set2)
+    overlaps, mapped = puzzle.find_overlaps(set1, set2)
 
-    self.assertEqual(overlaps, [
+    self.assertEqual(overlaps, set([
       (-618,-824,-621),
       (-537,-823,-458),
       (-447,-329,318),
@@ -110,7 +108,7 @@ class TestPuzzle(unittest.TestCase):
       (-345,-311,381),
       (459,-707,401),
       (-485,-357,347),
-    ])
+    ]))
 
 
 
@@ -125,11 +123,11 @@ class TestPuzzle(unittest.TestCase):
     ]
 
     offset = puzzle.offset(coords, point)
-    self.assertEqual(offset, [
-      [686-404, 422+588, 578+901],
-      [605-404, 423+588, 415+901],
-      [515-404, 917+588, -361+901]
-    ])
+    self.assertEqual(offset, set([
+      (686-404, 422+588, 578+901),
+      (605-404, 423+588, 415+901),
+      (515-404, 917+588, -361+901)
+    ]))
 
   def test_puzzle_can_gen_rotations_of_point(self):
     puzzle = puz.Puzzle()
