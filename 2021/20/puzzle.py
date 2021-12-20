@@ -71,10 +71,8 @@ class Puzzle:
     return text
 
   def result(self):
-    print self.tostring()
-    self.enhance_image()
-    print self.tostring()
-    self.enhance_image()
+    for i in range(50):
+      self.enhance_image()
     print self.tostring()
     count = 0
     for row in self.map:
