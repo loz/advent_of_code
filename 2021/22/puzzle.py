@@ -3,12 +3,19 @@ def overlap(cube1, cube2):
   corners2 = corners(cube2)
   in1 = pointsin(cube1, corners2)
   in2 = pointsin(cube2, corners1)
-  return len(in1) + len(in2) > 0
+  if len(in1) == len(in2) == 0:
+    return False
+  if len(in1) >= len(in2):
+    return [cube2, cube1]
+  return [cube1, cube2]
 
 def length(a, b):
   mmin = min(a,b)
   mmax = max(a,b)
   return abs(mmin - (mmax+1))
+
+def cleanup(data):
+  return filter(lambda d: d != None, data)
 
 def is_in(bigger, smaller):
   small_corners = corners(smaller)
@@ -61,6 +68,10 @@ def planer_cut_z(cube, z):
     (cx, cy, (z,   cz[1]))
   ]
 
+def debug_transpose(cube):
+  x, y, z = cube
+  return ((x[0], y[0], z[0]), (x[1], y[1], z[1]))
+
 def subdivide(cube, point):
   x, y, z = point
   cubes = []
@@ -73,6 +84,87 @@ def subdivide(cube, point):
   cubes.append(right)
   return cubes
 
+def threecut(plane, cube, p1, p2):
+  #print '3Cut', plane, p1, p2, 'in', debug_transpose(cube)
+  fn = planer_cut_x
+  idx = 0
+  if plane == 'y':
+    fn = planer_cut_y
+    idx = 1
+  elif plane == 'z':
+    fn = planer_cut_z
+    idx = 2
+
+  a, right = fn(cube, p1)
+  b, c = fn(right, p2+1)
+  cmin = min(cube[idx][0], cube[idx][1])
+  cmax = max(cube[idx][0], cube[idx][1])
+  #print p1, p2, cmin, cmax
+  if p1 == cmin: #skip left
+    return [None, b, c]
+  elif p2 == cmax:
+    return [a, b, None]
+  return [a,b,c]
+
+def subdivide_with_4(cube, p1, p2, p3, p4):
+  print 'Sub', debug_transpose(cube), p1, p2, p3, p4
+  cubes = []
+  if p1[0] == p2[0] == p3[0] == p4[0]:
+    #X face is inside
+    print 'X face'
+    left, right = planer_cut_x(cube, p1[0])
+    cubes.append(left)
+    minz = min([p1[2], p2[2], p3[2], p4[2]])
+    maxz = max([p1[2], p2[2], p3[2], p4[2]])
+    miny = min([p1[1], p2[1], p3[1], p4[1]])
+    maxy = max([p1[1], p2[1], p3[1], p4[1]])
+    a, b, c = threecut('z', right, minz, maxz)
+    #print 'A', a, 'B', b, 'C', c
+    cubes.append(a)
+    cubes.append(c)
+    a, b, c = threecut('y', b, miny, maxy)
+    #print 'A', a, 'B', b, 'C', c
+    cubes.append(a)
+    cubes.append(b)
+    cubes.append(c)
+  elif p1[1] == p2[1] == p3[1] == p4[1]:
+    #Y face is inside
+    print 'Y face'
+    left, right = planer_cut_y(cube, p1[1])
+    cubes.append(left)
+    minz = min([p1[2], p2[2], p3[2], p4[2]])
+    maxz = max([p1[2], p2[2], p3[2], p4[2]])
+    minx = min([p1[0], p2[0], p3[0], p4[0]])
+    maxx = max([p1[0], p2[0], p3[0], p4[0]])
+    a, b, c = threecut('z', right, minz, maxz)
+    #print 'A', a, 'B', b, 'C', c
+    cubes.append(a)
+    cubes.append(c)
+    a, b, c = threecut('x', b, minx, maxx)
+    #print 'A', a, 'B', b, 'C', c
+    cubes.append(a)
+    cubes.append(b)
+    cubes.append(c)
+  else:
+    #Z face is inside
+    #print 'Z face'
+    left, right = planer_cut_z(cube, p1[2])
+    cubes.append(left)
+    minx = min([p1[0], p2[0], p3[0], p4[0]])
+    maxx = max([p1[0], p2[0], p3[0], p4[0]])
+    miny = min([p1[1], p2[1], p3[1], p4[1]])
+    maxy = max([p1[1], p2[1], p3[1], p4[1]])
+    a, b, c = threecut('x', right, minx, maxx)
+    #print 'A', a, 'B', b, 'C', c
+    cubes.append(a)
+    cubes.append(c)
+    a, b, c = threecut('y', b, miny, maxy)
+    #print 'A', a, 'B', b, 'C', c
+    cubes.append(a)
+    cubes.append(b)
+    cubes.append(c)
+  return cleanup(cubes)
+
 def subdivide_with_2(cube, p1, p2):
   cubes = []
   if p1[0] == p2[0]: #Share X
@@ -82,35 +174,24 @@ def subdivide_with_2(cube, p1, p2):
       left, right = planer_cut_y(right, p1[1])
       cubes.append(left)
       #Threeway cut Z
-      left, right = planer_cut_z(right, p1[2])
-      cubes.append(left)
-      left, right = planer_cut_z(right, p2[2])
-      cubes.append(left)
-      cubes.append(right)
+      cubes += threecut('z', right, p1[2], p2[2])
     else:  #Share XZ
       left, right = planer_cut_z(right, p1[2])
       cubes.append(left)
       #Threeway cut Y
-      left, right = planer_cut_y(right, p1[1])
-      cubes.append(left)
-      left, right = planer_cut_y(right, p2[1])
-      cubes.append(left)
-      cubes.append(right)
+      cubes += threecut('y', right, p1[1], p2[1])
   elif p1[1] == p2[1]: #Share YZ
     left, right = planer_cut_y(cube, p1[1])
     cubes.append(left)
     left, right = planer_cut_z(right, p1[2])
     cubes.append(left)
     #Threeway cut X
-    left, right = planer_cut_x(right, p1[0])
-    cubes.append(left)
-    left, right = planer_cut_x(right, p2[0])
-    cubes.append(left)
-    cubes.append(right)
+    cubes += threecut('x', right, p1[0], p2[0])
   else:
     print 'Error, Z Not share X, or Y!'
     raise 'Oopsie'
-  return cubes
+  #print 'CC', cubes
+  return cleanup(cubes)
   
 def subdivide_old(cube, point):
   x, y, z = point
@@ -138,12 +219,12 @@ def subdivide_old(cube, point):
 
 def combine(cube1, cube2):
   newcubes = []
-  print cube1, cube2
+  #print cube1, cube2
   x1, y1, z1 = cube1
   x2, y2, z2 = cube2
   corners2 = corners(cube2)
   points_in_1 = pointsin(cube1, corners2)
-  print cube2, 'corners In', cube1, 'are', points_in_1
+  #print cube2, 'corners In', cube1, 'are', points_in_1
   #CornerCorner
   if len(points_in_1) == 1:
     #print 'CornerCorner: Subdivide', cube1,'at', points_in_1[0]
@@ -156,17 +237,32 @@ def combine(cube1, cube2):
     return newcubes
   #EdgeCorner
   elif len(points_in_1) == 2:
-    print 'Side Corner', cube1, cube2
+    #print 'Side Corner', cube1, cube2
     c1, c2 = points_in_1
     cubes = subdivide_with_2(cube1, c1, c2)
     for cube in cubes:
       #print 'Cube:', cube, is_in(cube2, cube)
       if not is_in(cube2, cube):
         newcubes.append(cube)
+      #else:
+      #  print 'Overlapped', cube
     newcubes.append(cube2)
     return newcubes
-  #Edge
-  #Consule
+  #Face
+  elif len(points_in_1) == 4:
+    #print 'Face Overlap', debug_transpose(cube1), debug_transpose(cube2)
+    c1, c2, c3, c4 = points_in_1
+    cubes = subdivide_with_4(cube1, c1, c2, c3, c4)
+    #print 'Face:', cubes
+    for cube in cubes:
+      #print 'Cube:', cube, is_in(cube2, cube)
+      if not is_in(cube2, cube):
+        newcubes.append(cube)
+    newcubes.append(cube2)
+    return newcubes
+  #Consume
+  elif len(points_in_1) == 8:
+    newcubes.append(cube1)
   return newcubes
 
 class Puzzle:
@@ -196,9 +292,11 @@ class Puzzle:
     z = (z1,z2)
     newcubes = set()
     for cube in self.on:
-      if overlap(cube, (x,y,z)):
+      ol = overlap(cube, (x,y,z))
+      if ol:
+        larger, smaller = ol
         #print 'Overlap!'
-        cubes = combine(cube, (x,y,z))
+        cubes = combine(smaller, larger)
         for nc in cubes:
           newcubes.add(nc)
       else:
@@ -231,7 +329,7 @@ class Puzzle:
       width  = length(x[0], x[1])
       height = length(y[0], y[1])
       depth  = length(z[0], z[1])
-      print cube, width, height, depth, (width * height * depth)
+      print debug_transpose(cube), width, height, depth, (width * height * depth)
       total += (width * height * depth)
     return total
 
