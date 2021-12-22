@@ -3,7 +3,34 @@ def overlap(cube1, cube2):
   corners2 = corners(cube2)
   in1 = pointsin(cube1, corners2)
   in2 = pointsin(cube2, corners1)
-  return len(in1) + len(in2) > 0
+  if len(in1) + len(in2) == 0:
+    return False
+  if len(in2) > len(in1):
+    return cube2, cube1
+  else:
+    return cube1, cube2
+
+def in2d(points1, points2):
+  xs = map(lambda p: p[0], points1)
+  ys = map(lambda p: p[1], points1)
+  print xs, ys
+  x0 = min(xs)
+  x1 = max(xs)
+  y0 = min(ys)
+  y1 = max(ys)
+  keep = []
+  for p in points2:
+    print p
+    if p[0] >= x0 and p[0] <= x1 and \
+       p[1] >= y0 and p[1] <= y1:
+      keep.append(p)
+  
+  return keep
+ 
+def calc_2d_cuts(cube_xy, cutr_xy):
+  points = in2d(cube_xy, cutr_xy)
+  print 'CALC:', points
+  #return x, y = 
 
 def length(a, b):
   mmin = min(a,b)
@@ -11,12 +38,50 @@ def length(a, b):
   return abs(mmin - (mmax+1))
 
 def cleanup(data):
+  clean = []
+  for d in data:
+    if d != None:
+      x0 = min(d[0][0], d[0][1])
+      x1 = max(d[0][0], d[0][1])
+      y0 = min(d[1][0], d[1][1])
+      y1 = max(d[1][0], d[1][1])
+      z0 = min(d[2][0], d[2][1])
+      z1 = max(d[2][0], d[2][1])
+      clean.append(((x0,x1), (y0,y1), (z0,z1)))
+  return clean
   return filter(lambda d: d != None, data)
 
 def is_in(bigger, smaller):
   small_corners = corners(smaller)
   in_bigger = pointsin(bigger, small_corners)
   return len(in_bigger) == 8
+
+def xy_corners(cube):
+  x, y, z = cube
+  return [
+    (x[0], y[0]),
+    (x[0], y[1]),
+    (x[1], y[0]),
+    (x[1], y[1])
+  ]
+
+def xz_corners(cube):
+  x, y, z = cube
+  return [
+    (x[0], z[0]),
+    (x[0], z[1]),
+    (x[1], z[0]),
+    (x[1], z[1])
+  ]
+
+def yz_corners(cube):
+  x, y, z = cube
+  return [
+    (y[0], z[0]),
+    (y[0], z[1]),
+    (y[1], z[0]),
+    (y[1], z[1])
+  ]
 
 def corners(cube):
   x, y, z = cube
@@ -51,23 +116,32 @@ def pointsin(cube, points):
 
 def planer_cut_x(cube, x):
   cx, cy, cz = cube
+  x0 = min(cx[0], cx[1])
+  x1 = max(cx[0], cx[1])
+
   return [
-    ((cx[0], x-1), cy, cz),
-    ((x,   cx[1]), cy, cz)
+    ((x0, x-1), cy, cz),
+    ((x,   x1), cy, cz)
   ]
 
 def planer_cut_y(cube, y):
   cx, cy, cz = cube
+  y0 = min(cy[0], cy[1])
+  y1 = max(cy[0], cy[1])
+
   return [
-    (cx, (cy[0], y-1), cz),
-    (cx, (y,   cy[1]), cz)
+    (cx, (y0, y-1), cz),
+    (cx, (y,   y1), cz)
   ]
 
 def planer_cut_z(cube, z):
   cx, cy, cz = cube
+  z0 = min(cz[0], cz[1])
+  z1 = max(cz[0], cz[1])
+
   return [
-    (cx, cy, (cz[0], z-1)),
-    (cx, cy, (z,   cz[1]))
+    (cx, cy, (z0, z-1)),
+    (cx, cy, (z,   z1))
   ]
 
 def debug_transpose(cube):
@@ -76,6 +150,7 @@ def debug_transpose(cube):
 
 def subdivide(cube, point):
   x, y, z = point
+
   cubes = []
   left, right = planer_cut_x(cube, x)
   cubes.append(left)
@@ -250,50 +325,74 @@ def chop_with_4(cube, cutter, p1, p2, p3, p4):
   return cleanup(cubes)
 
 def chop_with_2(cube, cutter, p1, p2):
-  #print 'Chop', debug_transpose(cube), 'with', debug_transpose(cutter), 'Points', p1, p2
+  print 'Chop', debug_transpose(cube), 'with', debug_transpose(cutter), 'Points', p1, p2
   #print cutter
   #print '---'
   cubes = []
   if p1[0] == p2[0]: #Share X
-    cx1, cx2 = cutter[0][0], cutter[0][0]
-    if cx1 in range(p1[0],p2[0]):
-      left, right = planer_cut_x(cube, cx1)
-    else:
-      left, right = planer_cut_x(cube, cx2)
-    cubes.append(left)
-    if p1[1] == p2[1]: #Share XY
-      cy1, cy2 = cutter[1][0], cutter[1][1]
-      if cy1 in range(p1[1],p2[1]):
-        left, right = planer_cut_y(right, cy1)
-      else:
-        left, right = planer_cut_y(right, cy2)
-      cubes.append(left)
-    else:  #Share XZ
-      cz1, cz2 = cutter[2][0], cutter[2][1]
-      if cz1 in range(p1[2],p2[2]):
-        left, right = planer_cut_z(right, cz1)
-      else:
-        left, right = planer_cut_z(right, cz2)
-      cubes.append(left)
+    if p1[1] ==p2[1]: #Share XY
+      print 'Share XY'
+      cube_xy = xy_corners(cube)
+      cutr_xy = xy_corners(cutter)
+      x, y = calc_2d_cuts(cube_xy, cutr_xy)
+      print 'X', x, 'Y', y
+      pass
+    else: #Share XZ
+      print 'Share XZ'
+      pass
   elif p1[1] == p2[1]: #Share YZ
-    cy1, cy2 = cutter[1][0], cutter[1][1]
-    if cy1 in range(p1[1],p2[1]):
-      left, right = planer_cut_y(cube, cy1)
-    else:
-      left, right = planer_cut_y(cube, cy2)
-    cubes.append(left)
-    cz1, cz2 = cutter[2][0], cutter[2][1]
-    if cz1 in range(p1[2],p2[2]):
-      left, right = planer_cut_z(right, cz1)
-    else:
-      left, right = planer_cut_z(right, cz2)
-    cubes.append(left)
+    print 'Share YZ'
+    pass
   else:
     print 'Error, Z Not share X, or Y!'
     raise 'Oopsie'
   return cleanup(cubes)
+
+def cut_larger(cube1, cutter):
+  print 'CUTL:', debug_transpose(cutter), 'from', debug_transpose(cube1)
+  newcubes = []
+  #The Cube is smaller than the cutter
+  ccorners = corners(cube1)
+  cpoints = pointsin(cutter, ccorners)
+  if len(cpoints) == 8:
+    print 'TOTALC'
+    #This is a cube totally in cutter?
+    #print 'Total Cut?', debug_transpose(cube1), debug_transpose(cutter)
+    return []
+  elif len(cpoints) == 2:
+    print 'CHOPL'
+    #Edge chop  L style
+    c1, c2 = cpoints
+    cubes = chop_with_2(cube1, cutter, c1, c2)
+    for cube in cubes:
+      if not is_in(cutter, cube):
+        newcubes.append(cube)
+    return newcubes
+  elif len(cpoints) == 4:
+    print 'CHOPFACE'
+    #Face chop
+    c1, c2, c3, c4 = cpoints
+    cubes = chop_with_4(cube1, cutter, c1, c2, c3, c4)
+    for cube in cubes:
+      if not is_in(cutter, cube):
+        newcubes.append(cube)
+    return newcubes
+  else:
+    print '===================='
+    print 'Cutter', debug_transpose(cutter)
+    print 'Cube', cube1
+    print 'Points', cpoints
+    print '===================='
+    print debug_transpose(cube1)
+    print corners(cube1)
+    print debug_transpose(cutter)
+    print corners(cutter)
+    print '===================='
+    raise 'Unknown Condition - cutter larger'
+  return newcubes
   
 def cut(cube1, cutter):
+  #print 'CUT:', debug_transpose(cutter), 'from', debug_transpose(cube1)
   newcubes = []
   #print cube1, cutter
   corners2 = corners(cutter)
@@ -332,43 +431,7 @@ def cut(cube1, cutter):
         newcubes.append(cube)
     return newcubes
   else:
-    #The Cube is smaller and cutter points not in
-    ccorners = corners(cube1)
-    cpoints = pointsin(cutter, ccorners)
-    if len(cpoints) == 8:
-      #This is a cube totally in cutter?
-      #print 'Total Cut?', debug_transpose(cube1), debug_transpose(cutter)
-      return []
-    elif len(cpoints) == 2:
-      #Edge chop  L style
-      c1, c2 = cpoints
-      cubes = chop_with_2(cube1, cutter, c1, c2)
-      for cube in cubes:
-        if not is_in(cutter, cube):
-          newcubes.append(cube)
-      return newcubes
-    elif len(cpoints) == 4:
-      #Face chop
-      c1, c2, c3, c4 = cpoints
-      cubes = chop_with_4(cube1, cutter, c1, c2, c3, c4)
-      for cube in cubes:
-        if not is_in(cutter, cube):
-          newcubes.append(cube)
-      return newcubes
-    else:
-      print '===================='
-      print 'Cutter', debug_transpose(cutter)
-      print 'Cube', cube1
-      print 'Points', cpoints
-      print '(Other Points)', points_in_1
-      print '===================='
-      print debug_transpose(cube1)
-      print corners(cube1)
-      print debug_transpose(cutter)
-      print corners(cutter)
-      print '===================='
-      raise 'Unknown Condition - cutter larger'
-  return newcubes
+    raise 'HowHEre?'
 
 class Puzzle:
   def __init__(self):
@@ -383,22 +446,35 @@ class Puzzle:
     self.process_instructions()
 
   def process_instructions(self):
+    #step = 0
     for instruction in self.instructions:
+      #step += 1
+      #print 'Step', step
       direction, x1, x2, y1, y2, z1, z2 = instruction
       if direction == 'on':
         self.turn_on(x1, x2, y1, y2, z1, z2)
       else:
         self.turn_off(x1, x2, y1, y2, z1, z2)
+      #print self.count_on()
 
   def turn_off(self, x1, x2, y1, y2, z1, z2):
     x = (x1,x2)
     y = (y1,y2)
     z = (z1,z2)
+    print 'Turn Off', debug_transpose((x,y,z))
     newcubes = set()
     for cube in self.on:
-      if overlap(cube, (x,y,z)):
-        cubes = cut(cube, (x,y,z))
+      ol = overlap(cube, (x,y,z)) 
+      if ol:
+        larger, _ = ol
+        print 'Overlaps', debug_transpose(cube)
+        if larger == cube:
+          cubes = cut(cube, (x,y,z))
+        else:
+          cubes = cut_larger(cube, (x,y,z))
+
         for nc in cubes:
+          print '--', debug_transpose(nc)
           newcubes.add(nc)
       else: #Does not cut this cube
         newcubes.add(cube)
@@ -410,8 +486,14 @@ class Puzzle:
     z = (z1,z2)
     newcubes = set()
     for cube in self.on:
-      if overlap(cube, (x,y,z)):
-        cubes = cut(cube, (x,y,z))
+      ol = overlap(cube, (x,y,z)) 
+      if ol:
+        larger, _ = ol
+        if larger == cube:
+          cubes = cut(cube, (x,y,z))
+        else:
+          cubes = cut_larger(cube, (x,y,z))
+
         for nc in cubes:
           newcubes.add(nc)
       else: #Does not cut this cube
@@ -444,14 +526,14 @@ class Puzzle:
     self.instructions.append(instruction)
 
   def count_on(self):
-    print 'Sizing', len(self.on), 'cubes'
+    #print 'Sizing', len(self.on), 'cubes'
     total = 0
     for cube in self.on:
       x, y, z = cube
       width  = length(x[0], x[1])
       height = length(y[0], y[1])
       depth  = length(z[0], z[1])
-      print debug_transpose(cube), width, height, depth, (width * height * depth)
+      #print debug_transpose(cube), width, height, depth, (width * height * depth)
       total += (width * height * depth)
     return total
 
