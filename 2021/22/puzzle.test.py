@@ -22,7 +22,7 @@ on x=2..3,y=2..3,z=2..3
     puzzle.process("""on x=0..3,y=0..3,z=0..3
 on x=1..2,y=2..4,z=2..4
 """)
-    self.assertEqual(puzzle.count_on(), 34)
+    self.assertEqual(puzzle.count_on(), 74)
 
   def test_regions_side_overlap(self):
     puzzle = puz.Puzzle()
