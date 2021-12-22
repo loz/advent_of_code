@@ -33,6 +33,9 @@ class Puzzle:
             if (x,y,z) in self.on:
               self.on.remove((x,y,z))
 
+  def count_on(self):
+    return len(self.on)
+
 
   def parse_range(self, string):
     string = string[2:]
