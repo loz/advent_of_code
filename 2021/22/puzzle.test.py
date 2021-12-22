@@ -108,6 +108,7 @@ off x=2..3,y=2..3,z=2..3
     self.assertEqual(puzzle.count_on(), 71)
 
   def test_remove_consume(self):
+    print 'Remove Consume'
     puzzle = puz.Puzzle()
     puzzle.process("""on x=2..2,y=2..2,z=2..2
 off x=1..3,y=1..3,z=1..3

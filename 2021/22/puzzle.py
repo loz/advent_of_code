@@ -4,11 +4,6 @@ def overlap(cube1, cube2):
   in1 = pointsin(cube1, corners2)
   in2 = pointsin(cube2, corners1)
   return len(in1) + len(in2) > 0
-  #if len(in1) == len(in2) == 0:
-  #  return False
-  #if len(in1) >= len(in2):
-  #  return [cube2, cube1]
-  #return [cube1, cube2]
 
 def length(a, b):
   mmin = min(a,b)
@@ -40,11 +35,17 @@ def corners(cube):
 def pointsin(cube, points):
   x, y, z = cube
   inlist = []
+  x0 = min(x[0], x[1])
+  x1 = max(x[0], x[1])
+  y0 = min(y[0], y[1])
+  y1 = max(y[0], y[1])
+  z0 = min(z[0], z[1])
+  z1 = max(z[0], z[1])
   for p in points:
     px, py, pz = p
-    if px >= x[0] and px <= x[1] and \
-       py >= y[0] and py <= y[1] and \
-       pz >= z[0] and pz <= z[1]:
+    if px >= x0 and px <= x1 and \
+       py >= y0 and py <= y1 and \
+       pz >= z0 and pz <= z1:
       inlist.append(p)
   return inlist
 
@@ -194,11 +195,64 @@ def subdivide_with_2(cube, p1, p2):
   #print 'CC', cubes
   return cleanup(cubes)
 
-def chop_with_2(cube, cutter, p1, p2):
-  print 'Chop', debug_transpose(cube), 'with', debug_transpose(cutter), 'Points', p1, p2
-  print cutter
-  print '---'
+def cut_inside(cube, cutter):
+  cubes = []
+  x, y, z = cutter
+  minx = min([x[0], x[1]])
+  maxx = max([x[0], x[1]])
+  a, b, c = threecut('x', cube, minx, maxx)
+  cubes.append(a)
+  cubes.append(c)
 
+  miny = min([y[0], y[1]])
+  maxy = max([y[0], y[1]])
+  a, b, c = threecut('y', b, miny, maxy)
+  cubes.append(a)
+  cubes.append(c)
+
+  minz = min([z[0], z[1]])
+  maxz = max([z[0], z[1]])
+  a, b, c = threecut('z', b, minz, maxz)
+  cubes.append(a)
+  cubes.append(b)
+  cubes.append(c)
+  return cleanup(cubes)
+
+def chop_with_4(cube, cutter, p1, p2, p3, p4):
+  cubes = []
+  if p1[0] == p2[0] == p3[0] == p4[0]:
+    #X face is inside
+    #print 'X face'
+    cx1, cx2 = cutter[0][0], cutter[0][0]
+    if cx1 in range(p1[0],p2[0]):
+      left, right = planer_cut_x(cube, cx1)
+    else:
+      left, right = planer_cut_x(cube, cx2)
+    cubes.append(left)
+  elif p1[1] == p2[1] == p3[1] == p4[1]:
+    #Y face is inside
+    #print 'Y face'
+    cy1, cy2 = cutter[1][0], cutter[1][1]
+    if cy1 in range(p1[1],p2[1]):
+      left, right = planer_cut_y(cube, cy1)
+    else:
+      left, right = planer_cut_y(cube, cy2)
+    cubes.append(left)
+  else:
+    #Z face is inside
+    #print 'Z face'
+    cz1, cz2 = cutter[2][0], cutter[2][1]
+    if cz1 in range(p1[2],p2[2]):
+      left, right = planer_cut_z(cube, cz1)
+    else:
+      left, right = planer_cut_z(cube, cz2)
+    cubes.append(left)
+  return cleanup(cubes)
+
+def chop_with_2(cube, cutter, p1, p2):
+  #print 'Chop', debug_transpose(cube), 'with', debug_transpose(cutter), 'Points', p1, p2
+  #print cutter
+  #print '---'
   cubes = []
   if p1[0] == p2[0]: #Share X
     cx1, cx2 = cutter[0][0], cutter[0][0]
@@ -270,21 +324,33 @@ def cut(cube1, cutter):
       if not is_in(cutter, cube):
         newcubes.append(cube)
     return newcubes
-  #Consume
+  #Totally Covered
   elif len(points_in_1) == 8:
-    raise 'Unimplemented - cutting out of middle of cube'
-    #newcubes.append(cube1)
+    cubes = cut_inside(cube1, cutter)
+    for cube in cubes:
+      if not is_in(cutter, cube):
+        newcubes.append(cube)
+    return newcubes
   else:
     #The Cube is smaller and cutter points not in
     ccorners = corners(cube1)
     cpoints = pointsin(cutter, ccorners)
     if len(cpoints) == 8:
       #This is a cube totally in cutter?
-      pass
+      #print 'Total Cut?', debug_transpose(cube1), debug_transpose(cutter)
+      return []
     elif len(cpoints) == 2:
       #Edge chop  L style
       c1, c2 = cpoints
       cubes = chop_with_2(cube1, cutter, c1, c2)
+      for cube in cubes:
+        if not is_in(cutter, cube):
+          newcubes.append(cube)
+      return newcubes
+    elif len(cpoints) == 4:
+      #Face chop
+      c1, c2, c3, c4 = cpoints
+      cubes = chop_with_4(cube1, cutter, c1, c2, c3, c4)
       for cube in cubes:
         if not is_in(cutter, cube):
           newcubes.append(cube)
@@ -296,57 +362,13 @@ def cut(cube1, cutter):
       print 'Points', cpoints
       print '(Other Points)', points_in_1
       print '===================='
+      print debug_transpose(cube1)
+      print corners(cube1)
+      print debug_transpose(cutter)
+      print corners(cutter)
+      print '===================='
       raise 'Unknown Condition - cutter larger'
   return newcubes
-
-#def combine(cube1, cube2):
-#  newcubes = []
-#  #print cube1, cube2
-#  corners2 = corners(cube2)
-#  points_in_1 = pointsin(cube1, corners2)
-#  #print cube2, 'corners In', cube1, 'are', points_in_1
-#  #CornerCorner
-#  if len(points_in_1) == 1:
-#    #print 'CornerCorner: Subdivide', cube1,'at', points_in_1[0]
-#    cubes = subdivide(cube1, points_in_1[0])
-#    for cube in cubes:
-#      #print 'Cube:', cube, is_in(cube2, cube)
-#      if not is_in(cube2, cube):
-#        newcubes.append(cube)
-#    ###newcubes.append(cube2)
-#    return newcubes
-#  #EdgeCorner
-#  elif len(points_in_1) == 2:
-#    #print 'Side Corner', cube1, cube2
-#    c1, c2 = points_in_1
-#    cubes = subdivide_with_2(cube1, c1, c2)
-#    for cube in cubes:
-#      #print 'Cube:', cube, is_in(cube2, cube)
-#      if not is_in(cube2, cube):
-#        newcubes.append(cube)
-#      #else:
-#      #  print 'Overlapped', cube
-#    ###newcubes.append(cube2)
-#    return newcubes
-#  #Face
-#  elif len(points_in_1) == 4:
-#    #print 'Face Overlap', debug_transpose(cube1), debug_transpose(cube2)
-#    c1, c2, c3, c4 = points_in_1
-#    cubes = subdivide_with_4(cube1, c1, c2, c3, c4)
-#    #print 'Face:', cubes
-#    for cube in cubes:
-#      #print 'Cube:', cube, is_in(cube2, cube)
-#      if not is_in(cube2, cube):
-#        newcubes.append(cube)
-#    ###newcubes.append(cube2)
-#    return newcubes
-#  #Consume
-#  elif len(points_in_1) == 8:
-#    newcubes.append(cube1)
-#  else:
-#    #The other way
-#    raise 'Not Implemented - corners diff'
-#  return newcubes
 
 class Puzzle:
   def __init__(self):
@@ -380,7 +402,7 @@ class Puzzle:
           newcubes.add(nc)
       else: #Does not cut this cube
         newcubes.add(cube)
-    return newcubes
+    self.on = newcubes
   
   def turn_on(self, x1,x2,y1,y2,z1,z2):
     x = (x1,x2)
@@ -411,7 +433,14 @@ class Puzzle:
     z1, z2 = self.parse_range(z)
     if abs(x1) >50 or abs(x2) > 50 or abs(y1) > 50 or abs(y2) > 50 or abs(z1) > 50 or abs(z2) > 50:
       return
-    instruction = (direction, x1, x2, y1, y2, z1, z2)
+    x0 = min(x1,x2)
+    x1 = max(x1,x2)
+    y0 = min(y1,y2)
+    y1 = max(y1,y2)
+    z0 = min(z1,z2)
+    z1 = max(z1,z2)
+
+    instruction = (direction, x0, x1, y0, y1, z0, z1)
     self.instructions.append(instruction)
 
   def count_on(self):
