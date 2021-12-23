@@ -164,13 +164,13 @@ on x=1..2,y=2..2,z=2..2
     self.assertEqual(puzzle.count_on(), 2)
 
   def test_bug1(self):
-    print '====== BUG ========'
+    #print '====== BUG ========'
     puzzle = puz.Puzzle()
     puzzle.process("""on x=10..12,y=10..12,z=10..12
 on x=11..13,y=11..13,z=11..13
 off x=9..11,y=9..11,z=9..11
 """)
-    self.assertEqual(puzzle.count_on(), 32)
+    self.assertEqual(puzzle.count_on(), 27+19-8)
 
 if __name__ == '__main__':
     unittest.main()
