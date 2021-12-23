@@ -3,6 +3,47 @@ import puzzle as puz
 
 class TestPuzzle(unittest.TestCase):
 
+  def test_intersecting_cuboid(self):
+    cube1 = ((-10, -10, -10), (10, 10, 10))
+    cube2 = ((0, 0, 0), (10, 10, 10))
+
+    expected = {
+      -15: (-10, -5),
+      -5:  (-5, 5),
+      5:   (5, 10)
+    }
+
+    #Corners and edges
+    for xd in [-15, -5, 5]:
+      for yd in [-15, -5, 5]:
+        for zd in [-15, -5, 5]:
+          dcube = ((cube2[0][0]+xd, cube2[0][1]+yd, cube2[0][2]+zd), (cube2[1][0]+xd, cube2[1][1]+yd, cube2[1][2]+zd))
+          ex = expected[xd]
+          ey = expected[yd]
+          ez = expected[zd]
+          bounds = ((ex[0], ey[0], ez[0]), (ex[1], ey[1], ez[1]))
+          self.assertEqual(bounds, puz.intersecting_cuboid(cube1, dcube))
+
+  def test_intersecting_larger(self):
+    cube1 = ((-10, -10, -10), (10, 10, 10))
+    cube2 = ((-20, -20, -20), (20, 20, 0))
+
+    bounds = ((-10, -10, -10), (10, 10, 0))
+    self.assertEqual(bounds, puz.intersecting_cuboid(cube1, cube2))
+
+  def test_intersecting_cshaped(self):
+    cube1 = ((-10, -10, -10), (10, 10, 10))
+    cube2 = ((0, -5, -20), (20, 5, 20))
+
+    bounds = ((0, -5, -10), (10, 5, 10))
+    self.assertEqual(bounds, puz.intersecting_cuboid(cube1, cube2))
+
+  def test_intersecting_dont(self):
+    cube1 = ((-10, -10, -10), (10, 10, 10))
+    cube2 = ((-20, -20, -20), (-18, -18, 18))
+
+    self.assertEqual(None, puz.intersecting_cuboid(cube1, cube2))
+
   def test_regions_separate(self):
     puzzle = puz.Puzzle()
     puzzle.process("""on x=0..1,y=0..1,z=0..1
