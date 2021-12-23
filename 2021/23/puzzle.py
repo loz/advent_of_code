@@ -1,9 +1,18 @@
+import heapq
+
 TARGET = set([
   ('A',3,3), ('A',3,2),
   ('B',5,3), ('B',5,2),
   ('C',7,3), ('C',7,3),
   ('D',9,3), ('D',9,3)
 ])
+
+EFFORTS = {
+ 'A': 1,
+ 'B': 10,
+ 'C': 100,
+ 'D': 1000
+}
 
 TARGET_ROOMS = {
  'A': 3,
@@ -17,6 +26,22 @@ SPOTS = [
   (3,2), (5,2), (7,2), (9,2),
   (3,3), (5,3), (7,3), (9,3)
 ]
+
+def calccost(pod, move):
+  let, x1, y1 = pod
+  x2, y2 = move
+  effort = EFFORTS[let]
+  steps = (y1-1) + abs(x2-x1) + (y2-1)
+  return steps * effort
+
+def map_states(pod, options, state):
+  base = state.difference([pod])
+  states = []
+  for o in options:
+    let = pod[0]
+    cost = calccost(pod, o)
+    states.append((cost, base.union([(let, o[0], o[1])])))
+  return states
 
 def transpose(pods):
   locations = {}
@@ -39,6 +64,9 @@ class Puzzle:
 
   def process(self, text):
     self.scan_map(text)
+  
+  def cost(self, pod, move):
+    return calccost(pod, move)
 
   def scan_map(self, text):
     rows = []
@@ -58,7 +86,7 @@ class Puzzle:
     locs = transpose(pods)
     occupied = locs.keys()
     if y == 2: #Top of Room
-      if locs[(x,3)] != let: #Above wrong pod
+      if locs.get((x,3), None) != let: #Above wrong pod
         options = filter(lambda s: s not in occupied, SPOTS)
         return options
       else:
@@ -79,11 +107,31 @@ class Puzzle:
           return [] #Room occupied by wrong
         else:
           return [(loc, 2)]
-      raise 'Not Implemented @Corridor'
+      else: #Won't move
+        return []
     return []
 
   def result(self):
-    pass
+    pq = []
+    visited = []
+    state = self.pods
+    heapq.heappush(pq, (0, state))
+    while pq:
+      cost, state = heapq.heappop(pq)
+      visited.append(state)
+      print 'Visiting', cost, state
+      if state == TARGET:
+        print 'Solved', state
+        return
+      for pod in state:
+        options = self.gen_moves(pod, state)
+        #print pod, options
+        mapped = map_states(pod, options, state)
+        for m in mapped:
+          mcost, s = m
+          if m not in visited: #We never as lower cost
+            print '--', (cost + mcost, s)
+            #heapq.heappush(pq, (cost + mcost, s))
 
 if __name__ == '__main__':
   puz = Puzzle()

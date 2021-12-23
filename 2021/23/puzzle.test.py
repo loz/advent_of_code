@@ -85,6 +85,16 @@ class TestPuzzle(unittest.TestCase):
   #  
   #  moves = puzzle.gen_moves(('C',5,3), [('C',5,3), ('B',9,3)])
   #  self.assertEqual(len(moves), 1)
+ 
+  def test_cost_calculates_correctly(self):
+    puzzle = puz.Puzzle()
+    puzzle.process(EXAMPLE)
+    #COSTS: a:1, b:10, c:100, D:1000
+    self.assertEqual(puzzle.cost(('B',3,3), (1,1)), 4 * 10)
+    self.assertEqual(puzzle.cost(('A',3,3), (11,1)), 10)
+    self.assertEqual(puzzle.cost(('C',3,3), (5,3)), 6 * 100)
+    self.assertEqual(puzzle.cost(('D',1,1), (9,2)), 9 * 1000)
+
 
 if __name__ == '__main__':
     unittest.main()
