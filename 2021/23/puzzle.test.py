@@ -76,7 +76,7 @@ class TestPuzzle(unittest.TestCase):
     puzzle.process(EXAMPLE)
     
     moves = puzzle.gen_moves(('C',5,3), [('C',5,3), ('B',7,3)])
-    self.assertEqual(len(moves), 9)
+    self.assertEqual(len(moves), 7)
 
   #a pod cannot move to a space through a blocked corridor
   def test_pod_cant_move_through_blocked(self):

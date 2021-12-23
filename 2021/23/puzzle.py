@@ -77,6 +77,7 @@ def gen_path(start, finish):
 def remove_invalid(pod, options, pods, maxy):
   valid = []
   let, x, y = pod
+  homecol = TARGET_ROOMS[let]
   for o in options:
     #Not valid move as does not leave room
     if o[0] == x:
@@ -84,11 +85,16 @@ def remove_invalid(pod, options, pods, maxy):
     #Moving to Corridor
     elif o[1] == 1:
       valid.append(o)
+    #Tring to move into a room not ours
+    elif o[0] != homecol: 
+      pass
     else:
       opods = set(pods_in_loc(o[0], pods))
       #Wont move to room occupied by wrong pods
-      if len(opods) == 1 and let not in opods:
-          pass 
+      if len(opods) > 1:
+        pass
+      elif len(opods) == 1 and let not in opods:
+        pass 
       #To and Empty room
       elif len(opods) == 0:
         #print 'Move To Empty', pod, o, maxy
@@ -234,9 +240,9 @@ class Puzzle:
       
 
   def result(self):
-    print self.pods
+    #print self.pods
     self.unfold()
-    print self.pods
+    #print self.pods
     #return
 
     pq = []
