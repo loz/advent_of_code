@@ -7,6 +7,13 @@ TARGET = frozenset([
   ('D',9,3), ('D',9,2)
 ])
 
+TARGET2 = frozenset([
+  ('A',3,5), ('A',3,4), ('A',3,3), ('A',3,2),
+  ('B',5,5), ('B',5,4), ('B',5,3), ('B',5,2),
+  ('C',7,5), ('C',7,4), ('C',7,3), ('C',7,2),
+  ('D',9,5), ('D',9,4), ('D',9,3), ('D',9,2)
+])
+
 EFFORTS = {
  'A': 1,
  'B': 10,
@@ -26,6 +33,20 @@ SPOTS = [
   (3,2), (5,2), (7,2), (9,2),
   (3,3), (5,3), (7,3), (9,3)
 ]
+
+SPOTS2 = [
+  (1,1), (2,1), (4,1), (6,1), (8,1), (10,1), (11,1),
+  (3,2), (5,2), (7,2), (9,2),
+  (3,3), (5,3), (7,3), (9,3),
+  (3,4), (5,4), (7,4), (9,4),
+  (3,5), (5,5), (7,5), (9,5)
+]
+
+def find_top_of_stack(loc, occupied, maxy):
+  y = maxy
+  while (loc,y) in occupied:
+    y -= 1
+  return (loc,y)
 
 def gen_path(start, finish):
   x1, y1 = start
@@ -53,18 +74,26 @@ def gen_path(start, finish):
   return path
 
 #Remove any moves to occupied rooms / same room
-def remove_invalid(pod, options, pods):
+def remove_invalid(pod, options, pods, maxy):
   valid = []
   let, x, y = pod
   for o in options:
-    if o == (x, 2): #Not valid move as in room
+    #Not valid move as does not leave room
+    if o[0] == x:
       pass
+    #Moving to Corridor
+    elif o[1] == 1:
+      valid.append(o)
     else:
       opods = set(pods_in_loc(o[0], pods))
+      #Wont move to room occupied by wrong pods
       if len(opods) == 1 and let not in opods:
-          pass #Room occupied by wrong
-      elif len(opods) == 0: #Empty room
-        if o[1] == 2: #Can't move to top
+          pass 
+      #To and Empty room
+      elif len(opods) == 0:
+        #print 'Move To Empty', pod, o, maxy
+        #only  move to bottom
+        if o[1] != maxy:
           pass
         else:
           valid.append(o)
@@ -119,6 +148,9 @@ def pods_in_loc(loc, pods):
 
 class Puzzle:
   def __init__(self):
+    self.target = TARGET
+    self.spots = SPOTS
+    self.maxy = 3
     self.pods = set()
 
   def process(self, text):
@@ -144,44 +176,69 @@ class Puzzle:
     let, x, y = pod
     locs = transpose(pods)
     occupied = locs.keys()
-    if y == 2: #Top of Room
-      if locs.get((x,3), None) != let: #Above wrong pod
-        options = filter(lambda s: s not in occupied, SPOTS)
+    loc = TARGET_ROOMS[let]
+    opods = set(pods_in_loc(loc, pods))
+    #if y == 2: #Top of Room
+    if x == loc and len(opods) == 1: #home column, only my ones
+      return []
+    elif y > 1: #In a Room
+      if locs.get((x,y-1), None) != let: #Pod above
+        options = filter(lambda s: s not in occupied, self.spots)
         #Remove any moves to occupied rooms
-        options = remove_invalid(pod, options, pods)
+        options = remove_invalid(pod, options, pods, self.maxy)
         #Remove any rooms inaccessible
         options = remove_blocked((x,y), options, occupied)
         return options
       else:
-        return [] #We're all HOME
-    elif y == 3: #Bottom of Room
-      if (x,2) in occupied: #Cannot Move
-        return []
-      else:
-        options = filter(lambda s: s not in occupied, SPOTS)
-        #Remove any moves to occupied rooms / same room
-        options = remove_invalid(pod, options, pods)
-
-        #Remove any rooms inaccessible
-        options = remove_blocked((x,y), options, occupied)
-        return options
-    else: #In Corridor
-      loc = TARGET_ROOMS[let]
-      pods = set(pods_in_loc(loc, pods))
-      if len(pods) == 0: #Empty Target Room
-        options =  [(loc, 3)]
-      elif len(pods) == 1:
-        if let not in pods:
+        return [] #We cannot move
+    elif y == 1: #In Corridor
+      if len(opods) == 0: #Empty Target Room
+        #move to bottom of target room
+        options =  [(loc, self.maxy)]
+      elif len(opods) == 1:
+        if let not in opods:
           return [] #Room occupied by wrong
         else:
-          options = [(loc, 2)]
+          options = [find_top_of_stack(loc, occupied, self.maxy)]
       else: #Won't move
         return []
       #May still not be able to access
       return remove_blocked((x,y), options, occupied)
+    else:
+      print '====== GEN MOVES ===='
+      print pod, pods
+      raise 'Unimplemented'
     return []
 
+  def unfold(self):
+    self.target = TARGET2
+    self.spots = SPOTS2
+    self.maxy = 5
+    #   Level 3 inserts
+    #   #D#C#B#A#
+    #   #D#B#A#C#
+    newpods = set([
+     ('D',3,3), ('D',3,4),
+     ('C',5,3), ('B',5,4),
+     ('B',7,3), ('A',7,4),
+     ('A',9,3), ('C',9,4)
+    ])
+    for pod in self.pods:
+      let, x, y = pod
+      if y == 3:
+        newpods.add((let, x, 5))
+      else:
+        newpods.add(pod)
+    
+    self.pods = newpods
+      
+
   def result(self):
+    print self.pods
+    self.unfold()
+    print self.pods
+    #return
+
     pq = []
     heapq.heapify(pq)
 
@@ -193,7 +250,7 @@ class Puzzle:
       if state not in cheapest:
         print 'Visiting', cost, state
         cheapest[state] = cost
-        if state == TARGET:
+        if state == self.target:
           print 'Solved', state
           return
         for pod in state:
