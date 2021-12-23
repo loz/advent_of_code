@@ -76,7 +76,38 @@ class TestPuzzle(unittest.TestCase):
     puzzle.process(EXAMPLE)
     
     moves = puzzle.gen_moves(('C',5,3), [('C',5,3), ('B',7,3)])
-    self.assertEqual(len(moves), 13)
+    self.assertEqual(len(moves), 9)
+
+  #a pod cannot move to a space through a blocked corridor
+  def test_pod_cant_move_through_blocked(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""#############
+#...C...B...#
+###B#.#.#D###
+  #A#D#C#A#
+  #########
+""")
+    
+    moves = puzzle.gen_moves(('D',5,3), puzzle.pods)
+    self.assertEqual(len(moves), 1)
+
+  #a pod will not move to top of empty room
+  def test_wont_move_to_top_of_empty_room(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""#############
+#...C...B...#
+###B#C#.#D###
+  #A#D#.#A#
+  #########
+""")
+    
+    moves = puzzle.gen_moves(('C',4,1), puzzle.pods)
+    self.assertEqual(len(moves), 1)
+
+    moves = puzzle.gen_moves(('C',5,2), puzzle.pods)
+    #print 'Moves', moves
+    #[(6, 1), (7, 2), (7, 3)]
+    self.assertEqual(len(moves), 2) #Maybe 1 if skip pointless
 
   #I think this is optimal based on rules!
   #def test_pod_in_room_will_move_straigt_to_right_room(self):

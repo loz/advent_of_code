@@ -1,10 +1,10 @@
 import heapq
 
-TARGET = set([
+TARGET = frozenset([
   ('A',3,3), ('A',3,2),
   ('B',5,3), ('B',5,2),
-  ('C',7,3), ('C',7,3),
-  ('D',9,3), ('D',9,3)
+  ('C',7,3), ('C',7,2),
+  ('D',9,3), ('D',9,2)
 ])
 
 EFFORTS = {
@@ -26,6 +26,65 @@ SPOTS = [
   (3,2), (5,2), (7,2), (9,2),
   (3,3), (5,3), (7,3), (9,3)
 ]
+
+def gen_path(start, finish):
+  x1, y1 = start
+  x2, y2 = finish
+  path = []
+  x = x1
+  y = y1
+  #up
+  while y > 1:
+    y -= 1
+    path.append((x,y))
+  #left/right
+  if x1 < x2: #move right
+    while x < x2:
+      x += 1
+      path.append((x,y))
+  else: #left
+    while x > x2:
+      x -= 1
+      path.append((x,y))
+  #down
+  while y < y2:
+    y += 1
+    path.append((x,y))
+  return path
+
+#Remove any moves to occupied rooms / same room
+def remove_invalid(pod, options, pods):
+  valid = []
+  let, x, y = pod
+  for o in options:
+    if o == (x, 2): #Not valid move as in room
+      pass
+    else:
+      opods = set(pods_in_loc(o[0], pods))
+      if len(opods) == 1 and let not in opods:
+          pass #Room occupied by wrong
+      elif len(opods) == 0: #Empty room
+        if o[1] == 2: #Can't move to top
+          pass
+        else:
+          valid.append(o)
+      else:
+        valid.append(o)
+  return valid
+
+def remove_blocked(start, options, occupied):
+  accessible = []
+  oset = set(occupied)
+  for o in options:
+    #print 'Access?', start, '->', o, ':', occupied
+    path = gen_path(start, o)
+    collide = set(path) & oset
+    if len(collide) > 0:
+      #print '-- Blocked --', path
+      pass
+    else:
+      accessible.append(o)
+  return accessible
 
 def calccost(pod, move):
   let, x1, y1 = pod
@@ -88,6 +147,10 @@ class Puzzle:
     if y == 2: #Top of Room
       if locs.get((x,3), None) != let: #Above wrong pod
         options = filter(lambda s: s not in occupied, SPOTS)
+        #Remove any moves to occupied rooms
+        options = remove_invalid(pod, options, pods)
+        #Remove any rooms inaccessible
+        options = remove_blocked((x,y), options, occupied)
         return options
       else:
         return [] #We're all HOME
@@ -96,42 +159,52 @@ class Puzzle:
         return []
       else:
         options = filter(lambda s: s not in occupied, SPOTS)
+        #Remove any moves to occupied rooms / same room
+        options = remove_invalid(pod, options, pods)
+
+        #Remove any rooms inaccessible
+        options = remove_blocked((x,y), options, occupied)
         return options
     else: #In Corridor
       loc = TARGET_ROOMS[let]
       pods = set(pods_in_loc(loc, pods))
       if len(pods) == 0: #Empty Target Room
-        return [(loc, 3)]
+        options =  [(loc, 3)]
       elif len(pods) == 1:
         if let not in pods:
           return [] #Room occupied by wrong
         else:
-          return [(loc, 2)]
+          options = [(loc, 2)]
       else: #Won't move
         return []
+      #May still not be able to access
+      return remove_blocked((x,y), options, occupied)
     return []
 
   def result(self):
     pq = []
-    visited = []
-    state = self.pods
-    heapq.heappush(pq, (0, state))
+    heapq.heapify(pq)
+
+    cheapest = {}
+    state = frozenset(self.pods)
+    heapq.heappush(pq, [0, state])
     while pq:
       cost, state = heapq.heappop(pq)
-      visited.append(state)
-      print 'Visiting', cost, state
-      if state == TARGET:
-        print 'Solved', state
-        return
-      for pod in state:
-        options = self.gen_moves(pod, state)
-        #print pod, options
-        mapped = map_states(pod, options, state)
-        for m in mapped:
-          mcost, s = m
-          if m not in visited: #We never as lower cost
-            print '--', (cost + mcost, s)
-            #heapq.heappush(pq, (cost + mcost, s))
+      if state not in cheapest:
+        print 'Visiting', cost, state
+        cheapest[state] = cost
+        if state == TARGET:
+          print 'Solved', state
+          return
+        for pod in state:
+          options = self.gen_moves(pod, state)
+          #print pod, options
+          mapped = map_states(pod, options, state)
+          for m in mapped:
+            mcost, s = m
+            if frozenset(s) not in cheapest: #We never as lower cost
+              #print '--', (cost + mcost, s)
+              heapq.heappush(pq, [cost + mcost, frozenset(s)])
 
 if __name__ == '__main__':
   puz = Puzzle()
