@@ -1,0 +1,269 @@
+inp w     #DIG-0
+mul x 0   #NOP
+add x z   #NOP
+mod x 26  #NOP
+div z 1   #NOP
+add x 14  #NOP
+eql x w   #NOP (as W != 0
+eql x 0   #X=1 
+mul y 0   #NOP
+add y 25  #Y=25
+mul y x   #NOP
+add y 1   #Y=26
+mul z y   #NOP
+mul y 0   #Y=0
+add y w   #Y=W
+add y 12  #Y=W+12
+mul y x   #NOP
+add z y   #Z=Y
+
+# X=1, Y=[INP]+12, Z=[INP]+12, W=[INP-NEXT]
+
+inp w     #DIG-1
+mul x 0   #X=0
+add x z   #X=Z  [LAST RES]
+mod x 26  #X= [LAST RES] Mod 26
+div z 1   #NOP
+add x 13  #X= [LAST RES] + 13
+eql x w   #X=0 AS whatever + 13 will always be > 1 DIGIT
+eql x 0   #X=1
+mul y 0   #Y=0
+add y 25  #Y=25
+mul y x   #NOP
+add y 1   #Y=26
+mul z y   #Z = Z*26
+mul y 0   #Y=0
+add y w   #Y=[INP]
+add y 6   #Y=[INP]+6
+mul y x   #NOP
+add z y   #Z=Z+Y
+
+inp w     #W=DIG-2
+mul x 0   #X=0
+add x z   #X=[LAST RES]
+mod x 26  #X=[LAST RES] % 26
+div z 1   #NOP
+add x 12  #X=[LAST RES] + 12
+eql x w   #X=0 +12 always > 1
+eql x 0   
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 4
+mul y x
+add z y
+
+inp w     #DIG-3
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 14
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 5
+mul y x
+add z y
+
+inp w     #DIG-4
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 13
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 0
+mul y x
+add z y
+
+inp w     #DIG-5
+mul x 0   #X=0
+add x z   #X=Z
+mod x 26  #X=Z % 26
+div z 26  #Z=Z / 26
+add x -7  #DOES MOD RESULT SO FAR -7 == DIG-5??
+eql x w   #X == DIGIT, 1 | 0
+eql x 0   # 0 => 1, 1 => 0
+mul y 0   #Y=0
+add y 25  #Y=25
+mul y x   #Y=0 | 25
+add y 1   #Y=1 | 26
+mul z y
+mul y 0
+add y w
+add y 4
+mul y x
+add z y
+
+#
+
+inp w    #DIG-6
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -13
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 15
+mul y x
+add z y
+
+inp w    #DIG-7
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 10
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 14
+mul y x
+add z y
+
+inp w    #DIG-8
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -7
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 6
+mul y x
+add z y
+
+inp w   #DIG-9
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 11
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 14
+mul y x
+add z y
+
+inp w    #DIG-10
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -9
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 8
+mul y x
+add z y
+
+inp w    #DIG-11
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -2
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 5
+mul y x
+add z y
+
+inp w    #DIG-12
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -9
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 14
+mul y x
+add z y
+
+inp w    #DIG-13
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -14
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 4
+mul y x
+add z y
