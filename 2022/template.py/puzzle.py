@@ -1,10 +1,17 @@
 class Puzzle:
 
   def process(self, text):
-    pass
+    for line in text.split('\n'):
+      self.process_line(line)
+
+  def process_line(self, line):
+    if line != '':
+      pass
 
   def result(self):
     pass
+
+
 
 if __name__ == '__main__':
   puz = Puzzle()
