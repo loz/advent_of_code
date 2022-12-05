@@ -51,6 +51,27 @@ move 3 from 1 to 3
 
     self.assertEquals(puzzle.execute(), False)
 
+  def test_puzzle_execute_9001(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""[A]            
+[B] [D]    
+[C] [E] [F]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+""")
+    puzzle.execute_9001()
+    self.assertEquals(puzzle.stacks[0], ['C','B','A', 'D'])
+    self.assertEquals(puzzle.stacks[1], ['E'])
+    self.assertEquals(puzzle.stacks[2], ['F'])
+
+    puzzle.execute_9001()
+    self.assertEquals(puzzle.stacks[0], ['C'])
+    self.assertEquals(puzzle.stacks[1], ['E'])
+    self.assertEquals(puzzle.stacks[2], ['F', 'B', 'A', 'D'])
+
+    self.assertEquals(puzzle.execute(), False)
 
 if __name__ == '__main__':
     unittest.main()

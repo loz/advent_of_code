@@ -33,7 +33,7 @@ class Puzzle:
       if part == None: #Space
         pass
       elif part.startswith('['):
-        if i > self.numstacks:
+        while i > self.numstacks:
           self.numstacks += 1
           self.stacks.append([])
         letter = part.replace('[', '').replace(']','')
@@ -62,6 +62,21 @@ class Puzzle:
     self.current+=1
     return True
 
+  def execute_9001(self):
+    if self.current == len(self.moves):
+      return False
+    move = self.moves[self.current]
+    count, cfrom, cto = move
+    print 'move', count, 'from', cfrom, 'to', cto
+    buff = []
+    for b in range(count):
+      blk = self.stacks[cfrom-1].pop()
+      buff.insert(0, blk)
+
+    self.stacks[cto-1].extend(buff)
+    self.current+=1
+    return True
+
   def dump_stacks(self):
     code = ""
     for stack in self.stacks:
@@ -73,8 +88,8 @@ class Puzzle:
   def result(self):
     self.dump_stacks()
     print '---'*10
-    while self.execute():
-      #self.dump_stacks()
+    while self.execute_9001():
+      self.dump_stacks()
       pass
     print '---'*10
     self.dump_stacks()
