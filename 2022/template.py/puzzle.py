@@ -1,3 +1,5 @@
+import sys
+
 class Puzzle:
 
   def process(self, text):
@@ -15,6 +17,9 @@ class Puzzle:
 
 if __name__ == '__main__':
   puz = Puzzle()
-  inp = open('input', 'r').read()
+  inputfile = 'input'
+  if len(sys.argv) == 2:
+    inputfile = sys.argv[1]
+  inp = open(inputfile, 'r').read()
   puz.process(inp)
   puz.result()
