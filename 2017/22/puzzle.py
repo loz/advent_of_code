@@ -13,6 +13,12 @@ class Virus:
     'DN':'RT',
     'LT':'DN'
   }
+  IMAP = {
+    'UP':'DN',
+    'RT':'LT',
+    'DN':'UP',
+    'LT':'RT'
+  }
   DELTAS = {
     'UP':( 0,-1),
     'RT':( 1, 0),
@@ -30,6 +36,9 @@ class Virus:
 
   def turnLeft(self):
     self.dir = self.LMAP[self.dir]
+
+  def reverse(self):
+    self.dir = self.IMAP[self.dir]
 
   def move(self):
     x, y = self.pos
@@ -54,7 +63,7 @@ class Puzzle:
     if line != '':
       x = 0-self.xOffset
       for ch in line:
-        if ch == '#':
+        if ch != '.':
           self.map[(x, self.current_line)] = ch
         x += 1
       self.current_line += 1
@@ -62,12 +71,18 @@ class Puzzle:
   def burst(self):
     node = self.nodeAt(self.virus.pos[0], self.virus.pos[1])
     if node:
-      self.virus.turnRight()
-      del self.map[self.virus.pos]
-    else:
+      if node == 'W':  #Infect
+        self.map[self.virus.pos] = '#'
+        self.virus.infections += 1
+      elif node =='F': #Clean
+        self.virus.reverse()
+        del self.map[self.virus.pos]
+      else: #Flag
+        self.virus.turnRight()
+        self.map[self.virus.pos] = 'F'
+    else: #Weaken
       self.virus.turnLeft()
-      self.map[self.virus.pos] = '#'
-      self.virus.infections += 1
+      self.map[self.virus.pos] = 'W'
     self.virus.move()
 
   def dump(self, size):
@@ -79,14 +94,15 @@ class Puzzle:
       for x in range(size):
         cx = 0 - xOffset + x
         #print (cx, cy),
+        node = self.nodeAt(cx, cy)
         if self.virus.pos == (cx, cy):
           if self.nodeAt(cx, cy):
-            sys.stdout.write('\x08[#]')
+            sys.stdout.write('\x08[' + node + ']')
           else:
             sys.stdout.write('\x08[.]')
         else:
           if self.nodeAt(cx, cy):
-            sys.stdout.write('# ')
+            sys.stdout.write(node + ' ')
           else:
             sys.stdout.write('. ')
       print
@@ -94,11 +110,11 @@ class Puzzle:
 
   def result(self):
     self.dump(11)
-    for run in range(10000):
+    for run in range(10000000):
       self.burst()
       #print run
       #self.dump(11)
-    self.dump(51)
+    #self.dump(51)
     print self.virus.infections, 'infections within bursts'
 
   def nodeAt(self, x, y):

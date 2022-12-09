@@ -32,6 +32,24 @@ class TestPuzzle(unittest.TestCase):
     puzzle.burst()
     self.assertEquals(puzzle.virus.dir, 'LT')
 
+  def test_puzzle_weak_node_does_not_turn(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""..#
+#W.
+...
+""")
+    puzzle.burst()
+    self.assertEquals(puzzle.virus.dir, 'UP')
+
+  def test_puzzle_flagged_node_reverses(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""..#
+#F.
+...
+""")
+    puzzle.burst()
+    self.assertEquals(puzzle.virus.dir, 'DN')
+
   def test_puzzle_right_turns_down(self):
     puzzle = puz.Puzzle()
     puzzle.process("""..#
@@ -62,18 +80,34 @@ class TestPuzzle(unittest.TestCase):
     self.assertEquals(puzzle.virus.dir, 'UP')
     self.assertEquals(puzzle.virus.pos, (0, -1))
 
-  def test_puzzle_clean_node_infects(self):
+  def test_puzzle_clean_node_weakens(self):
     puzzle = puz.Puzzle()
     puzzle.process("""..#
 #..
 ...""")
     puzzle.burst()
-    self.assertEquals(puzzle.nodeAt(0,0), '#')
+    self.assertEquals(puzzle.nodeAt(0,0), 'W')
 
-  def test_puzzle_infected_node_cleaned(self):
+  def test_puzzle_infected_node_flagged(self):
     puzzle = puz.Puzzle()
     puzzle.process("""..#
 ##.
+...""")
+    puzzle.burst()
+    self.assertEquals(puzzle.nodeAt(0,0), 'F')
+
+  def test_puzzle_weakened_node_infected(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""..#
+#W.
+...""")
+    puzzle.burst()
+    self.assertEquals(puzzle.nodeAt(0,0), '#')
+
+  def test_puzzle_flagged_node_cleaned(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""..#
+#F.
 ...""")
     puzzle.burst()
     self.assertEquals(puzzle.nodeAt(0,0), None)
