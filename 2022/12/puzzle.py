@@ -38,6 +38,10 @@ class Puzzle:
         continue
 
       th = self.map(tx, ty)
+      if th == 'E':
+        th = 'z'
+      if th == 'S':
+        th = 'a'
       if ord(current) >= ord(th):
         options.append((tx, ty))
       elif ord(current) == ord(th)-1:
