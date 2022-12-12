@@ -1,4 +1,6 @@
 import sys
+import heapq
+
 
 class Puzzle:
   DELTAS = [
@@ -60,28 +62,26 @@ class Puzzle:
         self.bfs(o, visited + [loc], distance +1)
 
   def dijk(self):
-    distances = {self.start: 0}
-    visited = {}
-    tovisit = [self.start]
-    paths = {self.start:[self.start]}
+    pq = []
+    heapq.heapify(pq)
 
-    while len(tovisit) > 0:
-      loc = tovisit.pop()
-      dist = distances.get(loc)
-      curpath = paths[loc]
-      visited[loc] = True
-      options = self.moves_from(loc[0], loc[1])
-      for o in options:
-        if visited.get(o, False):
-          if distances[o] > dist + 1:
-            distances[o] = dist + 1
-            paths[o] = curpath + [o]
-            tovisit.append(o)
-        else:
-          distances[o] = dist + 1
-          paths[o] = curpath + [o]
-          tovisit.append(o)
-    print 'Distance to E', distances[self.end]
+    shortest = {}
+    heapq.heappush(pq, [0, self.start])
+
+    while pq:
+      dist, loc = heapq.heappop(pq)
+      if loc not in shortest:
+        shortest[loc] = dist
+        if loc == self.end:
+          print 'Solved', loc, dist
+          return
+        options = self.moves_from(loc[0], loc[1])
+        for o in options:
+          if o not in shortest:
+            heapq.heappush(pq, [dist+1, o])
+
+
+    print 'Distance to E', len(paths[self.end])
     path = paths[self.end]
     for y in range(len(self.heights)):
       for x in range(len(self.heights[0])):
@@ -91,6 +91,7 @@ class Puzzle:
           sys.stdout.write(u"\u001b[0m" + self.heights[y][x])
       print
   
+    sys.stdout.write(u"\u001b[0m\n")
     
   def result(self):
     self.dijk()
