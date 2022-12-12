@@ -65,22 +65,36 @@ class Puzzle:
     pq = []
     heapq.heapify(pq)
 
+    path = [start]
     shortest = {}
-    heapq.heappush(pq, [0, start])
+    heapq.heappush(pq, [0, start,  path])
 
     while pq:
-      dist, loc = heapq.heappop(pq)
+      dist, loc, journey = heapq.heappop(pq)
       if loc not in shortest:
         shortest[loc] = dist
         if loc == self.end:
           # print 'Solved', loc, dist
-          return dist
+          return dist, journey
         options = self.moves_from(loc[0], loc[1])
         for o in options:
           if o not in shortest:
-            heapq.heappush(pq, [dist+1, o])
+            heapq.heappush(pq, [dist+1, o, journey + [o]])
     return None
     
+  def result1(self):
+    d, path = self.dijk(self.start)
+    print path
+    for y in range(len(self.heights)):
+      for x in range(len(self.heights[0])):
+        h = self.map(x, y)
+        if (x,y) in path:
+          sys.stdout.write(u"\u001b[36m" + h)
+        else:
+          sys.stdout.write(u"\u001b[0m" + h)
+      print u"\u001b[0m"
+
+
   def result(self):
     starts = []
     shortest = 9999999
@@ -96,8 +110,6 @@ class Puzzle:
       print start, dist
     print 'Shortest start gives', shortest
 
-
-
 if __name__ == '__main__':
   puz = Puzzle()
   inputfile = 'input'
@@ -105,4 +117,4 @@ if __name__ == '__main__':
     inputfile = sys.argv[1]
   inp = open(inputfile, 'r').read()
   puz.process(inp)
-  puz.result()
+  puz.result1()
