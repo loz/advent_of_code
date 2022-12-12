@@ -61,40 +61,40 @@ class Puzzle:
       if o not in visited:
         self.bfs(o, visited + [loc], distance +1)
 
-  def dijk(self):
+  def dijk(self, start):
     pq = []
     heapq.heapify(pq)
 
     shortest = {}
-    heapq.heappush(pq, [0, self.start])
+    heapq.heappush(pq, [0, start])
 
     while pq:
       dist, loc = heapq.heappop(pq)
       if loc not in shortest:
         shortest[loc] = dist
         if loc == self.end:
-          print 'Solved', loc, dist
-          return
+          # print 'Solved', loc, dist
+          return dist
         options = self.moves_from(loc[0], loc[1])
         for o in options:
           if o not in shortest:
             heapq.heappush(pq, [dist+1, o])
-
-
-    print 'Distance to E', len(paths[self.end])
-    path = paths[self.end]
-    for y in range(len(self.heights)):
-      for x in range(len(self.heights[0])):
-        if (x,y) in path:
-          sys.stdout.write(u"\u001b[36m" + self.heights[y][x])
-        else:
-          sys.stdout.write(u"\u001b[0m" + self.heights[y][x])
-      print
-  
-    sys.stdout.write(u"\u001b[0m\n")
+    return None
     
   def result(self):
-    self.dijk()
+    starts = []
+    shortest = 9999999
+    for y in range(len(self.heights)):
+      for x in range(len(self.heights[0])):
+        h = self.map(x, y)
+        if h == 'S' or h == 'a':
+          starts.append((x, y))
+    for start in starts:
+      dist = self.dijk(start)
+      if dist != None and dist < shortest:
+        shortest = dist
+      print start, dist
+    print 'Shortest start gives', shortest
 
 
 
