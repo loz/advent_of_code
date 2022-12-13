@@ -1,0 +1,6 @@
+'c': 125400
+'b': 108400
+
+looping  c-b = 17000
+
+loops, add +1 to h, adds 17 to b => 108417
