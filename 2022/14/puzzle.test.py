@@ -47,13 +47,26 @@ class TestPuzzle(unittest.TestCase):
     puzzle.drop_sand()
     self.assertEquals(puzzle.map_at(501,4), 'o')
 
-  def test_sand_that_does_not_land_returns_false(self):
+  def test_sand_lands_on_the_floor(self):
     puzzle = puz.Puzzle()
     puzzle.process("""501,5 -> 502,5
 """)
 
+    puzzle.drop_sand()
+    self.assertEquals(puzzle.map_at(500,7), 'o')
+
+  def test_sand_stops_when_source_blocked(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""499,1 -> 502,1
+""")
+
+    lands = puzzle.drop_sand()
+    self.assertEquals(puzzle.map_at(500,0), 'o')
+    self.assertEquals(lands, True)
+
     lands = puzzle.drop_sand()
     self.assertEquals(lands, False)
+
 
 if __name__ == '__main__':
     unittest.main()

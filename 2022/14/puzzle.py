@@ -60,11 +60,13 @@ class Puzzle:
       cx, cy = nx, ny
 
   def dump(self):
-    for y in range(self.depth+1):
-      for x in range(self.leftx, self.rightx+1):
+    for y in range(self.depth+3):
+      for x in range(self.leftx-30, self.rightx+31):
         ch = self.map_at(x, y)
         if ch:
           sys.stdout.write(ch)
+        elif y == self.depth+2:
+          sys.stdout.write('#')
         else:
           sys.stdout.write('.')
       print
@@ -73,6 +75,8 @@ class Puzzle:
     sx = 500
     sy = 0
     falling = True
+    if self.map_at(500,0) != None:
+      return False
     while falling:
       if self.map_at(sx, sy+1) == None:
         sy += 1
@@ -85,8 +89,8 @@ class Puzzle:
           #sy += 1
         else:
           falling = False
-      if sy == self.depth:
-        return False
+      if sy == self.depth+1:
+        falling = False
     self.map[(sx, sy)] = 'o'
     return True
 
@@ -94,8 +98,8 @@ class Puzzle:
     fallen = 0
     while self.drop_sand():
       fallen += 1
-      print u"\033[0;0H"
-      self.dump()
+    print u"\033[0;0H"
+    self.dump()
     print fallen, 'sand landed'
 
 
