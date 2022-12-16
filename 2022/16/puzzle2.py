@@ -137,9 +137,6 @@ class Puzzle:
     print 'Sorting Paths'
     paths.sort(key=lambda x: cache[''.join(x)], reverse=True)
 
-    for path in paths:
-      print path, '=>', cache[''.join(path)]
-
     #return
     pairs = itertools.combinations(paths, 2)
     print 'Finding Pairs'
@@ -160,6 +157,7 @@ class Puzzle:
           largest = my_val + el_val
           largestpath = pair
           print 'NewLargest', pair, my_val, el_val, '=>', largest
+        #return
     print 'Largest', largest
     print 'Path', largestpath
 
