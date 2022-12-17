@@ -168,7 +168,7 @@ class Puzzle:
     print self.height
 
   def result(self):
-    count = 2000
+    count = 10000
     changes = self.run(count)
     window = 2
     found = False
