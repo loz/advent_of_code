@@ -52,6 +52,15 @@ class Puzzle:
 
   def gen_choices(self, blueprint, resources):
     costs = self.blueprints[blueprint]
+    options = [None]
+    for item in ["ore", "clay", "obsidian", "geode"]:
+      needs = costs[item]
+      if self.can_afford(needs, resources):
+        options.append(item)
+    return options
+    
+  def gen_choices_2(self, blueprint, resources):
+    costs = self.blueprints[blueprint]
     options = []
     geo = costs["geode"]
     if self.can_afford(geo, resources):
@@ -100,52 +109,108 @@ class Puzzle:
     #print 'New ', robot, 'you now have', nrobots[robot]
     return nrobots, resources
 
+  def min_viable(self, idx):
+    costs = self.blueprints[idx]
+
+    obreq = costs["geode"][2]
+    obsidian = 0
+    timestamp = 24
+    for i in range(obreq):
+      offset = timestamp-(obreq/(i+1))-(i+1)
+      if offset >= obsidian:
+        obsidian = offset
+    clayreq = costs["obsidian"][1]
+    clay = 0
+    maxclay = 0
+    for i in range(clayreq):
+      offset = obsidian-(clayreq/(i+1))-(i+1)
+      if offset >= clay:
+        clay = offset
+        if (i+1) > maxclay:
+          maxclay = i+1
+    orreq = costs["clay"][0]
+    orcost = costs["ore"][0]
+    maxore = (clay-orreq) / orcost
+    return (obsidian+1, clay+1, maxclay+2, maxore+2)
 
   def run_blueprint(self, idx):
+    viable = self.min_viable(idx)
+    print viable
     limits = {
-      "ore": 3,
-      "clay": 4,
+      "ore": viable[3],
+      "clay": viable[2],
       "obsidian": 9999,
       "geode": 9999
     }
+    visited = {}
     maxgeod = 0
     maxrobot = []
+    allpaths = []
     robots = {"ore":1, "clay":0, "obsidian":0, "geode":0}
     resources = (0, 0, 0, 0)
     tovisit = [(robots, resources, 0, [])]
     while tovisit:
       robots, resources, timer, path = tovisit.pop()
+      item = (robots["ore"], robots["clay"], robots["obsidian"], robots["geode"], resources, 0)
+      if visited.get(item, False):
+        continue
+      else:
+        visited[item] = True
       if timer == 24:
         if resources[3] > maxgeod:
           maxgeod = resources[3]
           maxrobot = path
+        allpaths.append(path)
         continue
       #print '== Minute ', timer, '=='
+      if timer == viable[1] and robots["clay"] == 0:
+        #print 'Culling For Clay'
+        continue
+      if timer == viable[0] and robots["obsidian"] == 0:
+        #print 'Culling for Obsidian'
+        continue
       options = self.gen_choices(idx, resources)
       for option in options:
         if option == None: #Wait option
-          nrobots = robots
+          nrobots = robots.copy()
           nresources = self.collect(resources, robots)
           tovisit.append((nrobots, nresources, timer+1, path + [(nrobots, nresources)]))
         else:
           if robots.get(option, 0) < limits[option]:
             nrobots, nresources = self.build(option, resources, robots,idx)
             nresources = self.collect(nresources, robots)
-            tovisit.append((nrobots, nresources, timer+1, path + [(nrobots, nresources)]))
+            tovisit.append((nrobots, nresources, timer+1, path + [(robots, nresources)]))
 
-              
-    print 'Max', maxgeod
-    minute = 1
-    for step in maxrobot:
-      print 'Minute', minute, step
-      minute += 1
-    print '===='
+    #for path in allpaths:
+    #  print '='*80
+    #  minute = 1
+    #  for step in path:
+    #    print 'Minute', minute, step
+    #    minute += 1
+    #  print '===='
+
+    #print 'Max', maxgeod
+    #minute = 1
+    #for step in maxrobot:
+    #  print 'Minute', minute, step
+    #  minute += 1
+    #print '===='
+    return maxgeod
+
+  def result_x(self):
+    for blueprint in range(len(self.blueprints)):
+      print blueprint, self.min_viable(blueprint)
 
   def result(self):
     blueprint = 0
+    total = 0
     for blueprint in range(len(self.blueprints)):
       print 'Running BP:', blueprint+1
-      self.run_blueprint(blueprint)
+      val = self.run_blueprint(blueprint)
+      print val, 'quality', (blueprint+1)*val
+      total += ((blueprint+1)*val)
+    print 'Total', total
+
       
 
 
