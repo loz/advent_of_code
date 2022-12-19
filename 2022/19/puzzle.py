@@ -82,7 +82,7 @@ class Puzzle:
     }
     for robot in robots.keys():
       amounts[robot] += robots[robot]
-      print robots[robot], robot, 'collect, you have now have', amounts[robot]
+      #print robots[robot], robot, 'collect, you have now have', amounts[robot]
     return (amounts['ore'], amounts['clay'], amounts['obsidian'], amounts['geode'])
 
   def build(self, robot, resources, robots, idx):
@@ -97,31 +97,56 @@ class Puzzle:
     nrobots = robots.copy()
     count = nrobots.get(robot, 0)
     nrobots[robot] = count + 1
-    print 'New ', robot, 'you now have', nrobots[robot]
+    #print 'New ', robot, 'you now have', nrobots[robot]
     return nrobots, resources
 
 
   def run_blueprint(self, idx):
-    robots = {"ore":1}
+    limits = {
+      "ore": 3,
+      "clay": 4,
+      "obsidian": 9999,
+      "geode": 9999
+    }
+    maxgeod = 0
+    maxrobot = []
+    robots = {"ore":1, "clay":0, "obsidian":0, "geode":0}
     resources = (0, 0, 0, 0)
-    tovisit = [(robots, resources, 0)]
+    tovisit = [(robots, resources, 0, [])]
     while tovisit:
-      robots, resources, timer = tovisit.pop()
+      robots, resources, timer, path = tovisit.pop()
       if timer == 24:
+        if resources[3] > maxgeod:
+          maxgeod = resources[3]
+          maxrobot = path
         continue
-      print '== Minute ', timer, '=='
-      resources = self.collect(resources, robots)
+      #print '== Minute ', timer, '=='
       options = self.gen_choices(idx, resources)
       for option in options:
         if option == None: #Wait option
-          tovisit.append((robots, resources, timer+1))
+          nrobots = robots
+          nresources = self.collect(resources, robots)
+          tovisit.append((nrobots, nresources, timer+1, path + [(nrobots, nresources)]))
         else:
-          nrobots, resources = self.build(option, resources, robots,idx)
-          tovisit.append((nrobots, resources, timer+1))
+          if robots.get(option, 0) < limits[option]:
+            nrobots, nresources = self.build(option, resources, robots,idx)
+            nresources = self.collect(nresources, robots)
+            tovisit.append((nrobots, nresources, timer+1, path + [(nrobots, nresources)]))
+
+              
+    print 'Max', maxgeod
+    minute = 1
+    for step in maxrobot:
+      print 'Minute', minute, step
+      minute += 1
+    print '===='
 
   def result(self):
-    blueprint = 1
-    self.run_blueprint(blueprint)
+    blueprint = 0
+    for blueprint in range(len(self.blueprints)):
+      print 'Running BP:', blueprint+1
+      self.run_blueprint(blueprint)
+      
 
 
 
