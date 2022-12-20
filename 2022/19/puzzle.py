@@ -53,7 +53,11 @@ class Puzzle:
   def gen_choices(self, blueprint, resources):
     costs = self.blueprints[blueprint]
     options = [None]
-    for item in ["ore", "clay", "obsidian", "geode"]:
+    geo = costs["geode"]
+    if self.can_afford(geo, resources):
+      #build it!
+      return ["geode"]
+    for item in ["ore", "clay", "obsidian"]:
       needs = costs[item]
       if self.can_afford(needs, resources):
         options.append(item)
@@ -130,45 +134,59 @@ class Puzzle:
           maxclay = i+1
     orreq = costs["clay"][0]
     orcost = costs["ore"][0]
-    maxore = (clay-orreq) / orcost
-    return (obsidian+1, clay+1, maxclay+2, maxore+2)
+    maxore = 0
+    maxclay = 0
+    for req in costs:
+      maxore = max(maxore, costs[req][0])
+      maxclay = max(maxclay, costs[req][1])
+    return (obsidian+1, clay+1, maxclay+1, maxore+1)
 
-  def run_blueprint(self, idx):
+  def run_blueprint(self, idx, timelimit=24):
     viable = self.min_viable(idx)
-    print viable
+    print viable, self.blueprints[idx]
     limits = {
       "ore": viable[3],
       "clay": viable[2],
       "obsidian": 9999,
       "geode": 9999
     }
+    print 'Limits', limits
+    bestdepth = {}
     visited = {}
     maxgeod = 0
     maxrobot = []
     allpaths = []
+    best = None
     robots = {"ore":1, "clay":0, "obsidian":0, "geode":0}
     resources = (0, 0, 0, 0)
     tovisit = [(robots, resources, 0, [])]
     while tovisit:
       robots, resources, timer, path = tovisit.pop()
-      item = (robots["ore"], robots["clay"], robots["obsidian"], robots["geode"], resources, 0)
+      item = (robots["ore"], robots["clay"], robots["obsidian"], robots["geode"], resources, timer)
       if visited.get(item, False):
         continue
       else:
         visited[item] = True
-      if timer == 24:
+      if bestdepth.get(timer, 0) > resources[3]: #We have better at depth seen before
+        #print 'Culling Poorer Path'
+        continue
+      else:
+        #print 'Best at depth', timer, resources[3]
+        bestdepth[timer] = resources[3]
+      if timer == timelimit:
         if resources[3] > maxgeod:
           maxgeod = resources[3]
           maxrobot = path
+          best = robots
         allpaths.append(path)
         continue
       #print '== Minute ', timer, '=='
-      if timer == viable[1] and robots["clay"] == 0:
-        #print 'Culling For Clay'
-        continue
-      if timer == viable[0] and robots["obsidian"] == 0:
-        #print 'Culling for Obsidian'
-        continue
+      #if timer == viable[1] and robots["clay"] == 0:
+      #  #print 'Culling For Clay'
+      #  continue
+      #if timer == viable[0] and robots["obsidian"] == 0:
+      #  #print 'Culling for Obsidian'
+      #  continue
       options = self.gen_choices(idx, resources)
       for option in options:
         if option == None: #Wait option
@@ -177,7 +195,7 @@ class Puzzle:
           tovisit.append((nrobots, nresources, timer+1, path + [(nrobots, nresources)]))
         else:
           if robots.get(option, 0) < limits[option]:
-            nrobots, nresources = self.build(option, resources, robots,idx)
+            nrobots, nresources = self.build(option, resources, robots, idx)
             nresources = self.collect(nresources, robots)
             tovisit.append((nrobots, nresources, timer+1, path + [(robots, nresources)]))
 
@@ -195,6 +213,7 @@ class Puzzle:
     #  print 'Minute', minute, step
     #  minute += 1
     #print '===='
+    #print 'Best', best, maxgeod
     return maxgeod
 
   def result_x(self):
@@ -205,12 +224,23 @@ class Puzzle:
     blueprint = 0
     total = 0
     for blueprint in range(len(self.blueprints)):
+    #for blueprint in [8]:
       print 'Running BP:', blueprint+1
       val = self.run_blueprint(blueprint)
       print val, 'quality', (blueprint+1)*val
       total += ((blueprint+1)*val)
     print 'Total', total
 
+  def result(self):
+    blueprint = 0
+    total = 0
+    #for blueprint in range(len(self.blueprints)):
+    for blueprint in [0,1,2]:
+      print 'Running BP:', blueprint+1
+      val = self.run_blueprint(blueprint, 32)
+      print val, 'quality', (blueprint+1)*val
+      total += ((blueprint+1)*val)
+    print 'Total', total
       
 
 
