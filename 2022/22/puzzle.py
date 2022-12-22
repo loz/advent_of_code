@@ -39,6 +39,7 @@ class Puzzle:
     #Nasty map does not pad!
     self.height = len(self.map)
     self.padmap()
+    self.mapcube()
   
   def padmap(self):
     maxw = 0
@@ -49,6 +50,179 @@ class Puzzle:
       if len(self.map[y]) < maxw:
         padded = self.map[y] + (' ' * (maxw-len(self.map[y])))
         self.map[y] = padded
+
+  def mapcube(self):
+    if self.width > self.height:
+      self.map_net1()
+    else:
+      self.map_net2()
+
+  def map_net1(self):
+    size = self.width / 4
+    movemap = {}
+    for y in range(size*3):
+      for x in range(size*4):
+        loc = (x,y)
+        moves = {
+          '>': ((x+1,y), '>'),
+          '<': ((x-1,y), '<'),
+          '^': ((x,y-1), '^'),
+          'v': ((x,y+1), 'v')
+        }
+        movemap[loc] = moves
+    #for 1<->2 edges
+    for r in range(size):
+      x1 = (2*size)+r
+      y1 = 0
+      x2 = size-1-r
+      y2 = size
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['^'] = ((x2, y2), 'v')
+      movemap[(x2,y2)]['^'] = ((x1, y1), 'v')
+    #for 1<->3 edges
+    for r in range(size):
+      x1 = (2*size)
+      y1 = r
+      x2 = size+r
+      y2 = size
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['<'] = ((x2, y2), 'v')
+      movemap[(x2,y2)]['^'] = ((x1, y1), '>')
+    #for 1<->6 edges
+    for r in range(size):
+      x1 = (3*size)-1
+      y1 = r
+      x2 = (4*size)-1
+      y2 = (3*size)-1-r
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['>'] = ((x2, y2), '<')
+      movemap[(x2,y2)]['>'] = ((x1, y1), '<')
+    #for 2<->6 edges
+    for r in range(size):
+      x1 = 0
+      y1 = size + r
+      x2 = (4*size)-1-r
+      y2 = (3*size)-1
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['<'] = ((x2, y2), '^')
+      movemap[(x2,y2)]['v'] = ((x1, y1), '>')
+
+    #for 2<->5 edges
+    for r in range(size):
+      x1 = r
+      y1 = (2*size)-1
+
+      x2 = (3*size)-1-r
+      y2 = (3*size)-1
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['v'] = ((x2, y2), '^')
+      movemap[(x2,y2)]['v'] = ((x1, y1), '^')
+
+    #for 3<->5 edges
+    for r in range(size):
+      x1 = size + r
+      y1 = (2*size)-1
+
+      x2 = (2*size)
+      y2 = (3*size)-1-r
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['v'] = ((x2, y2), '>')
+      movemap[(x2,y2)]['<'] = ((x1, y1), '^')
+
+    #for 4<->6 edges
+    for r in range(size):
+      x1 = (3*size)-1
+      y1 = size+r
+
+      x2 = (4*size)-1-r
+      y2 = (2*size)
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['>'] = ((x2, y2), 'v')
+      movemap[(x2,y2)]['^'] = ((x1, y1), '<')
+
+    #print movemap
+    self.movemap = movemap
+
+  def map_net2(self):
+    size = self.height / 4
+    #print 'size', size
+    movemap = {}
+    for y in range(size*4):
+      for x in range(size*3):
+        loc = (x,y)
+        moves = {
+          '>': ((x+1,y), '>'),
+          '<': ((x-1,y), '<'),
+          '^': ((x,y-1), '^'),
+          'v': ((x,y+1), 'v')
+        }
+        movemap[loc] = moves
+    #for 1 ^^ 2
+    for r in range(size):
+      x1 = size+r
+      y1 = 0
+      x2 = 0
+      y2 = (3*size)+r
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['^'] = ((x2, y2), '>')
+      movemap[(x2,y2)]['<'] = ((x1, y1), 'v')
+    #for 1 << 3
+    for r in range(size):
+      x1 = size
+      y1 = r
+      x2 = 0
+      y2 = (3*size)-1-r
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['<'] = ((x2, y2), '>')
+      movemap[(x2,y2)]['<'] = ((x1, y1), '>')
+    #for 2 >> 5
+    for r in range(size):
+      x1 = size-1
+      y1 = (size*3)+r
+      x2 = size+r
+      y2 = (3*size)-1
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['>'] = ((x2, y2), '^')
+      movemap[(x2,y2)]['v'] = ((x1, y1), '<')
+    #for 2 vv 6
+    for r in range(size):
+      x1 = r
+      y1 = (size*4)-1
+      x2 = (2*size)+r
+      y2 = 0
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['v'] = ((x2, y2), 'v')
+      movemap[(x2,y2)]['^'] = ((x1, y1), '^')
+    #for 3 ^^ 4
+    for r in range(size):
+      x1 = r
+      y1 = size*2
+      x2 = size
+      y2 = size+r
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['^'] = ((x2, y2), '>')
+      movemap[(x2,y2)]['<'] = ((x1, y1), 'v')
+    #for 4 >> 6
+    for r in range(size):
+      x1 = (size*2)-1
+      y1 = size+r
+      x2 = (size*2)+r
+      y2 = size-1
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['>'] = ((x2, y2), '^')
+      movemap[(x2,y2)]['v'] = ((x1, y1), '<')
+    #for 5 >> 6
+    for r in range(size):
+      x1 = (size*2)-1
+      y1 = (2*size)+r
+      x2 = (size*3)-1
+      y2 = size-1-r
+      #print (x1,y1), '->', (x2,y2)
+      movemap[(x1,y1)]['>'] = ((x2, y2), '<')
+      movemap[(x2,y2)]['>'] = ((x1, y1), '<')
+
+    #print movemap
+    self.movemap = movemap
 
   def find_start(self):
     x = 0
@@ -63,28 +237,29 @@ class Puzzle:
       if mv == 'R':
         heading = HRDELTA[heading]
         visited[loc] = heading
-        #print [loc[0],loc[1]], heading, mv
+        print [loc[0],loc[1]], heading, mv
       elif mv == 'L':
         heading = HLDELTA[heading]
         visited[loc] = heading
-        #print [loc[0],loc[1]], heading, mv
+        print [loc[0],loc[1]], heading, mv
       else:
-        if heading == '^':
-          fn = self.up
-        elif heading == 'v':
-          fn = self.down
-        elif heading == '<':
-          fn = self.left
-        else: #>
-          fn = self.right
         for r in range(mv):
-          nloc = fn(loc[0], loc[1])
+          if heading == '^':
+            fn = self.up
+          elif heading == 'v':
+            fn = self.down
+          elif heading == '<':
+            fn = self.left
+          else: #>
+            fn = self.right
+          nloc, nheading = fn(loc[0], loc[1])
           if self.tile_at(nloc[0], nloc[1]) == '#':
             #hit wall
             break
           else:
             loc = nloc
-          #print [loc[0],loc[1]], heading, mv
+            heading = nheading
+          print [loc[0],loc[1]], heading, mv
           visited[nloc] = heading
       #print '='*10, mv
       #self.dump(visited)
@@ -116,46 +291,16 @@ class Puzzle:
     return moves
 
   def left(self, x, y):
-    row = self.map[y]
-    nx = x-1
-    if nx < 0:
-      nx = self.width-1
-    while row[nx] == ' ':
-      nx -= 1
-      if nx < 0:
-        nx = self.width-1
-    return (nx, y)
+    return self.movemap[(x,y)]['<']
 
   def right(self, x, y):
-    row = self.map[y]
-    nx = x + 1
-    if nx == self.width:
-      nx = 0
-    while row[nx] == ' ':
-      nx += 1
-      if nx == self.width:
-        nx = 0
-    return (nx, y)
+    return self.movemap[(x,y)]['>']
 
   def up(self, x, y):
-    ny = y-1
-    if ny < 0:
-      ny = self.height-1
-    while self.map[ny][x] == ' ':
-      ny -= 1
-      if ny < 0:
-        ny = self.height-1
-    return (x, ny)
+    return self.movemap[(x,y)]['^']
 
   def down(self, x, y):
-    ny = y+1
-    if ny == self.height:
-      ny = 0
-    while self.map[ny][x] == ' ':
-      ny += 1
-      if ny == self.height:
-        ny = 0
-    return (x, ny)
+    return self.movemap[(x,y)]['v']
 
   def xxxneighbours(self, x, y):
     tiles = []
