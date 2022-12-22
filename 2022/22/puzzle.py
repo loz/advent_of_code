@@ -39,7 +39,6 @@ class Puzzle:
     #Nasty map does not pad!
     self.height = len(self.map)
     self.padmap()
-    self.width = len(self.map[0])
   
   def padmap(self):
     maxw = 0
@@ -64,9 +63,11 @@ class Puzzle:
       if mv == 'R':
         heading = HRDELTA[heading]
         visited[loc] = heading
+        #print [loc[0],loc[1]], heading, mv
       elif mv == 'L':
         heading = HLDELTA[heading]
         visited[loc] = heading
+        #print [loc[0],loc[1]], heading, mv
       else:
         if heading == '^':
           fn = self.up
@@ -83,6 +84,7 @@ class Puzzle:
             break
           else:
             loc = nloc
+          #print [loc[0],loc[1]], heading, mv
           visited[nloc] = heading
       #print '='*10, mv
       #self.dump(visited)
@@ -122,7 +124,6 @@ class Puzzle:
       nx -= 1
       if nx < 0:
         nx = self.width-1
-
     return (nx, y)
 
   def right(self, x, y):
@@ -138,11 +139,11 @@ class Puzzle:
 
   def up(self, x, y):
     ny = y-1
-    if ny == 0:
+    if ny < 0:
       ny = self.height-1
     while self.map[ny][x] == ' ':
       ny -= 1
-      if ny == 0:
+      if ny < 0:
         ny = self.height-1
     return (x, ny)
 
@@ -190,18 +191,23 @@ class Puzzle:
         else:
           sys.stdout.write(u"\u001b[0m")
 
-        if (x,y) in visits.keys():
+        if visits.get((x,y), False):
           sys.stdout.write(visits[(x,y)])
         else:
           sys.stdout.write(self.map[y][x])
       print
 
   def result(self):
+    #print self.start
+    #print self.moves
+    #return
     #for row in self.map:
     #  print len(row)
     #return
     final = self.move()
-    #self.dump(final[2], final[0])
+    self.dump(final[2], final[0])
+    #for visit in final[2]:
+    #  print visit, final[2][visit]
     print 'Final Loc', final[0][0]+1, final[0][1]+1
     print 'Bearing', final[1], BSCORE[final[1]]
     loc = final[0]
