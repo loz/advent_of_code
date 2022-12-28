@@ -3,17 +3,36 @@ import heapq
 from collections import defaultdict
 
 DELTAS = [
-  #top->bottom
-  (-1,0), (1,0), 
+  #top
+  (0, -1), 
   #left->right
-  (0, -1), (0, 1)
+  (-1,0), (1,0), 
+  #->bottom
+  (0, 1),
 ]
 
+def cmp_scan(a, b):
+  if a[1] < b[1]:
+    return -1
+  elif a[1] == b[1]:
+    return -1 if a[0] < b[0] else 1
+  else:
+    return 1
+ 
 class Creature:
   def __init__(self, puzzle, x, y):
     self.puzzle = puzzle
     self.x = x
     self.y = y
+    self.hitpoints = 200
+    self.attack = 3
+
+  def health(self):
+    return self.ch() + '(' + str(self.hitpoints) + ')'
+
+  def set_loc(self, loc):
+    self.x = loc[0]
+    self.y = loc[1]
 
   def open_squares(self):
     squares = []
@@ -25,41 +44,75 @@ class Creature:
         squares.append((nx, ny))
     return squares
 
+  def next_to_enemy(self):
+    enem = self.enemy_locations()
+    squares = []
+    for d in DELTAS:
+      dx, dy = d
+      nx = self.x+dx
+      ny = self.y+dy
+      if (nx, ny) in enem:
+        return True
+    return False
+
   def gen_move(self):
+    if self.next_to_enemy():
+      return None
     targets = set()
     for e in self.enemies():
       for t in e.open_squares():
         targets.add(t)
     best = sys.maxsize
     best_paths = []
+    starts = self.open_squares()
     for t in targets:
-      path = self.puzzle.shortest_path((self.x,self.y), t)
-      if not self.puzzle.path_clear(path):
-        path = None
-        #print 'TODO: find alternate path'
-      if path:
-        if len(path) < best:
-          best = len(path)
-          best_paths = [path]
-        elif len(path) == best:
-          best_paths.append(path)
-        #print (self.x, self.y), '->', t, 'shortest path', path
+      for s in starts:
+        path = self.puzzle.shortest_path(s, t)
+        if not self.puzzle.path_clear(path):
+          path = self.puzzle.alternate_path(s,t)
+        if path:
+          if len(path) < best:
+            best = len(path)
+            best_paths = [path]
+          elif len(path) == best:
+            best_paths.append(path)
+          #print (self.x, self.y), '->', t, 'shortest path', path
     #print 'Best', best, best_paths
     if len(best_paths) == 1:
       return best_paths[0][0]
     elif len(best_paths) == 0:
       return None
     else:
-      #print best_paths
-      raise 'Unimplemented multi option'
+      for s in starts:
+        for path in best_paths:
+          if s == path[0]:
+            return s
 
 class Goblin(Creature):
   def enemies(self):
     return [self.puzzle.elves[e] for e in self.puzzle.elves]
 
+  def enemy_locations(self):
+    return self.puzzle.elves.keys()
+
+  def is_elf(self):
+    return False
+
+  def ch(self):
+    return u"\u001b[31mG"
+
 class Elf(Creature):
   def enemies(self):
     return [self.puzzle.goblins[e] for e in self.puzzle.goblins]
+
+  def enemy_locations(self):
+    return self.puzzle.goblins.keys()
+
+  def is_elf(self):
+    return True
+
+  def ch(self):
+    return u"\u001b[32mE"
 
 class Puzzle:
 
@@ -73,7 +126,7 @@ class Puzzle:
       self.process_line(line, y)
       y+=1
     self.width = len(self.map[0])
-    self.height = y
+    self.height = y-1
 
   def process_line(self, line, y):
     if line != '':
@@ -94,7 +147,15 @@ class Puzzle:
     #print 'SP', start, end
     #Optimistic paths cache
     op = self.empty_astar(start, end)
-    return op
+    if op == None:
+      return None
+    return [start] + op
+
+  def alternate_path(self, start, end):
+    op = self.full_astar(start, end)
+    if op == None:
+      return None
+    return [start] + op
 
   def path_clear(self, path):
     for node in path:
@@ -102,7 +163,7 @@ class Puzzle:
         return False
     return True
 
-  def e_ah(self, start, end):
+  def a_h(self, start, end):
     ax, ay = start
     bx, by = end
     return abs(bx-ax) + abs(by-ay)
@@ -117,35 +178,55 @@ class Puzzle:
         squares.append((nx, ny))
     return squares
 
+  def options(self, loc):
+    squares = []
+    for d in DELTAS:
+      dx, dy = d
+      nx = loc[0]+dx
+      ny = loc[1]+dy
+      if self.item_at(nx, ny) == '.':
+        squares.append((nx, ny))
+    return squares
+
   def empty_astar(self, start, end):
-    if self.op_cache.get((start, end), False):
-      return self.op_cache[(start, end)]
-    #print 'Gen astar cache'
+    return self.gen_astar(start, end, self.op_cache, self.op_options)
+
+  def full_astar(self, start, end):
+    return self.gen_astar(start, end, {}, self.options)
+
+  def gen_astar(self, start, end, cache, op_fn):
+    if cache.get((start, end), False):
+      return cache[(start, end)]
+    #print 'Gen astar cache', (start, end)
     g_score = defaultdict(lambda: sys.maxsize)
     f_score = defaultdict(lambda: sys.maxsize)
     g_score[start] = 0
-    start_h = self.e_ah(start, end)
+    start_h = self.a_h(start, end)
     f_score[start] = start_h
     pq = []
     heapq.heapify(pq)
     heapq.heappush(pq, [(start_h, start_h), start])
     paths = {}
+    found = False
     while pq:
       score, loc = heapq.heappop(pq)
       if loc == end:
-        #print 'Reached End'
+        found = True
         break
-      options = self.op_options(loc)
+      options = op_fn(loc)
       for option in options:
         g_s = g_score[loc]+1
-        a_h = self.e_ah(option, end)
+        a_h = self.a_h(option, end)
         f_s = g_s + a_h
-
+        
         if f_s < f_score[option]:
           g_score[option] = g_s
           f_score[option] = f_s
           heapq.heappush(pq, [(f_s, a_h), option])
           paths[option] = loc
+
+    if not found:
+      return None
 
     fwdpath = {}
     node = end
@@ -153,7 +234,7 @@ class Puzzle:
     while node != start:
       fwdpath[paths[node]] = node
       #print [node, end], path
-      self.op_cache[(node, end)] = path + []
+      cache[(node, end)] = path + []
       path = [node] + path
       node = paths[node]
     return path
@@ -164,9 +245,49 @@ class Puzzle:
     elif self.goblins.get((x,y), False):
       return self.goblins[(x,y)]
     return self.map[y][x]
+  
+
+  def tick(self):
+    bots = self.elves.keys() + self.goblins.keys()
+    bots = sorted(bots, cmp=cmp_scan)
+    for loc in bots:
+      bot = self.item_at(loc[0], loc[1])
+      mv = bot.gen_move()
+      if mv == None:
+        mv = loc
+
+      bot.set_loc(mv)
+      if bot.is_elf():
+        del self.elves[loc]
+        self.elves[mv] = bot
+      else:
+        del self.goblins[loc]
+        self.goblins[mv] = bot
+
+  def dump(self):
+    print u"\u001b[0;0H"
+    for y in range(self.height):
+      bots = []
+      for x in range(self.width):
+        item = self.item_at(x,y)
+        if isinstance(item, Creature):
+          bots.append(item)
+          sys.stdout.write(item.ch())
+        elif item == '#':
+          sys.stdout.write(u"\u001b[33m#")
+        else:
+          sys.stdout.write(u"\u001b[0m.")
+      print u"\u001b[K",
+      for bot in bots:
+        print u"\u001b[0m", bot.health(),
+      print u"\u001b[0m"
 
   def result(self):
-    pass
+    self.dump()
+    for rnd in range(10):
+      self.tick()
+      self.dump()
+      print 'After', rnd+1, 'rounds:'
 
 
 

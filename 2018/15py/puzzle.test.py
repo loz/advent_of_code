@@ -61,5 +61,48 @@ class TestPuzzle(unittest.TestCase):
     move = e.gen_move()
     self.assertEquals(move, None)
 
+  def test_will_prioritise_ns_over_ew(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""#######
+#.G...#
+#.#.E.#
+#..##.#
+#######
+""")
+
+    e = puzzle.elves[(4,2)]
+    move = e.gen_move()
+    self.assertEquals(move, (4,1))
+
+  def test_will_not_move_next_to_enemy(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""#######
+#.GE.G#
+#.#...#
+#..##.#
+#######
+""")
+
+    e = puzzle.elves[(3,1)]
+    move = e.gen_move()
+    self.assertEquals(move, None)
+
+  def test_will_move_up_correctly(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""#########
+#G..G..G#
+#.......#
+#.......#
+#G..E..G#
+#.......#
+#.......#
+#G..G..G#
+#########
+""")
+
+    g = puzzle.goblins[(1,7)]
+    move = g.gen_move()
+    self.assertEquals(move, (1,6))
+
 if __name__ == '__main__':
     unittest.main()
