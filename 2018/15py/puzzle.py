@@ -18,6 +18,16 @@ def cmp_scan(a, b):
     return -1 if a[0] < b[0] else 1
   else:
     return 1
+
+def cmp_targets(a, b):
+  if a.hitpoints < b.hitpoints:
+    return -1
+  elif a.hitpoints == b.hitpoints:
+    al = (a.x, a.y)
+    bl = (b.x, b.y)
+    return cmp_scan(al, bl)
+  else:
+    return 1
  
 class Creature:
   def __init__(self, puzzle, x, y):
@@ -29,6 +39,28 @@ class Creature:
 
   def health(self):
     return self.ch() + '(' + str(self.hitpoints) + ')'
+
+  def isdead(self):
+    return self.hitpoints <= 0
+
+  def strike(self):
+    targets = []
+    for d in DELTAS:
+      dx, dy = d
+      nx = self.x+dx
+      ny = self.y+dy
+      item = self.puzzle.item_at(nx, ny)
+      if isinstance(item, Creature):
+        if self.is_elf() and not item.is_elf():
+          targets.append(item)
+        elif not self.is_elf() and item.is_elf():
+          targets.append(item)
+    targets = sorted(targets, cmp_targets)
+    if len(targets) > 0:
+      enemy = targets[0]
+      enemy.hitpoints -= self.attack
+      if enemy.hitpoints <= 0:
+        enemy.remove()
 
   def set_loc(self, loc):
     self.x = loc[0]
@@ -59,7 +91,11 @@ class Creature:
     if self.next_to_enemy():
       return None
     targets = set()
-    for e in self.enemies():
+    enemies = self.enemies()
+    if len(enemies) == 0:
+      return 'NoTargets'
+
+    for e in enemies:
       for t in e.open_squares():
         targets.add(t)
     best = sys.maxsize
@@ -92,6 +128,9 @@ class Goblin(Creature):
   def enemies(self):
     return [self.puzzle.elves[e] for e in self.puzzle.elves]
 
+  def enemy_hash(self):
+    return self.puzzle.elves
+
   def enemy_locations(self):
     return self.puzzle.elves.keys()
 
@@ -101,9 +140,15 @@ class Goblin(Creature):
   def ch(self):
     return u"\u001b[31mG"
 
+  def remove(self):
+    del self.puzzle.goblins[(self.x, self.y)]
+
 class Elf(Creature):
   def enemies(self):
     return [self.puzzle.goblins[e] for e in self.puzzle.goblins]
+
+  def enemy_hash(self):
+    return self.puzzle.goblins
 
   def enemy_locations(self):
     return self.puzzle.goblins.keys()
@@ -113,6 +158,9 @@ class Elf(Creature):
 
   def ch(self):
     return u"\u001b[32mE"
+
+  def remove(self):
+    del self.puzzle.elves[(self.x, self.y)]
 
 class Puzzle:
 
@@ -248,14 +296,18 @@ class Puzzle:
   
 
   def tick(self):
-    bots = self.elves.keys() + self.goblins.keys()
-    bots = sorted(bots, cmp=cmp_scan)
-    for loc in bots:
-      bot = self.item_at(loc[0], loc[1])
+    locs = self.elves.keys() + self.goblins.keys()
+    locs = sorted(locs, cmp=cmp_scan)
+    bots = [self.item_at(loc[0], loc[1]) for loc in locs]
+    for bot in bots:
+      loc = (bot.x, bot.y)
+      if bot.isdead():
+        continue
       mv = bot.gen_move()
+      if mv == 'NoTargets':
+        return False
       if mv == None:
         mv = loc
-
       bot.set_loc(mv)
       if bot.is_elf():
         del self.elves[loc]
@@ -263,9 +315,13 @@ class Puzzle:
       else:
         del self.goblins[loc]
         self.goblins[mv] = bot
+      bot.strike()
+      #self.dump()
+    return True
 
   def dump(self):
     print u"\u001b[0;0H"
+    print 
     for y in range(self.height):
       bots = []
       for x in range(self.width):
@@ -282,12 +338,26 @@ class Puzzle:
         print u"\u001b[0m", bot.health(),
       print u"\u001b[0m"
 
-  def result(self):
+  def victory(self):
+    return len(self.elves.keys()) == 0 or len(self.goblins.keys()) == 0
+
+  def combat(self):
+    rnd = 0
     self.dump()
-    for rnd in range(10):
-      self.tick()
+    while not self.victory():
+      if self.tick():
+        rnd += 1
       self.dump()
-      print 'After', rnd+1, 'rounds:'
+      print 'After', rnd, 'FULL rounds:'
+    outcome = 0
+    for e in self.elves:
+      outcome += self.elves[e].hitpoints
+    for g in self.goblins:
+      outcome += self.goblins[g].hitpoints
+    print 'Outcome', outcome, '*', rnd, '=', outcome * rnd
+
+  def result(self):
+    self.combat()
 
 
 
