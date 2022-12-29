@@ -178,6 +178,24 @@ class Puzzle:
       y+=1
     self.width = len(self.map[0])
     self.height = y-1
+    self.initial = {'elves':[], 'goblins':[]}
+    for e in self.elves:
+      elf = self.elves[e]
+      self.initial['elves'].append((elf.x, elf.y))
+    for g in self.goblins:
+      gob = self.goblins[g]
+      self.initial['goblins'].append((gob.x, gob.y))
+
+  def reset(self):
+    self.elves = {}
+    self.goblins = {}
+    for e in self.initial['elves']:
+      elf = Elf(self, e[0], e[1])
+      self.elves[e] = elf
+    for g in self.initial['goblins']:
+      gob = Goblin(self, g[0], g[1])
+      self.goblins[g] = gob
+
 
   def process_line(self, line, y):
     if line != '':
@@ -372,9 +390,40 @@ class Puzzle:
       #  raw_input('Press ENTER to continue......')
     outcome = self.scores()
     print 'Outcome', outcome, '*', rnd, '=', outcome * rnd
+      
+  def improved_combat(self,power):
+    self.reset()
+    for e in self.elves:
+      self.elves[e].attack = power
+    rnd = 0
+    elfcount = len(self.elves)
+    self.dump()
+    while not self.victory():
+      if self.tick():
+        rnd += 1
+      self.dump()
+      print 'Power Pack:', power, "     "
+      print 'After', rnd, 'FULL rounds:'
+      self.scores()
+      if len(self.elves) < elfcount:
+        return False
+      #if rnd > 76:
+      #  raw_input('Press ENTER to continue......')
+    outcome = self.scores()
+    print 'Outcome', outcome, '*', rnd, '=', outcome * rnd
+    return True
+
 
   def result(self):
-    self.combat()
+    mini = 4
+    maxi = 100
+    while mini < maxi:
+      midi = mini + ((maxi-mini)/2)
+      won = self.improved_combat(midi)
+      if won:
+        maxi = midi-1
+      else:
+        mini = midi+1
 
 if __name__ == '__main__':
   puz = Puzzle()
