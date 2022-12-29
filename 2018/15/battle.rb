@@ -516,6 +516,21 @@ class Battle
       str = str.gsub(ch, rep)
     end
     puts str
+    print "\e[0;0H"
+    y = 0
+    @map.map do |row|
+      pad = row.length
+      print "\e[1C" * pad
+      print "\e[K"
+      row.each_with_index do |r,x|
+        if r == 'G' or r == 'E'
+          unit = @units.find { |u| u.pos == [x,y] }
+          print "  #{r}(#{unit.hitpoints})"
+        end
+      end
+      print "\n"
+      y+=1
+    end
   end
 
   def visualise_locations(locations, color)
