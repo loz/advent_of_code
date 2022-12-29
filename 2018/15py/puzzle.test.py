@@ -104,5 +104,23 @@ class TestPuzzle(unittest.TestCase):
     move = g.gen_move()
     self.assertEquals(move, (1,6))
 
+  def test_bug_inp_77(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""############
+#..GE....###
+#..GE#....##
+#..G.......#
+#..G......##
+#.........##
+#GE.......##
+#.##...#..##
+############
+""")
+
+    g = puzzle.goblins[(3,4)]
+    move = g.gen_move()
+    self.assertEquals(move, (4,4))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -50,7 +50,7 @@ class Creature:
       nx = self.x+dx
       ny = self.y+dy
       item = self.puzzle.item_at(nx, ny)
-      if isinstance(item, Creature):
+      if isinstance(item, Creature) and not item.isdead():
         if self.is_elf() and not item.is_elf():
           targets.append(item)
         elif not self.is_elf() and item.is_elf():
@@ -59,7 +59,7 @@ class Creature:
     if len(targets) > 0:
       enemy = targets[0]
       enemy.hitpoints -= self.attack
-      if enemy.hitpoints <= 0:
+      if enemy.isdead():
         enemy.remove()
 
   def set_loc(self, loc):
@@ -96,8 +96,9 @@ class Creature:
       return 'NoTargets'
 
     for e in enemies:
-      for t in e.open_squares():
-        targets.add(t)
+      if not e.isdead():
+        for t in e.open_squares():
+          targets.add(t)
     best = sys.maxsize
     best_paths = []
     starts = self.open_squares()
@@ -119,10 +120,12 @@ class Creature:
     elif len(best_paths) == 0:
       return None
     else:
-      for s in starts:
-        for path in best_paths:
-          if s == path[0]:
-            return s
+      ends = [p[len(p)-1] for p in best_paths]
+      ends = sorted(ends, cmp_scan)
+      #print ends
+      for p in best_paths:
+        if p[len(p)-1] == ends[0]:
+          return p[0]
 
 class Goblin(Creature):
   def enemies(self):
@@ -341,6 +344,21 @@ class Puzzle:
   def victory(self):
     return len(self.elves.keys()) == 0 or len(self.goblins.keys()) == 0
 
+  def scores(self):
+    escore = 0
+    for e in self.elves:
+      if self.elves[e].hitpoints > 0:
+        escore += self.elves[e].hitpoints
+    print u"\u001b[K",
+    print 'Elf Score:', escore
+    gscore = 0
+    for g in self.goblins:
+      if self.goblins[g].hitpoints > 0:
+        gscore += self.goblins[g].hitpoints
+    print u"\u001b[K",
+    print 'Goblin Score:', gscore
+    return escore + gscore
+
   def combat(self):
     rnd = 0
     self.dump()
@@ -349,17 +367,14 @@ class Puzzle:
         rnd += 1
       self.dump()
       print 'After', rnd, 'FULL rounds:'
-    outcome = 0
-    for e in self.elves:
-      outcome += self.elves[e].hitpoints
-    for g in self.goblins:
-      outcome += self.goblins[g].hitpoints
+      self.scores()
+      #if rnd > 76:
+      #  raw_input('Press ENTER to continue......')
+    outcome = self.scores()
     print 'Outcome', outcome, '*', rnd, '=', outcome * rnd
 
   def result(self):
     self.combat()
-
-
 
 if __name__ == '__main__':
   puz = Puzzle()
