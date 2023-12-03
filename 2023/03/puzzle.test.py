@@ -32,7 +32,6 @@ class TestPuzzle(unittest.TestCase):
 ....%.........976..679
 """)
     self.assertEqual(puzzle.isPart(17,0), False)
-    print(puzzle.numbers.keys())
 
   def test_puzzle_is_part_ajacent_to_symbol(self):
     puzzle = puz.Puzzle()
@@ -47,6 +46,20 @@ class TestPuzzle(unittest.TestCase):
     self.assertEqual(puzzle.isPart(0,0), True)
     self.assertEqual(puzzle.isPart(0,4), True)
     self.assertEqual(puzzle.isPart(5,5), True)
+
+  def test_puzzle_finds_stars(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""123...23
+..*.....
+..345..8
+........
+12*.34..
+....*445
+""")
+    stars = puzzle.stars
+    self.assertEqual((2,1) in stars, True)
+    self.assertEqual((2,4) in stars, True)
+    self.assertEqual((4,5) in stars, True)
 
 if __name__ == '__main__':
     unittest.main()
