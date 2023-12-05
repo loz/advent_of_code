@@ -58,7 +58,7 @@ class Puzzle:
     return (dst, num)
 
   def gen_range(self, maps):
-    maps.sort(key = lambda x: x[1])
+    maps = sorted(maps, key = lambda x: x[1])
     #print('Sorted', maps)
     newmaps = []
     mmin = 0
@@ -104,7 +104,7 @@ class Puzzle:
       _, mstart, msize = mmap
       if send > mstart:
         ranges.append(mmap)
-    print('Ranges', ranges)
+    #print('Ranges', ranges)
     mranges = []
     #forall return mapped ranges
     if len(ranges) == 1:
