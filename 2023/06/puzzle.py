@@ -25,8 +25,51 @@ class Puzzle:
   def calculate_distance(self, press, limit):
     return (press * (limit-press))
 
+  def minsearch(self, limit, record):
+    lower = 0
+    upper = limit/2
+    while lower < upper:
+      mid = int((lower + upper) / 2)
+      score = self.calculate_distance(mid, limit)
+      win = score > record
+      #print('Srch', lower, upper, score)
+      if win:
+        upper = mid-1
+      else:
+        lower = mid+1
+    score = self.calculate_distance(lower, limit)
+    if score > record:
+      return lower
+    else:
+      return lower+1
+    return lower
+
+  def maxsearch(self, limit, record):
+    lower = limit/2
+    upper = limit
+    while lower < upper:
+      mid = int((lower + upper) / 2)
+      score = self.calculate_distance(mid, limit)
+      win = score > record
+      #print('Srch', lower, upper, score)
+      if win:
+        lower = mid+1
+      else:
+        upper = mid-1
+    score = self.calculate_distance(upper, limit)
+    if score > record:
+      return upper
+    else:
+      return upper-1
+
   def wincount(self, limit, record):
-    pass
+    #Binsearch lowest win combination
+    lower = self.minsearch(limit, record)
+    #Binsearch highest combination
+    upper = self.maxsearch(limit, record)
+    #Range is answer
+    #print('Range', lower, upper)
+    return upper - lower + 1
 
   def brute_wincount(self, limit, record):
     wins = 0
@@ -39,7 +82,20 @@ class Puzzle:
     return wins
 
   def result(self):
-    self.result1()
+    self.result2()
+
+  def result2(self):
+    t, rec = self.records.pop(0)
+    t = str(t)
+    rec = str(rec)
+    while(self.records):
+      nt, nrec = self.records.pop(0)
+      t = t + str(nt)
+      rec = rec + str(nrec)
+    print(t, rec)
+    t = int(t)
+    rec = int(rec)
+    print('Wins', self.wincount(t, rec))
 
   def result1(self):
     score = 1
