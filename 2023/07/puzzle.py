@@ -1,7 +1,8 @@
 import sys
 import functools
 
-ORDER = "23456789TJQKA"
+#ORDER = "23456789TJQKA"
+ORDER = "J23456789TQKA"
 
 class Puzzle:
 
@@ -41,6 +42,42 @@ class Puzzle:
       return 2
     return 1
 
+  def wild_score(self, cards):
+    sets = {}
+    for ch in cards:
+      cur = sets.get(ch, 0)
+      cur += 1
+      sets[ch] = cur
+    jokers = sets.pop('J', 0)
+    if jokers == 0 or jokers == 5: #No/All Wild
+      return self.score(cards)
+    #Conver J to most common card
+    counts = list(sets.values())
+    most = max(counts)
+    for k in sets.keys():
+      if sets[k] == most:
+        sets[k] += jokers
+        break
+
+    diffs = list(sets.keys())
+    counts = list(sets.values())
+    #print(jokers, 'Jokers -> ', sets, diffs, counts, len(diffs))
+    if len(diffs) == 1: #5 of a kind
+      return 7
+    elif len(diffs) == 2: #4 of a kind
+      if 4 in counts:
+        return 6
+      else:
+        return 5 #FH
+    elif len(diffs) == 3: #4 of a kind or 2Pair
+      if 3 in counts: #3 of kinds
+        return 4
+      else:
+        return 3 #2p
+    elif len(diffs) == 4: #1 pair
+      return 2
+    return 1
+
   def cmp_hand(a, b):
     aval = [ORDER.index(ch) for ch in a]
     bval = [ORDER.index(ch) for ch in b]
@@ -57,7 +94,7 @@ class Puzzle:
     return 0
 
   def result(self):
-    self.result1()
+    self.result2()
 
   def cmp_ranked(a, b):
     if a[1] == b[1]: #Same Rank
@@ -67,6 +104,23 @@ class Puzzle:
     else:
       return -1
 
+  def result2(self):
+    #pre-rank
+    ranked = []
+    for hand, bid in self.turns:
+      ra = (hand, self.wild_score(hand), bid)
+      print(ra)
+      ranked.append(ra)
+    print('Sorting:')
+    rsorted = sorted(ranked, key=functools.cmp_to_key(Puzzle.cmp_ranked))
+    position = 1
+    total = 0
+    for ra in rsorted:
+      winnings = position * ra[2]
+      print(ra, position, winnings)
+      position = position + 1
+      total = total + winnings
+    print('Total Winnings', total)
 
   def result1(self):
     #pre-rank
