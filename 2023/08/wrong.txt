@@ -1,0 +1,4 @@
+111099756521483 -> high
+4180208583537 -> low
+20,685,524,831,999 -> correct (Lowest common multiple of each path)
+20685524831999 -> correct (Lowest common multiple of each path)
