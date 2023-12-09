@@ -37,7 +37,23 @@ class Puzzle:
     return n
 
   def result(self):
-    self.result1()
+    self.result2()
+
+  def result2(self):
+    #Reverse
+    back = []
+    for r in self.readings:
+      rr = list(reversed(r))
+      back.append(rr)
+
+    total = 0
+    for r in back:
+      #print('Reading', r)
+      n = self.generate(r)
+      total += n
+      #print(total)
+      #print('=', n)
+    print('Total', total)
 
   def result1(self):
     total = 0
