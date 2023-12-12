@@ -16,6 +16,11 @@ class Puzzle:
       self.checks.append(check)
 
   def r_possible(self, records, checks, indent=''):
+    rstr = ''.join(records)
+    cstr = ''.join([str(n) for n in checks])
+    if (rstr, cstr) in self.cache:
+      return self.cache[(rstr, cstr)]
+
     #Consume OK
     while(records != [] and records[0] == '.'):
       records = records[1:]
@@ -32,7 +37,9 @@ class Puzzle:
 
     if(records[0] == '?'):
       #Try as '.' + #Try as '#'
-      return self.r_possible(records[1:], checks, indent + 'a ') + self.r_possible(['#'] + records[1:], checks, indent + 'b ')
+      v = self.r_possible(records[1:], checks, indent + 'a ') + self.r_possible(['#'] + records[1:], checks, indent + 'b ')
+      self.cache[(rstr, cstr)] = v
+      return v
     else:
       #We are supposed to be AT a run of run items
       run, checks = checks[0], checks[1:]
@@ -54,16 +61,37 @@ class Puzzle:
         return 0 #Not possible as block too large
       #Regardless of ? or . ? must be a ., so possbile
       # if remainder matches the checks
-      return self.r_possible(records[1:], checks, indent + ' ')
-
-
+      v = self.r_possible(records[1:], checks, indent + ' ')
+      self.cache[(rstr, cstr)] = v
+      return v
 
   def possible(self, records, checks):
     chs = [ch for ch in records]
     return self.r_possible(chs, checks)
 
+  def unfold(self):
+    frecords = []
+    fchecks = []
+    for r in self.records:
+      frecords.append(r + '?' + r + '?' + r + '?' + r + '?' + r)
+    for c in self.checks:
+      fchecks.append(c + c + c +c + c)
+    return frecords, fchecks
+
   def result(self):
-    self.result1()
+    self.result2()
+
+  def result2(self):
+    frecords, fchecks = self.unfold()
+    total = 0
+    for n in range(len(frecords)):
+      self.cache = {}
+      records = frecords[n]
+      checks = fchecks[n]
+      p = self.possible(records, checks)
+      total += p
+      print(records, checks, p)
+    print('Total', total)
 
   def result1(self):
     total = 0
