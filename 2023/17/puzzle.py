@@ -15,6 +15,11 @@ CHANGE = {
   (0,-1): [(-1,0), (1,0)]
 }
 
+MCHANGE = {
+  'h': ('v', [(0,-1), (0,1)]),
+  'v': ('h', [(-1,0), (1,0)]),
+}
+
 class Puzzle:
 
   def process(self, text):
@@ -24,6 +29,26 @@ class Puzzle:
 
   def at(self, x, y):
     return self.grid[y][x]
+
+  def moves(self, loc, d, mmin, mmax):
+    moves = []
+    newd, deltas = MCHANGE[d]
+    x, y = loc
+    for dx, dy in deltas:
+      cost = 0
+      #Calc cost to start of range
+      for r in range(1,mmin):
+        nx, ny = x+(r*dx), y+(r*dy)
+        if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+          cost += self.at(nx, ny)
+        
+      for r in range(mmin, mmax+1):
+        nx, ny = x+(r*dx), y+(r*dy)
+        if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+          cost += self.at(nx, ny)
+          moves.append(((nx, ny), cost, newd))
+
+    return moves
 
   def neighbours(self, x, y):
     options = []
@@ -249,8 +274,47 @@ class Puzzle:
           heapq.heappush(pq, [dist+dd, o, journey + [o], nhist, loc])
     return (bdist, best)
 
+  def ultra_dijk2(self, start, end):
+    pq = []
+    heapq.heapify(pq)
+    path = [start]
+    shortest = {}
+    hist = []
+    starter = []
+    #vmoves
+    moves = self.moves((0, 0), 'v', 4, 10)
+    for m in moves:
+      heapq.heappush(pq, [m[1], m,  [m]])
+    starter += moves
+    #hmoves
+    moves = self.moves((0, 0), 'h', 4, 10)
+    for m in moves:
+      heapq.heappush(pq, [m[1], m,  [m]])
+    starter += moves
+
+    best = None
+    bdist = sys.maxsize
+
+    while pq:
+      dist, move, path = heapq.heappop(pq)
+      loc, mdist, mdir = move
+      if (loc, mdir) not in shortest or shortest[(loc, mdir)] > dist:
+        shortest[(loc, mdir)] = dist
+        if loc == end:
+          #print('Solved', loc, dist)
+          if dist < bdist:
+            best = path
+            bdist = dist
+          #print(path)
+          #return (dist, path)
+        options = self.moves(loc, mdir, 4, 10)
+        for o in options:
+          dd = o[1]
+          heapq.heappush(pq, [dist+dd, o, path + [o]])
+    return (bdist, best)
+
   def result(self):
-    self.result2()
+    self.result3()
 
   def result1(self):
     start = (0,0)
@@ -271,10 +335,40 @@ class Puzzle:
     result = self.ultra_dijk(start, end)
     if(result != None):
       dist, path = result
+      #print('PATH:', dist, path) else:
+      print('Fail')
+    self.dump_path(path)
+    print('Path Length', dist)
+
+  def result3(self):
+    start = (0,0)
+    end = (len(self.grid[0])-1, len(self.grid)-1)
+    result = self.ultra_dijk2(start, end)
+    if(result != None):
+      dist, path = result
       #print('PATH:', dist, path)
     else:
       print('Fail')
-    self.dump_path(path)
+    traced = []
+    current = (0,0)
+    cx, cy = current
+    for loc, _, ddir in path:
+      lx, ly = loc
+      if ddir == 'h':
+        dx = int((lx-cx) / abs(lx-cx))
+        dy = 0
+      else:
+        dy = int((ly-cy) / abs(ly-cy))
+        dx = 0
+      #print('Trace', (cx, cy), '->', loc, 'with', (dx, dy))
+      
+      while((cx, cy) != loc):
+        #print(cx, cy, dx, dy, '?', loc)
+        traced.append((cx, cy))
+        cx, cy = cx + dx, cy + dy
+      traced.append(end)
+      #print(loc, ddir)
+    self.dump_path(traced)
     print('Path Length', dist)
 
   def dump_path(self, path):

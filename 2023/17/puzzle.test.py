@@ -91,5 +91,23 @@ class TestPuzzle(unittest.TestCase):
     self.assertEqual(((2,1), (1, 0)) in nbrs, True)
     self.assertEqual(len(nbrs), 3)
 
+  def test_moves_generates_range_of_moves(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""123
+456
+789
+""")
+
+    moves = puzzle.moves((0, 0), 'v', 1,2)
+    self.assertEqual(len(moves), 2)
+    self.assertEqual(((1,0), 2, 'h') in moves, True)
+    self.assertEqual(((2,0), 5, 'h') in moves, True)
+
+    moves = puzzle.moves((0, 0), 'h', 1,2)
+    self.assertEqual(len(moves), 2)
+    self.assertEqual(((0,1), 4, 'v') in moves, True)
+    self.assertEqual(((0,2), 11, 'v') in moves, True)
+
+
 if __name__ == '__main__':
     unittest.main()
