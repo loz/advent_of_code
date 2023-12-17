@@ -67,7 +67,14 @@ class Puzzle:
     bests[(start, last3)] = sys.maxsize
     toexplore = [(start, 0, last3, floc, [])]
 
+    ebest = sys.maxsize
+    ebest = 1165 #Dijkstra wrong
+    n = 0
+
     while toexplore:
+      n += 1
+      if (n % 10000 == 0):
+        print('Turn', n, 'still', len(toexplore), 'toexplore')
       loc, dist, last3, floc, path = toexplore.pop(0)
       #if (loc, last3) not in seen:
       #  seen[(loc, last3)] = True
@@ -76,6 +83,10 @@ class Puzzle:
         bests[(loc, last3)] = dist
         paths[(loc, last3)] = path + [loc]
 
+        if(loc == end):
+          print('Solution', dist)
+          ebest = dist
+
         #print(loc, 'from', floc, 'for', dist)
         options = self.neighbours(loc[0], loc[1])
         for o, do in options:
@@ -83,9 +94,10 @@ class Puzzle:
             #Does not change direction
             pass
           elif o != floc: #90deg turn required, no 180
-            nlast3 = (last3[1], last3[2], do)
             dd = self.at(o[0], o[1])
-            toexplore.append( (o, dist+dd, nlast3, loc, path + [loc]) )
+            if dist+dd < ebest: #Crop slower than one known solution
+              nlast3 = (last3[1], last3[2], do)
+              toexplore.append( (o, dist+dd, nlast3, loc, path + [loc]) )
     path = []
     mpath = sys.maxsize
     for loc, last3 in bests:
@@ -102,16 +114,17 @@ class Puzzle:
     path = [start]
     shortest = {}
     #Because you already start in the top-left block, you don't incur that block's heat loss unless you leave that block and then return to it.
-    heapq.heappush(pq, [0, start,  path, [(-2, -2), (-2, -2), (-2, -2)] ])
+    last3 = ((-2, -2), (-2, -2), (-2, -2))
+    heapq.heappush(pq, [0, start,  path, last3, (-1, -1) ])
 
     best = None
-    bdist = 9999999999999
+    bdist = sys.maxsize
 
     while pq:
-      dist, loc, journey, last3 = heapq.heappop(pq)
+      dist, loc, journey, last3, floc = heapq.heappop(pq)
       #print(dist, loc, journey)
-      if loc not in shortest or shortest[loc] > dist:
-        shortest[loc] = dist
+      if (loc, last3) not in shortest or shortest[(loc, last3)] > dist:
+        shortest[(loc, last3)] = dist
         if loc == end:
           # print 'Solved', loc, dist
           if dist < bdist:
@@ -123,10 +136,10 @@ class Puzzle:
           if last3[0] == last3[1] == last3[2] == do:
             #Does not change direction
             pass
-          else:
-            nlast3 = [last3[1], last3[2], do]
+          elif o != floc:
+            nlast3 = (last3[1], last3[2], do)
             dd = self.at(o[0], o[1])
-            heapq.heappush(pq, [dist+dd, o, journey + [o], nlast3])
+            heapq.heappush(pq, [dist+dd, o, journey + [o], nlast3, loc])
     return (bdist, best)
 
   def result(self):
@@ -135,8 +148,8 @@ class Puzzle:
   def result1(self):
     start = (0,0)
     end = (len(self.grid[0])-1, len(self.grid)-1)
-    #result = self.dijk(start, end)
-    result = self.wexplore(start, end)
+    result = self.dijk(start, end)
+    #result = self.wexplore(start, end)
     if(result != None):
       dist, path = result
       #print('PATH:', dist, path)
