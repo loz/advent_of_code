@@ -8,6 +8,13 @@ DELTAS = [
   ( 0, 1)
 ]
 
+CHANGE = {
+  (1, 0): [(0,-1), (0,1)],
+  (0, 1): [(-1,0), (1,0)],
+  (-1,0): [(0,-1), (0,1)],
+  (0,-1): [(-1,0), (1,0)]
+}
+
 class Puzzle:
 
   def process(self, text):
@@ -24,6 +31,75 @@ class Puzzle:
       nx, ny = x+dx, y+dy
       if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
         options.append(((nx, ny), (dx, dy)))
+    return options
+
+  def ultra_neighbours(self, loc, history):
+    x, y = loc
+    options = []
+    #If we haven't gone 4 in same direction, we must continue
+    if history == []:
+      for dx, dy in DELTAS:
+        nx, ny = x+dx, y+dy
+        if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+          options.append(((nx, ny), (dx, dy)))
+    elif len(history) == 10:
+      last = history[-1]
+      same = True
+      for h in history:
+        same = same and (h == last)
+      if same:
+        #Must Change
+        deltas = CHANGE[last]
+        #print('Change', deltas)
+        for dx, dy in deltas:
+          nx, ny = x+dx, y+dy
+          if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+            options.append(((nx, ny), (dx, dy)))
+      else:
+        #IF last 4 same
+        last4 = history[-4:]
+        last = history[-1]
+        same = True
+        for h in last4:
+          same = same and (h == last)
+         
+        #Continue
+        dx, dy = last4[-1]
+        nx, ny = x+dx, y+dy
+        if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+          options.append(((nx, ny), (dx, dy)))
+
+        #Can Change
+        if same and len(last4) == 4:
+          deltas = CHANGE[last]
+          for dx, dy in deltas:
+            nx, ny = x+dx, y+dy
+            if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+              options.append(((nx, ny), (dx, dy)))
+    else:
+      if len(history) < 4:
+        last4 = history
+      else:
+        last4 = history[-4:]
+
+      last = history[-1]
+      same = True
+      for h in last4:
+        same = same and (h == last)
+       
+      #Continue
+      dx, dy = last4[-1]
+      nx, ny = x+dx, y+dy
+      if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+        options.append(((nx, ny), (dx, dy)))
+
+      #Can Change
+      if same and len(last4) == 4:
+        deltas = CHANGE[last]
+        for dx, dy in deltas:
+          nx, ny = x+dx, y+dy
+          if nx >= 0 and ny >= 0 and nx < len(self.grid[0]) and ny < len(self.grid):
+            options.append(((nx, ny), (dx, dy)))
     return options
 
   def process_line(self, line):
@@ -142,14 +218,57 @@ class Puzzle:
             heapq.heappush(pq, [dist+dd, o, journey + [o], nlast3, loc])
     return (bdist, best)
 
+  def ultra_dijk(self, start, end):
+    pq = []
+    heapq.heapify(pq)
+    path = [start]
+    shortest = {}
+    #Because you already start in the top-left block, you don't incur that block's heat loss unless you leave that block and then return to it.
+    hist = []
+    heapq.heappush(pq, [0, start,  path, hist, (-1, -1) ])
+
+    best = None
+    bdist = sys.maxsize
+
+    while pq:
+      dist, loc, journey, hist, floc = heapq.heappop(pq)
+      #print(dist, loc, journey)
+      thist = tuple(hist)
+      if (loc, thist) not in shortest or shortest[(loc, thist)] > dist:
+        shortest[(loc, thist)] = dist
+        if loc == end:
+          # print 'Solved', loc, dist
+          if dist < bdist:
+            best = journey
+            bdist = dist
+          #return dist, journey
+        options = self.ultra_neighbours(loc, hist)
+        for o, do in options:
+          nhist = hist[-9:] + [do]
+          dd = self.at(o[0], o[1])
+          heapq.heappush(pq, [dist+dd, o, journey + [o], nhist, loc])
+    return (bdist, best)
+
   def result(self):
-    self.result1()
+    self.result2()
 
   def result1(self):
     start = (0,0)
     end = (len(self.grid[0])-1, len(self.grid)-1)
     result = self.dijk(start, end)
     #result = self.wexplore(start, end)
+    if(result != None):
+      dist, path = result
+      #print('PATH:', dist, path)
+    else:
+      print('Fail')
+    self.dump_path(path)
+    print('Path Length', dist)
+
+  def result2(self):
+    start = (0,0)
+    end = (len(self.grid[0])-1, len(self.grid)-1)
+    result = self.ultra_dijk(start, end)
     if(result != None):
       dist, path = result
       #print('PATH:', dist, path)
