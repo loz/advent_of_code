@@ -11,6 +11,7 @@ L 5 (#abcefg)
 U 3 (#aabbcc)
 """)
     
+    puzzle.dig1()
     self.assertEqual(puzzle.at(0,0), ('.', '.'))
     self.assertEqual(puzzle.at(4,0), ('.', '.'))
     self.assertEqual(puzzle.at(5,0), ('R', '#123123'))
@@ -23,6 +24,7 @@ L 5 (#abcefg)
 U 3 (#aabbcc)
 """)
     
+    puzzle.dig1()
     self.assertEqual(puzzle.at(5,7), ('.', '.'))
     self.assertEqual(puzzle.at(5,8), ('D', '#aaabbb'))
 
@@ -34,6 +36,7 @@ L 5 (#abcefg)
 U 3 (#aabbcc)
 """)
     
+    puzzle.dig1()
     self.assertEqual(puzzle.at(1,8), ('.', '.'))
     self.assertEqual(puzzle.at(0,8), ('L', '#abcefg'))
 
@@ -45,6 +48,7 @@ L 5 (#abcefg)
 U 3 (#aabbcc)
 """)
     
+    puzzle.dig1()
     self.assertEqual(puzzle.at(0,6), ('.', '.'))
     self.assertEqual(puzzle.at(0,5), ('U', '#aabbcc'))
 

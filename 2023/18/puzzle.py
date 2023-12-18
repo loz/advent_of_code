@@ -8,10 +8,18 @@ MOVES = {
 
 }
 
+DMAP = {
+  '0': 'R',
+  '1': 'D',
+  '2': 'L',
+  '3': 'U'
+}
+
 class Puzzle:
 
   def process(self, text):
     self.holes = {}
+    self.instructions = []
     self.curx = 0
     self.cury = 0
     self.holes[(0,0)] = ('.', '.')
@@ -26,7 +34,30 @@ class Puzzle:
       d, n, colour = line.split(' ')
       n = int(n)
       colour = colour[1:-1]
+      self.instructions.append((d, n, colour))
+
+  def dig1(self):
+    for d, n, colour in self.instructions:
       self.paint(d, n, colour)
+
+  def dig2(self):
+    points = [(0, 0)]
+    perim = 0
+    for d, n, colour in self.instructions:
+      loc, dist = self.travel(d, n, colour)
+      points.append(loc)
+      perim += dist
+    return points, perim
+
+  def travel(self, d, num, colour):
+    newd = DMAP[colour[-1]]
+    newnum = colour[1:-1]
+    newnum = int(newnum, 16)
+    dx, dy = MOVES[newd]
+    #print(newd, newnum)
+    self.curx += (dx * newnum)
+    self.cury += (dy * newnum)
+    return (self.curx, self.cury), newnum
 
   def paint(self, d, num, colour):
     dx, dy = MOVES[d]
@@ -68,14 +99,36 @@ class Puzzle:
     #deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     while(tofill):
       current = tofill.pop(0)
-      print(current)
+      #print(current)
       spill = self.floodline(current, minx, miny, maxx, maxy)
       tofill += spill
 
   def result(self):
-    self.result1()
+    self.result2()
+
+  def result2(self):
+    print('Digging...')
+    points, perimeter = self.dig2()
+    total = 0
+    for n in range(len(points)-1):
+      p1 = points[n]
+      p2 = points[n+1]
+      x1, y1 = p1
+      x2, y2 = p2
+      seg = ((x1*y2)-(y1*x2))
+      #print(p1, p2, seg)
+      total += seg
+    total = abs(total)
+    area = total // 2
+    #print('Area', area, 'Diff', area - 952408144115),
+    #print('Perim', perimeter)
+    print('Total', area + (perimeter//2) + 1)
+
+
 
   def result1(self):
+
+    self.dig1()
     minx, maxx, miny, maxy = 0, 0, 0, 0
     for x, y in self.holes.keys():
       minx = min(minx, x)
