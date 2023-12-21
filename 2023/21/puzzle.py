@@ -1,4 +1,5 @@
 import sys
+import heapq
 
 DELTA = [
   (-1, 0), (1, 0),
@@ -11,7 +12,8 @@ class Puzzle:
     self.map = {}
     for y, line in enumerate(text.split('\n')):
       self.process_line(y, line)
-    self.height = y-1
+    self.height = y
+    print('W:', self.width, 'H:', self.height)
 
   def process_line(self, y, line):
     if line != '':
@@ -20,12 +22,132 @@ class Puzzle:
           self.start = (x, y)
           ch = '.'
         self.map[(x,y)] = ch
-      self.width = x
+      self.width = x+1
 
   def at(self, x, y):
-    x = x % (self.width+1)
-    y = y % (self.height+1)
+    x = x % (self.width)
+    y = y % (self.height)
     return self.map[(x,y)]
+
+  def dumpgrid(self, gridid, visited, steps, start):
+    print('==== GRID', gridid, '=======')
+    #oddeven = gridid[2]
+    if steps % 2 == 0:
+      oddeven = 0
+    else:
+      oddeven = 1
+    total = 0
+    for y in range(self.height):
+      for x in range(self.width):
+        if (x,y) in visited:
+          d = visited[(x,y)]
+          if d == steps:
+            total += 1
+            if (x,y) == start:
+              sys.stdout.write('S')
+            else:
+              sys.stdout.write('O')
+          elif d < steps and (d % 2 == oddeven):
+          #elif d < steps and (d % 2 == 0):
+            total += 1
+            if (x,y) == start:
+              sys.stdout.write('S')
+            else:
+              sys.stdout.write('O')
+          elif (x,y) == start:
+            sys.stdout.write('s')
+          else:
+            #sys.stdout.write(str(d))
+            sys.stdout.write('_')
+        elif (x,y) == start:
+          sys.stdout.write('s')
+        else:
+          sys.stdout.write(self.at(x, y))
+      sys.stdout.write('\n')
+    print('Total:', total)
+
+  def countplots(self, gridid, visited, steps):
+    if steps % 2 == 0:
+      oddeven = 0
+    else:
+      oddeven = 1
+    total = 0
+    for d in visited:
+      dd = visited[d]
+      if dd == steps or (dd < steps and (dd % 2 == oddeven)):
+        total +=1
+    return total
+    
+
+  def flood(self, loc, steps):
+    grids = [(loc, steps, (0, 0, 0))]
+    seen = [(0,0)]
+    visited = 0
+    while grids:
+      loc, stepsleft, gridid = grids.pop(0)
+      print('Flooding', gridid, 'with', stepsleft, 'steps, from', loc)
+      exits, distances = self.grid_flood(loc, stepsleft)
+      #print(distances)
+      visited += self.countplots(gridid, distances, stepsleft)
+      self.dumpgrid(gridid, distances, stepsleft, loc)
+
+      for direction in exits:
+        print(direction, len(exits[direction]))
+        mindistance = steps*10
+        bestloc = None
+        for option in exits[direction]:
+          eloc, distance = option
+          if mindistance > distance:
+            mindistance = distance
+            bestloc = eloc
+        if bestloc != None:
+          #print(direction, 'Best Exit ->', bestloc, mindistance)
+          gx, gy, oddeven = gridid
+          dx, dy = direction
+          ngx, ngy = gx+dx, gy+dy
+          remaining = stepsleft-mindistance
+          if (ngx, ngy) not in seen:
+            seen.append((ngx, ngy))
+            grids.append( (bestloc, remaining, (ngx, ngy, 1-oddeven))   )
+        else:
+          #print(direction, 'No Exit')
+          pass
+    return visited
+
+  def grid_flood(self, loc, steps):
+    exits = {}
+    for d in DELTA:
+      exits[d] = []
+
+    tovisit = []
+    heapq.heapify(tovisit)
+    heapq.heappush(tovisit, [0, loc, steps])
+
+    visited = {}
+    while tovisit:
+      distance, loc, remaining = heapq.heappop(tovisit)
+      x, y = loc
+
+      if remaining == 0:
+        pass
+        #visited[(x, y)] = distance
+      else:
+        #print('V', (x, y), steps, distance)
+        for dx, dy in DELTA:
+          nx, ny = x+dx, y+dy
+          if self.at(nx, ny) == '.':
+            if nx < 0 or ny < 0 or nx >= self.width or ny >= self.height:
+              #An exit hit
+              nx = nx % (self.width)
+              ny = ny % (self.height)
+              #print('Exit', (nx, ny), distance+1, '->', (dx, dy))
+              exits[(dx, dy)].append( ((nx,ny), distance+1) )
+            else:
+              if (nx, ny) not in visited and remaining > 0:
+                visited[(nx, ny)] = distance + 1
+                heapq.heappush(tovisit, [distance+1, (nx, ny), remaining-1 ] )
+
+    return exits, visited
 
   def r_walk(self, loc, steps, seen, visited):
     if steps == 0:
@@ -45,8 +167,8 @@ class Puzzle:
       return {(0,0):True}
 
     x, y = loc
-    mx = x % (self.width+1)
-    my = y % (self.height+1)
+    mx = x % (self.width)
+    my = y % (self.height)
 
     if ((mx,my), steps) in self.cache:
       vset = self.cache[((mx, my), steps)]
@@ -86,8 +208,8 @@ class Puzzle:
         for dx, dy in DELTA:
           nx, ny = x+dx, y+dy
           #print((nx,ny), self.at(nx,ny), steps)
-          #nx = nx % (self.width+1)
-          #ny = ny % (self.height+1)
+          #nx = nx % (self.width)
+          #ny = ny % (self.height)
           #print(x, y, mx, my)
           if self.at(nx,ny) == '.':
             if (nx,ny, step-1) not in seen:
@@ -118,7 +240,15 @@ class Puzzle:
       places = self.walk(self.start, s)
       print(s, len(places))
 
-  def result2(self):  
+  def result2(self):
+    #steps = [6,10, 50, 100, 500, 1000, 5000]
+    steps = [6,10]
+    for s in steps:
+      count = self.flood(self.start, s)
+      print(s, count)
+    
+
+  def result2_brute(self):  
     steps = [6,10, 50, 100, 500, 1000, 5000]
     for s in steps:
       count = self.infinite_walk(self.start, s)
