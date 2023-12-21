@@ -1,5 +1,6 @@
 import sys
 import heapq
+import math
 
 DELTA = [
   (-1, 0), (1, 0),
@@ -94,6 +95,7 @@ class Puzzle:
           if k not in seen:
             seen[k] = True
             grids.append( (eloc, remaining, ngid) )
+          #grids.append( (eloc, remaining, ngid) )
         #print(direction, len(exits[direction]))
         #mindistance = steps*10
         #bestloc = None
@@ -115,10 +117,31 @@ class Puzzle:
         #  #print(direction, 'No Exit')
         #  pass
     visited = 0
-    for grid in known:
+    print('Virtual Grids', len(known.keys()))
+    for grid in known.keys():
       visited += len(known[grid])
     return visited
 
+  def calculate_distances(self):
+    tovisit = []
+    heapq.heapify(tovisit)
+    heapq.heappush(tovisit, [0, self.start])
+    distances = {}
+    while tovisit:
+      distance, loc = heapq.heappop(tovisit)
+      x, y = loc
+      for dx, dy in DELTA:
+        nx, ny = x+dx, y+dy
+        if self.at(nx, ny) == '.':
+          if nx < 0 or ny < 0 or nx >= self.width or ny >= self.height:
+            pass
+          else:
+            if (nx, ny) not in distances:
+              distances[(nx, ny)] = distance + 1
+              heapq.heappush(tovisit, [distance+1, (nx, ny) ] )
+    return distances
+    
+    
   def grid_flood(self, loc, steps, visited):
     exits = {}
     for d in DELTA:
@@ -241,14 +264,109 @@ class Puzzle:
   def result(self):
     self.result2()
 
+  def result2(self):
+    steps = [6,10, 50, 100, 500, 1000, 5000, 26501365]
+    for step in steps:
+      self.result2_manhattan(step)
+
   def result1(self):  
     steps = [6, 64]
     for s in steps:
       places = self.walk(self.start, s)
       print(s, len(places))
 
-  def result2(self):
-    #steps = [6,10, 50, 100, 500, 1000, 5000]
+  def result2_manhattan(self, steps):
+    print('Calculate for', steps)
+    #Each step folows manhattan distance (effectively)
+    #            O                      O
+    #      O    OOO              O     O O
+    # O   OOO  OOOOO  ->   O    O O   O O O   
+    #      O    OOO              O     O O
+    #            O                      O
+    #Except you can only stop on alternate steps
+    #Each REPLICA of the grid also manhatten
+    # -> Alternating Odd Even or Even/Odd based on step count
+    #            #                      E
+    #      #    ###              E     EOE
+    # #   ###  #####  ->   #    EOE   EOEOE   
+    #      #    ###              E     EOE
+    #            #                      E
+    # On the INSIDE all possible squares are visited
+    #   Odds + Evens are different values
+    # On the PERIMETER
+    # We are cutting In / Out as manhattan top/left/right/bottom
+    #     is all there is on a particular grid
+    # -> Alternating Odd Even or Even/Odd based on step count
+    #   E         (O)E(O)
+    #  EOE       (O)EOE(O)  
+    # EOEOE  -> (O)EOEOE(O)
+    #  EOE       (O)EOE(O)
+    #   E         (O)E(O)   
+    
+    #Calculate all distances from start to each possible location
+    distances = self.calculate_distances()
+    gr = self.start[0] #(inside grid manhattan radius)
+
+    #1. Calculate ODD /EVEN full count
+    #print("ODDS", steps)
+    oddcount = 0
+    evencount = 0
+    oddcorners = 0
+    evencorners = 0
+    for y in range(self.width):
+      for x in range(self.width):
+        if (x,y) in distances:
+          v = distances[(x,y)]
+          if v % 2 == 0:
+            evencount += 1
+            if v > gr:
+              evencorners += 1
+          else:
+            oddcount += 1
+            if v > gr:
+              oddcorners += 1
+
+    #2. Calculate EVEN full count
+    print('Odds', oddcount, 'Evens', evencount)
+    print('Odd Corners', oddcorners, 'Even Corners', evencorners)
+
+    #3. Calculate INSIDE manhatten of GRIDS (ODDS + EVENS) -> I (inclusive of perim)
+    #print('x', x, 'w', self.width, 's', steps)
+    #r = int(math.floor(self.width-x+steps / self.width)) + 1
+    r = (self.width-gr)
+    r = steps - r
+    r = (r // self.width) + 1
+    print(r, 'Radius Manhatten')
+    if r % 2 == 0:
+      man_odd = (r+1)*(r+1)
+      man_even = r*r
+    else:
+      man_odd = r*r
+      man_even = (r+1)*(r+1)
+    print('Man', man_odd, 'odd and', man_even, 'even')
+    man_i = (man_odd * oddcount) + (man_even * evencount)
+
+    #4. Calculate PERIM of manhatten GRIDS
+    #5. cuts INTO PERIM (odd or even depending on start) -> C
+    #6. cuts OUT of PERIM (odd or even depending on start) -> O
+
+    man_in = (r+1)
+    man_out = r
+    print('In', man_in, 'Out', man_out)
+    if r % 2 == 0:
+      man_o = man_out * evencorners
+      man_c = man_in * oddcorners
+    else:
+      man_o = man_out * oddcorners
+      man_c = man_in * evencorners
+
+    #7. Total => I + O - C
+    total = man_i + man_o - man_c
+    print('Total', total)
+    print()
+
+
+  def result2_flood(self):
     steps = [6,10, 50, 100, 500, 1000, 5000]
     for s in steps:
       count = self.flood(self.start, s)
