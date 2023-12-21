@@ -40,25 +40,11 @@ class Puzzle:
     for y in range(self.height):
       for x in range(self.width):
         if (x,y) in visited:
-          d = visited[(x,y)]
-          if d == steps:
-            total += 1
-            if (x,y) == start:
-              sys.stdout.write('S')
-            else:
-              sys.stdout.write('O')
-          elif d < steps and (d % 2 == oddeven):
-          #elif d < steps and (d % 2 == 0):
-            total += 1
-            if (x,y) == start:
-              sys.stdout.write('S')
-            else:
-              sys.stdout.write('O')
-          elif (x,y) == start:
-            sys.stdout.write('s')
+          total += 1
+          if (x,y) == start:
+            sys.stdout.write('S')
           else:
-            #sys.stdout.write(str(d))
-            sys.stdout.write('_')
+            sys.stdout.write('O')
         elif (x,y) == start:
           sys.stdout.write('s')
         else:
@@ -67,6 +53,7 @@ class Puzzle:
     print('Total:', total)
 
   def countplots(self, gridid, visited, steps):
+    return len(visited.keys())
     if steps % 2 == 0:
       oddeven = 0
     else:
@@ -80,41 +67,59 @@ class Puzzle:
     
 
   def flood(self, loc, steps):
-    grids = [(loc, steps, (0, 0, 0))]
-    seen = [(0,0)]
-    visited = 0
+    grids = [(loc, steps, (0, 0))]
+    seen = {((0,0), steps, loc):True}
+    known = {}
     while grids:
       loc, stepsleft, gridid = grids.pop(0)
-      print('Flooding', gridid, 'with', stepsleft, 'steps, from', loc)
-      exits, distances = self.grid_flood(loc, stepsleft)
+      if gridid not in known:
+        known[gridid] = {}
+      current = known[gridid]
+
+      #print('Flooding', gridid, 'with', stepsleft, 'steps, from', loc)
+      exits, distances = self.grid_flood(loc, stepsleft, current)
       #print(distances)
-      visited += self.countplots(gridid, distances, stepsleft)
-      self.dumpgrid(gridid, distances, stepsleft, loc)
+      #self.countplots(gridid, distances, stepsleft)
+      #self.dumpgrid(gridid, distances, stepsleft, loc)
 
       for direction in exits:
-        print(direction, len(exits[direction]))
-        mindistance = steps*10
-        bestloc = None
         for option in exits[direction]:
           eloc, distance = option
-          if mindistance > distance:
-            mindistance = distance
-            bestloc = eloc
-        if bestloc != None:
-          #print(direction, 'Best Exit ->', bestloc, mindistance)
-          gx, gy, oddeven = gridid
+          gx, gy = gridid
           dx, dy = direction
           ngx, ngy = gx+dx, gy+dy
-          remaining = stepsleft-mindistance
-          if (ngx, ngy) not in seen:
-            seen.append((ngx, ngy))
-            grids.append( (bestloc, remaining, (ngx, ngy, 1-oddeven))   )
-        else:
-          #print(direction, 'No Exit')
-          pass
+          ngid = (ngx, ngy)
+          remaining = stepsleft-distance
+          k = (ngid, remaining, eloc)
+          if k not in seen:
+            seen[k] = True
+            grids.append( (eloc, remaining, ngid) )
+        #print(direction, len(exits[direction]))
+        #mindistance = steps*10
+        #bestloc = None
+        #for option in exits[direction]:
+        #  eloc, distance = option
+        #  if mindistance > distance:
+        #    mindistance = distance
+        #    bestloc = eloc
+        #if bestloc != None:
+        #  #print(direction, 'Best Exit ->', bestloc, mindistance)
+        #  gx, gy = gridid
+        #  dx, dy = direction
+        #  ngx, ngy = gx+dx, gy+dy
+        #  remaining = stepsleft-mindistance
+        #  if (ngx, ngy) not in seen:
+        #    seen.append((ngx, ngy))
+        #    grids.append( (bestloc, remaining, (ngx, ngy))   )
+        #else:
+        #  #print(direction, 'No Exit')
+        #  pass
+    visited = 0
+    for grid in known:
+      visited += len(known[grid])
     return visited
 
-  def grid_flood(self, loc, steps):
+  def grid_flood(self, loc, steps, visited):
     exits = {}
     for d in DELTA:
       exits[d] = []
@@ -122,8 +127,8 @@ class Puzzle:
     tovisit = []
     heapq.heapify(tovisit)
     heapq.heappush(tovisit, [0, loc, steps])
+    seen = {}
 
-    visited = {}
     while tovisit:
       distance, loc, remaining = heapq.heappop(tovisit)
       x, y = loc
@@ -140,11 +145,13 @@ class Puzzle:
               #An exit hit
               nx = nx % (self.width)
               ny = ny % (self.height)
-              #print('Exit', (nx, ny), distance+1, '->', (dx, dy))
+              #print('Exit', (nx, ny), distance+1, '->', (dx, dy), remaining-distance)
               exits[(dx, dy)].append( ((nx,ny), distance+1) )
             else:
-              if (nx, ny) not in visited and remaining > 0:
-                visited[(nx, ny)] = distance + 1
+              if (nx, ny) not in seen: #and remaining > 0:
+                seen[(nx, ny)] = True
+                if remaining % 2 == 1:
+                  visited[(nx, ny)] = True
                 heapq.heappush(tovisit, [distance+1, (nx, ny), remaining-1 ] )
 
     return exits, visited
@@ -242,7 +249,7 @@ class Puzzle:
 
   def result2(self):
     #steps = [6,10, 50, 100, 500, 1000, 5000]
-    steps = [6,10]
+    steps = [6,10, 50, 100, 500, 1000, 5000]
     for s in steps:
       count = self.flood(self.start, s)
       print(s, count)
