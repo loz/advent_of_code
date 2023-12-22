@@ -1,6 +1,7 @@
 import sys
 import heapq
 import math
+from numpy import polyfit
 
 DELTA = [
   (-1, 0), (1, 0),
@@ -255,6 +256,42 @@ class Puzzle:
     #print(locs)
     return len(locs)
 
+  def bf_walk(self, loc, steps):
+    if steps % 2 == 0:
+      oddeven = 1
+    else:
+      oddeven = 0
+    #breadth first walk of map
+    reached = {}
+    stopable = {}
+    tovisit = [(loc, steps, 0)]
+    while tovisit:
+      loc, remaining, distance = tovisit.pop(0)
+      if remaining == 0:
+        reached[loc] = distance
+        stopable[loc] = True
+      else:
+        x, y = loc
+        for dx, dy in DELTA:
+          nx, ny = x+dx, y+dy
+          if self.at(nx,ny) == '.':
+            if (nx,ny) not in reached:
+              reached[(nx,ny)] = distance
+              if (distance) % 2 == oddeven:
+                stopable[(nx, ny)] = True
+              tovisit.append(((nx,ny), remaining-1, distance+1))
+    return stopable
+    return reached
+
+
+  def infinite_walk_o(self, loc, steps):
+    #print('Start', loc, steps)
+    seen = {}
+    visited = {}
+    self.cache = {}
+    reachable = self.bf_walk(loc, steps)
+    return len(reachable)
+
   def walk(self, loc, steps):
     visited = {}
     seen = {}
@@ -264,7 +301,77 @@ class Puzzle:
   def result(self):
     self.result2()
 
+  def result2_pfit(self, steps):
+    w = self.width
+    if steps < 2*w:
+      return self.infinite_walk_o(self.start, steps)
+    else:
+      #print('Large!')
+      rem = steps % w
+      if rem == 0:
+        rem = w
+      #print('Simulating..')
+      data = []
+      for n in range(3):
+        x = (w *n) + rem
+        y = self.infinite_walk_o(self.start, x)
+        #print((x, y))
+        data.append([x,y])
+      print('Approximating:', data)
+      a, b, c = self.fit_quadratic(data)
+      #print('C:', (a, b, c))
+      n = steps
+      #print('N:', n)
+      val = a * n **2 +  b * n + c
+      ival = int(val)
+      #print('Steps:', n, '->', ival)
+      return ival
+
   def result2(self):
+    steps = [6,10, 50, 100, 500, 1000, 5000, 26501365]
+    #steps = [26501365]
+    for step in steps:
+      v = self.result2_pfit(step)
+      print(step, '=>', v)
+    return
+
+    target = 26501365
+    #Work out 3 solutions by brute
+    steps = []
+    w = self.width
+    rem = target % w
+    print('Remainder', rem)
+    for n in range(3):
+      steps.append( (((n+1)*w)+rem) )
+    print('Simulating..')
+    known = []
+    #steps = [6,10, 50, 100, 500, 1000, 5000]
+    for s in steps:
+      count = self.infinite_walk_o(self.start, s)
+      #print(s, count)
+      known.append((s, count))
+
+    print('Fitting Quadratic')
+    a, b, c = self.fit_quadratic(known)
+    steps = [6,10, 50, 100, 500, 1000, 5000, 26501365]
+    for step in steps:
+      # ax^2 + bx + c
+      val = ((a*step)*(a*step)) + (b*step) + c
+      ival = int(val)
+      print('Steps:', step, '->', ival)
+
+  def fit_quadratic(self, pairs):
+    xs, ys = zip(*pairs)
+    coefficients = polyfit(xs, ys, 2)
+    #print('Coefficients', coefficients)
+    return coefficients
+    a = (ys[-1] - 2*ys[-2] + ys[-3]) / (xs[-1]**2 - 2*xs[-2]**2 + xs[-3]**2)
+    b = (ys[-1] - ys[-2] - a * xs[-1] ** 2 + a * xs[-2]**2) / (xs[-1] - xs[-2])
+    c = ys[-1] - a * xs[-1] ** 2 - b * xs[-1]
+    #print('a, b, c', (a, b, c))
+    return a, b, c
+
+  def result2_old(self):
     steps = [6,10, 50, 100, 500, 1000, 5000, 26501365]
     for step in steps:
       self.result2_manhattan(step)
