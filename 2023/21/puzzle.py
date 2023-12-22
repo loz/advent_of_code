@@ -305,7 +305,7 @@ class Puzzle:
     
     #Calculate all distances from start to each possible location
     distances = self.calculate_distances()
-    gr = self.start[0] #(inside grid manhattan radius)
+    gr = self.width - self.start[0] -1 #(inside grid manhattan radius)
 
     #1. Calculate ODD /EVEN full count
     #print("ODDS", steps)
@@ -330,14 +330,22 @@ class Puzzle:
     print('Odds', oddcount, 'Evens', evencount)
     print('Odd Corners', oddcorners, 'Even Corners', evencorners)
 
+    #total = 0
+    #for n in distances:
+    #  v = distances[n]
+    #  if v == steps:
+    #    total +=1
+    #  elif v < steps and (v % 2 == 0):
+    #    total +=1 
+    #print("DEBUG TOTAL", total)
+
     #3. Calculate INSIDE manhatten of GRIDS (ODDS + EVENS) -> I (inclusive of perim)
     #print('x', x, 'w', self.width, 's', steps)
     #r = int(math.floor(self.width-x+steps / self.width)) + 1
-    r = (self.width-gr)
-    r = steps - r
-    r = (r // self.width) + 1
-    print(r, 'Radius Manhatten')
-    if r % 2 == 0:
+    r = steps - gr
+    r = (r / self.width) 
+    print(r, 'Radius of GRIDS and', gr)
+    if steps % 2 == 1:
       man_odd = (r+1)*(r+1)
       man_even = r*r
     else:
@@ -353,7 +361,7 @@ class Puzzle:
     man_in = (r+1)
     man_out = r
     print('In', man_in, 'Out', man_out)
-    if r % 2 == 0:
+    if steps % 2 == 1:
       man_o = man_out * evencorners
       man_c = man_in * oddcorners
     else:
