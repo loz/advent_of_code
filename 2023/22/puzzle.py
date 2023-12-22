@@ -52,7 +52,7 @@ class Puzzle:
             else:
               #print('Fall To', nz, 'from', z)
               dz = nz-z
-              p1, p2 = self.cubes[id]
+              p1, p2 = cubes[id]
               ncube = ( (p1[0], p1[1], p1[2] + dz), (p2[0], p2[1], p2[2]+dz) )
               ncubes[id] = ncube
               #print('->', ncube)
@@ -66,10 +66,10 @@ class Puzzle:
               #print('Fall To Ground')
               nz = 1
               dz = nz-z
-              p1, p2 = self.cubes[id]
+              p1, p2 = cubes[id]
               ncube = ( (p1[0], p1[1], p1[2] + dz), (p2[0], p2[1], p2[2]+dz) )
               ncubes[id] = ncube
-              #print('->', ncube)
+              #print((p1,p2), '->', ncube)
               didFall = True
               fallcount += 1
               fallen.append(id)
@@ -103,6 +103,38 @@ class Puzzle:
 
     return False
 
+  def buildtree(self, cubes):
+    bottoms, tops = self.rescan(cubes)
+    supporters = {}
+    for cube in bottoms:
+      z, id, *_ = cube
+      if id not in supporters:
+        supporters[id] = []
+      below = [c for c in tops if self.isover(cube, c)]
+      if below:
+        for c in below:
+          nz = c[0]+1
+          if z == nz:
+            supporters[id].append(c[1])
+      else:
+        if z == 1:
+          supporters[id].append(-1)
+    return supporters
+
+  def inverttree(self, tree):
+    #Swap CUBE -> [SUPPORTED BY]
+    # to  CUBE -> [SUPPORTS]
+    newtree = {}
+    for k in tree:
+      ss = tree[k]
+      for c in ss:
+        if c not in newtree:
+          newtree[c] = []
+        if k not in newtree: #May only be k and support NONE
+          newtree[k] = []
+        newtree[c].append(k)
+    return newtree
+
   def rescan(self, cubes):
     #Bottoms of all cubes 
     #Tops of all cubes
@@ -135,8 +167,26 @@ class Puzzle:
     else:
       return False
 
+  def traverse_impact(self, id, supporters, supporting):
+    tovisit = [id]
+    fallen = [id]
+    while(tovisit):
+      fid = tovisit.pop(0)
+      effected = supporting[fid]
+      #print('Fallen', fid, 'hits', effected, '(', fallen, ')')
+      for c in effected:
+        needs = supporters[c]
+        has = [n for n in needs if n not in fallen]
+        #print(c, 'N->', needs, 'has', has)
+        if has == [] and c not in fallen:
+          fallen.append(c)
+          tovisit.append(c)
+      #print('-'*20)
+    return fallen 
+
+
   def result(self):
-    self.result1()
+    self.result2()
 
   def result1(self):
     print('Settline Bricks')
@@ -151,6 +201,23 @@ class Puzzle:
       print(n, '->', willfall)
     print('Total Safe', len(safe))
 
+  def result2(self):
+    print('Settline Bricks')
+    settled, _ = self.fall(self.cubes)
+    print('Building Tree')
+    supporters = self.buildtree(settled)
+    supporting = self.inverttree(supporters)
+
+    #for k in supporting:
+    #  print(k, supporting[k])
+
+    print('Scanning')
+    total = 0
+    for n, brick in enumerate(settled):
+      impacted = self.traverse_impact(n, supporters, supporting)
+      total += (len(impacted)-1) #-1 as the removed brick is in the list
+      print(n, '->', supporting[n], len(impacted))
+    print('Total Falls', total)
 
 
 if __name__ == '__main__':
