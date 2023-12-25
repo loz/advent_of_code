@@ -1,0 +1,81 @@
+['rzs', 'ntq']
+2 roots and 15 nodes
+================================================================================
+Candidate: rzs ntq 8<: [('qnr', 'nvd'), ('pzl', 'hfx'), ('pzl', 'nvd'), ('frs', 'lhk'), ('lsr', 'lhk'), ('cmg', 'nvd'), ('cmg', 'lhk'), ('cmg', 'bvb'), ('jqt', 'xhk'), ('jqt', 'nvd'), ('rhn', 'xhk'), ('rhn', 'bvb'), ('rhn', 'hfx')]
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('pzl', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('frs', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('lsr', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('cmg', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('cmg', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('cmg', 'bvb')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('jqt', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('qnr', 'nvd'), ('pzl', 'hfx'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('frs', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('lsr', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('cmg', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('cmg', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('cmg', 'bvb')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('jqt', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('pzl', 'nvd'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('lsr', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('cmg', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('cmg', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('cmg', 'bvb')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('jqt', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+
+
+(('pzl', 'hfx'), ('frs', 'lhk'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('cmg', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('cmg', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('cmg', 'bvb')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('jqt', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'nvd'), ('cmg', 'lhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'nvd'), ('cmg', 'bvb')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('cmg', 'nvd'), ('jqt', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+
+
+(('pzl', 'hfx'), ('cmg', 'nvd'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'nvd'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'nvd'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'lhk'), ('cmg', 'bvb')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('cmg', 'lhk'), ('jqt', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'lhk'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'lhk'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'lhk'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('cmg', 'bvb'), ('jqt', 'xhk')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('cmg', 'bvb'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('cmg', 'bvb'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('cmg', 'bvb'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'nvd', 'lhk'}
+(('pzl', 'hfx'), ('jqt', 'xhk'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('jqt', 'xhk'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('jqt', 'xhk'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+
+(('pzl', 'hfx'), ('jqt', 'nvd'), ('rhn', 'xhk')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('jqt', 'nvd'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('jqt', 'nvd'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('lsr', 'lhk'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('frs', 'lhk'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('cmg', 'nvd'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('jqt', 'xhk'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+(('pzl', 'hfx'), ('cmg', 'lhk'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} {'hfx', 'bvb', 'xhk'}
+
+(('pzl', 'hfx'), ('cmg', 'bvb'), ('jqt', 'nvd')) : {'lhk', 'rsh', 'qnr', 'pzl', 'frs', 'nvd', 'lsr', 'cmg'} {'jqt', 'xhk', 'bvb', 'hfx', 'rhn'} set()
+
+
+(('pzl', 'hfx'), ('rhn', 'xhk'), ('rhn', 'bvb')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('rhn', 'xhk'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+(('pzl', 'hfx'), ('rhn', 'bvb'), ('rhn', 'hfx')) : {'lhk', 'rsh', 'qnr', 'xhk', 'pzl', 'bvb', 'frs', 'nvd', 'lsr', 'hfx', 'cmg'} {'jqt', 'lhk', 'xhk', 'bvb', 'nvd', 'hfx', 'rhn'} {'lhk', 'xhk', 'bvb', 'nvd', 'hfx'}
+
