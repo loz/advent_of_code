@@ -1,6 +1,7 @@
 import sys
 import heapq
 from collections import defaultdict
+from functools import cmp_to_key
 
 DELTAS = [
   #top
@@ -55,7 +56,7 @@ class Creature:
           targets.append(item)
         elif not self.is_elf() and item.is_elf():
           targets.append(item)
-    targets = sorted(targets, cmp_targets)
+    targets = sorted(targets, key=cmp_to_key(cmp_targets))
     if len(targets) > 0:
       enemy = targets[0]
       enemy.hitpoints -= self.attack
@@ -121,7 +122,7 @@ class Creature:
       return None
     else:
       ends = [p[len(p)-1] for p in best_paths]
-      ends = sorted(ends, cmp_scan)
+      ends = sorted(ends, key=cmp_to_key(cmp_scan))
       #print ends
       for p in best_paths:
         if p[len(p)-1] == ends[0]:
@@ -317,8 +318,8 @@ class Puzzle:
   
 
   def tick(self):
-    locs = self.elves.keys() + self.goblins.keys()
-    locs = sorted(locs, cmp=cmp_scan)
+    locs = list(self.elves.keys()) + list(self.goblins.keys())
+    locs = sorted(locs, key=cmp_to_key(cmp_scan))
     bots = [self.item_at(loc[0], loc[1]) for loc in locs]
     for bot in bots:
       loc = (bot.x, bot.y)
@@ -341,8 +342,8 @@ class Puzzle:
     return True
 
   def dump(self):
-    print u"\u001b[0;0H"
-    print 
+    print(u"\u001b[0;0H")
+    print()
     for y in range(self.height):
       bots = []
       for x in range(self.width):
@@ -354,10 +355,10 @@ class Puzzle:
           sys.stdout.write(u"\u001b[33m#")
         else:
           sys.stdout.write(u"\u001b[0m.")
-      print u"\u001b[K",
+      print(u"\u001b[K",end='')
       for bot in bots:
-        print u"\u001b[0m", bot.health(),
-      print u"\u001b[0m"
+        print(u"\u001b[0m", bot.health(),end='')
+      print(u"\u001b[0m")
 
   def victory(self):
     return len(self.elves.keys()) == 0 or len(self.goblins.keys()) == 0
@@ -367,14 +368,14 @@ class Puzzle:
     for e in self.elves:
       if self.elves[e].hitpoints > 0:
         escore += self.elves[e].hitpoints
-    print u"\u001b[K",
-    print 'Elf Score:', escore
+    print(u"\u001b[K", end='')
+    print('Elf Score:', escore)
     gscore = 0
     for g in self.goblins:
       if self.goblins[g].hitpoints > 0:
         gscore += self.goblins[g].hitpoints
-    print u"\u001b[K",
-    print 'Goblin Score:', gscore
+    print(u"\u001b[K", end='')
+    print('Goblin Score:', gscore)
     return escore + gscore
 
   def combat(self):
@@ -384,12 +385,12 @@ class Puzzle:
       if self.tick():
         rnd += 1
       self.dump()
-      print 'After', rnd, 'FULL rounds:'
+      print('After', rnd, 'FULL rounds:')
       self.scores()
       #if rnd > 76:
       #  raw_input('Press ENTER to continue......')
     outcome = self.scores()
-    print 'Outcome', outcome, '*', rnd, '=', outcome * rnd
+    print('Outcome', outcome, '*', rnd, '=', outcome * rnd)
       
   def improved_combat(self,power):
     self.reset()
@@ -402,15 +403,15 @@ class Puzzle:
       if self.tick():
         rnd += 1
       self.dump()
-      print 'Power Pack:', power, "     "
-      print 'After', rnd, 'FULL rounds:'
+      print('Power Pack:', power, "     ")
+      print('After', rnd, 'FULL rounds:')
       self.scores()
       if len(self.elves) < elfcount:
         return False
       #if rnd > 76:
       #  raw_input('Press ENTER to continue......')
     outcome = self.scores()
-    print 'Outcome', outcome, '*', rnd, '=', outcome * rnd
+    print('Outcome', outcome, '*', rnd, '=', outcome * rnd)
     return True
 
 
