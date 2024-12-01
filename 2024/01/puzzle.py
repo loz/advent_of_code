@@ -5,6 +5,7 @@ class Puzzle:
 
   def process(self, text):
     self.pairs = []
+    self.similarities = None
     for line in text.split('\n'):
       self.process_line(line)
 
@@ -35,12 +36,17 @@ class Puzzle:
     right = sorted(right)
     return list(zip(left, right))
 
-  def similarity(self, n):
-    s = 0
+  def scan_right(self):
+    self.similarities = {}
     for p in self.pairs:
-      if p[1] == n:
-        s += 1
-    return s
+      v = self.similarities.get(p[1], 0)
+      v += 1
+      self.similarities[p[1]] = v
+
+  def similarity(self, n):
+    if self.similarities == None:
+      self.scan_right()
+    return self.similarities.get(n, 0)
 
   def result(self):
     left = self.left_list()
