@@ -14,22 +14,18 @@ class Puzzle:
       self.parse_instructions(line)
   
   def parse_instructions(self, line):
-    #p = re.compile(r'((mul|do|don\'t)\(((\d+),(\d+)){0,1}\))')
-    p = re.compile(r'((mul)\((\d+),(\d+)\)|(do)\(\)|(don\'t)\(\))')
+    p = re.compile(r'((mul|do|don\'t)\(((\d+),(\d+)){0,1}\))')
+    #p = re.compile(r'((mul)\((\d+),(\d+)\)|(do)\(\)|(don\'t)\(\))')
     matches = p.findall(line)
     for match in matches:
-       if match[0].startswith('mul'):
-          inst = 'mul'
-          a = int(match[2])
-          b = int(match[3])
-       elif match[0].startswith('don'):
-          inst = "don't"
-          a = 0
-          b = 0
-       else:
-          inst = 'do'
-          a = 0
-          b = 0
+       inst = match[1]
+       a, b = None, None
+       if inst == 'mul':
+          a = int(match[3])
+          b = int(match[4])
+       #elif inst == 'do' or inst == "don't":
+       #   a = 0
+       #   b = 0
        self.instructions.append((inst, a, b))
 
   def result(self):

@@ -21,12 +21,12 @@ class TestPuzzle(unittest.TestCase):
   def test_puzzle_extracts_do_instructions(self):
     puzzle = puz.Puzzle()
     puzzle.process("""mul(1,2)do()mul(3,4)""")
-    self.assertEqual(puzzle.instructions[1], ('do', 0, 0))
+    self.assertEqual(puzzle.instructions[1], ('do', None, None))
 
   def test_puzzle_extracts_dont_instructions(self):
     puzzle = puz.Puzzle()
     puzzle.process("""mul(1,2)don't()mul(3,4)""")
-    self.assertEqual(puzzle.instructions[1], ("don't", 0, 0))
+    self.assertEqual(puzzle.instructions[1], ("don't", None, None))
 
 if __name__ == '__main__':
     unittest.main()
