@@ -128,6 +128,20 @@ MM...MM
 XMASAMX
 """)
     self.assertEqual(len(puzzle.words), 12)
+
+  def test_puzzle_finds_MAS_x(self):
+    puzzle = puz.Puzzle()
+    puzzle.process("""
+.......
+.M.S.M.
+..A.A..
+.M.S.M.
+..A.A..
+.M.S.M.
+.......
+""")
+    pairs = puzzle.find_cross('MAS')
+    self.assertEqual(len(pairs), 4)
     
 if __name__ == '__main__':
     unittest.main()

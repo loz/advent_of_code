@@ -173,29 +173,39 @@ class Puzzle:
      pairs = itertools.combinations(words, 2)
      for pair in pairs:
         a, b = pair
-        print(a,b)
+        #print(a,b)
         (ax1, ay1), (ax2, ay2) = a
         (bx1, by1), (bx2, by2) = b
-        if a != b:
-          if ax1 == bx1 and ax2 == bx2:
-             if min(ay1, ay2) == min(by1, by2) and max(ay1, ay2) == max(by1, by2):
-               found.append(pair)
-            
+        if min(ax1,ax2) == min(bx1,bx2) and \
+           max(ax1,ax2) == max(bx1,bx2) and \
+           min(ay1,ay2) == min(by1,by2) and \
+           max(ay1,ay2) == max(by1,by2):
+             found.append(pair)
      return found
 
+  def find_cross(self, text):
+    pairs = []
+    target = [ch for ch in text]
+    target2 = target.copy()
+    target2.reverse()
+    targets = [target, target2]
+    self.words = []
+    for target in targets:
+      self.scan_forward_slash(target, 1) 
+      self.scan_back_slash(target, 1) 
+    pairs = self.find_pairs(self.words)
+    return pairs
+
   def result(self):
+     pairs = self.find_cross('MAS')
      self.words = []
-     for target in [['M', 'A', 'S'], ['S', 'A', 'M']]:
-        self.scan_forward_slash(target, 1) 
-        self.scan_forward_slash(target, -1) 
-        self.scan_back_slash(target, 1) 
-        self.scan_back_slash(target, -1) 
-     words = self.normalize_words(self.words)
-     pairs = self.find_pairs(words)
      for pair in pairs:
-       print(pair)
+        a, b = pair
+        self.words.append(a)
+        self.words.append(b)
+     self.print_debug()
      print('Total Found:', len(pairs))
-  
+
   def result1(self):
      self.print_debug()
      print('Total Found:', len(self.words))
