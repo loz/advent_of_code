@@ -3,11 +3,11 @@ import puzzle as puz
 
 class TestPuzzle(unittest.TestCase):
 
-  def test_puzzle_y_draws(self):
+  def test_puzzle_parses_lines(self):
     puzzle = puz.Puzzle()
     puzzle.process("""
 """)
-    self.assertEquals(puzzle.item, 'expected')
+    self.assertEqual(puzzle.item, 'expected')
 
 if __name__ == '__main__':
     unittest.main()
