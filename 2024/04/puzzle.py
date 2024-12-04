@@ -123,8 +123,7 @@ class Puzzle:
       self.scan_forward_slash(target, direction)
       self.scan_back_slash(target, direction)
 
-  def print_debug(self):
-    target = 'XMAS'
+  def print_debug(self, target='XMAS'):
     letters = {}
     for word in self.words:
       start, end = word
@@ -155,16 +154,6 @@ class Puzzle:
          else:
             print(Fore.RESET + self.grid[y][x], end='')
       print(Fore.RESET + '')
-
-  def normalize_words(self, words):
-     wrds = []
-     for word in words:
-       start, end = word
-       if start[0] > end[0]:
-         wrds.append((end, start))
-       else:
-         wrds.append((start, end))
-     return wrds
 
   def find_pairs(self, words):
      #a: (x, y) -> (x2, y2)
@@ -203,7 +192,7 @@ class Puzzle:
         a, b = pair
         self.words.append(a)
         self.words.append(b)
-     self.print_debug()
+     self.print_debug('MAS')
      print('Total Found:', len(pairs))
 
   def result1(self):
