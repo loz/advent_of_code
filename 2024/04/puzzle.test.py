@@ -10,7 +10,7 @@ AAAAAAAA
 AAAAXMAS
 AAAAAAAA
 """)
-    self.assertEqual(((4,2),(7,2)) in puzzle.words, True)
+    self.assertIn(((4,2),(7,2)), puzzle.words)
 
   def test_puzzle_finds_horizonal_word_bug(self):
     puzzle = puz.Puzzle()
@@ -19,7 +19,7 @@ AAAAAAAA
 AAAAXCAS
 AAAAAAAA
 """)
-    self.assertEqual(((4,0),(7,0)) in puzzle.words, True)
+    self.assertIn(((4,0),(7,0)), puzzle.words)
 
   def test_puzzle_finds_horizonal_words_backwards(self):
     puzzle = puz.Puzzle()
@@ -28,7 +28,7 @@ AAAAAAAA
 AAAASAMX
 AAAAAAAA
 """)
-    self.assertEqual(((7,2),(4,2)) in puzzle.words, True)
+    self.assertIn(((7,2),(4,2)), puzzle.words)
 
   def test_puzzle_finds_only_consecutive_words(self):
     puzzle = puz.Puzzle()
@@ -37,7 +37,7 @@ AAAAAAAA
 AAAAXMAS
 AAAAAAAA
 """)
-    self.assertEqual(((4,0),(7,0)) in puzzle.words, False)
+    self.assertNotIn(((4,0),(7,0)), puzzle.words)
 
   def test_puzzle_finds_vertical_words(self):
     puzzle = puz.Puzzle()
@@ -48,7 +48,7 @@ XAAS
 ASAA
 CCCC
 """)
-    self.assertEqual(((1,1),(1,4)) in puzzle.words, True)
+    self.assertIn(((1,1),(1,4)), puzzle.words)
 
   def test_puzzle_finds_vertical_words_restarting(self):
     puzzle = puz.Puzzle()
@@ -59,7 +59,7 @@ XAAS
 ASAA
 CCCC
 """)
-    self.assertEqual(((1,1),(1,4)) in puzzle.words, True)
+    self.assertIn(((1,1),(1,4)), puzzle.words)
 
   def test_puzzle_finds_vertical_words_backwards(self):
     puzzle = puz.Puzzle()
@@ -70,7 +70,7 @@ XMAS
 AXAA
 CCCC
 """)
-    self.assertEqual(((1,4),(1,1)) in puzzle.words, True)
+    self.assertIn(((1,4),(1,1)), puzzle.words)
 
   def test_puzzle_finds_diagonal_words(self):
     puzzle = puz.Puzzle()
@@ -81,7 +81,7 @@ XAAACC
 ASAASC
 CCCCCC
 """)
-    self.assertEqual(((1,1),(4,4)) in puzzle.words, True)
+    self.assertIn(((1,1),(4,4)), puzzle.words)
 
   def test_puzzle_finds_diagonal_words_restarting(self):
     puzzle = puz.Puzzle()
@@ -92,7 +92,7 @@ XAAACC
 ASAASC
 CCCCCC
 """)
-    self.assertEqual(((1,1),(4,4)) in puzzle.words, True)
+    self.assertIn(((1,1),(4,4)), puzzle.words)
 
   def test_puzzle_finds_diagonal_words_backwards(self):
     puzzle = puz.Puzzle()
@@ -103,7 +103,7 @@ XAAMCC
 ASAAXC
 CCCCCC
 """)
-    self.assertEqual(((4,4),(1,1)) in puzzle.words, True)
+    self.assertIn(((4,4),(1,1)), puzzle.words)
 
   def test_puzzle_finds_diagonal_words_forward_slash(self):
     puzzle = puz.Puzzle()
@@ -114,9 +114,9 @@ XAMMCC
 AXAAXC
 CCCCCC
 """)
-    self.assertEqual(((1,4),(4,1)) in puzzle.words, True)
+    self.assertIn(((1,4),(4,1)), puzzle.words)
 
-  def test_puzzle_finds_diagonal_words_forward_slash(self):
+  def test_puzzle_finds_edge_case_combos(self):
     puzzle = puz.Puzzle()
     puzzle.process("""
 XMASAMX
@@ -144,4 +144,4 @@ XMASAMX
     self.assertEqual(len(pairs), 4)
     
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
