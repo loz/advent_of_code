@@ -71,4 +71,4 @@ class TestPuzzle(unittest.TestCase):
     #self.assertEqual(puzzle.sort_order([4,1,3]), [1,3,4])
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

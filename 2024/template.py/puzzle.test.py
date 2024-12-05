@@ -10,4 +10,4 @@ class TestPuzzle(unittest.TestCase):
     self.assertEqual(puzzle.item, 'expected')
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
