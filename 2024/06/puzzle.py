@@ -71,25 +71,8 @@ class Puzzle:
       else:
          self.guard_location = (nx, ny, nd)
 
-   def result(self):
-      #For each location
-      #Insert an obstacle
-      #Check it
-      locations = []
-      for y, row in enumerate(self.map):
-         for x, ch in enumerate(row):
-            print('.', end='', flush=True)
-            if ch == '.':
-               obs = (x,y)
-               self.obstacle_map[obs] = True
-               #print(obs, self.obstacles)
-               if not self.guard_will_leave():
-                  locations.append(obs)
-               self.obstacle_map[obs] = False
-         print('')
-      print('Total Locations:', len(locations))
-
-   def result1(self):
+   def guard_walk_map(self):
+      original = self.guard_location
       visited = {}
       x, y, _ = self.guard_location
       visited[(x,y)] = True
@@ -98,7 +81,28 @@ class Puzzle:
          if self.guard_location:
             x, y, _ = self.guard_location
             visited[(x,y)] = True
-      print('Total Locations:', len(visited.keys()))
+      self.guard_location = original
+      return list(visited.keys())
+      
+
+   def result(self):
+      #For each location the guard usually walks
+      #Insert an obstacle
+      #Check it
+      visited = self.guard_walk_map()
+      locations = []
+      for loc in visited:
+         print('.', end='', flush=True)
+         self.obstacle_map[loc] = True
+         if not self.guard_will_leave():
+            locations.append(loc)
+         self.obstacle_map[loc] = False
+      print('')
+      print('Total Locations:', len(locations))
+
+   def result1(self):
+      visited = self.guard_walk_map()
+      print('Total Locations:', len(visited))
 
 if __name__ == '__main__':
   puz = Puzzle()
