@@ -22,6 +22,8 @@ class Puzzle:
       self.map = []
       for line in text.split('\n'):
          self.process_line(line)
+      self.width = len(self.map[0])
+      self.height = len(self.map)
       self.locate_obstacles_and_guard()
       self.map_obstacles()
 
@@ -64,10 +66,8 @@ class Puzzle:
          ny = y
          nx = x
          nd = TURNS[d]
-      if nx >= len(self.map[0]) or \
-         ny >= len(self.map) or \
-         nx < 0 or ny < 0:
-            self.guard_location = None
+      if nx not in range(self.width) or ny not in range(self.height):
+         self.guard_location = None
       else:
          self.guard_location = (nx, ny, nd)
 
