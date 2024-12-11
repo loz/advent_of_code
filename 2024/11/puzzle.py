@@ -43,9 +43,8 @@ class Puzzle:
         newstones.append(stone * 2024)
     return newstones
 
-  def blink_n(self, n, stones, cache = {}, cachemap = {}):
+  def blink_n(self, n, stones, cache = {}):
     #cache = {} #children at N depth -> count
-    #cachemap = {} #number -> children
     total = 0
     if n == 0:
       return len(stones)
@@ -54,14 +53,8 @@ class Puzzle:
         #print('.', end='', flush=True)
         total += cache[(stone, n)]
       else:
-        #print('M', end='', flush=True)
-        if (stone, n) in cachemap:
-          children = cachemap[(stone, gen)]
-        else:
-          children = self.blink_a_stone(stone)
-          #print(stone, '@', n, '->', children)
-          cachemap[(stone, n)] = children
-        count = self.blink_n(n-1, children, cache, cachemap)
+        children = self.blink_a_stone(stone)
+        count = self.blink_n(n-1, children, cache)
         cache[(stone, n)] = count
         total += count
     return total
