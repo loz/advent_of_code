@@ -3,6 +3,7 @@ from colorama import Fore
 import heapq
 from pyrsistent import pmap
 from pyrsistent import pvector
+from collections import defaultdict
 
 
 """
@@ -48,18 +49,94 @@ class Puzzle:
     self.height = len(self.maze)
 
     self.graph_map()
-    self.optimize_graph()
+    self.debug_graph(self.graph)
 
+    self.optimize_graph()
+    self.debug_graph(self.graph)
+
+  def debug_graph(self, graph):
+    points = {}
+    for node in graph:
+      loc, _ = node
+      count = points.get(loc, 0)
+      count += 1
+      points[loc] = count
+
+    for y in range(self.height):
+      for x in range(self.width):
+        if self.maze[y][x] == '#':
+          print(Fore.RED + '#' + Fore.RESET, end='')
+        elif self.maze[y][x] == '.':
+          if (x,y) in points:
+            print(Fore.CYAN + str(points[(x,y)]) +  Fore.RESET, end='')
+          else:
+            print('.', end='')
+        else:
+          print(Fore.GREEN + self.maze[y][x] + Fore.RESET, end='')
+      print('')
+          
+  def debug_path(self, path):
+    points = {}
+    for loc in path:
+      points[loc] = True
+
+    for y in range(self.height):
+      for x in range(self.width):
+        if self.maze[y][x] == '#':
+          print(Fore.RED + '#' + Fore.RESET, end='')
+        elif self.maze[y][x] == '.':
+          if (x,y) in points:
+            print(Fore.CYAN + '*' +  Fore.RESET, end='')
+          else:
+            print('.', end='')
+        else:
+          print(Fore.GREEN + self.maze[y][x] + Fore.RESET, end='')
+      print('')
+
+
+  def find_junction(self, node, fromnode, graph, nest=''):
+    #node:
+    # ((1, (2, 13), 'E'), [])
+    # ((cost, loc, direction), tilesskipped) 
+
+    (cost, loc, direction), skipped = node
+    #print('Finding A Junction', loc, direction, 'from', fromnode)
+
+    curloc, curdirection = loc, direction
+    fromloc = fromnode[0]
+
+    if self.at(curloc[0], curloc[1]) == 'E' or \
+       self.at(curloc[0], curloc[1]) == 'S':
+      #Consider a Junction
+      return node
+
+    options = graph[(curloc, curdirection)]
+    togoto = []
+    #print(nest, loc, 'from', fromnode, '>', options)
+    for option in options:
+      #((2001, (1, 13), 'W'), [])
+      (_, oloc, _), _ = option
+      if oloc != fromloc:
+        togoto.append(option) 
+    #print(nest, '==>', togoto)
+    
+    if len(togoto) == 1: #Corridor
+      #print(nest + str(loc))
+      #BUG, recursive node is not (loc, direction)
+      jnode = self.find_junction(togoto[0], (loc, direction), graph, nest+' ')
+      if jnode:
+        (jcost, jloc, jdirection), jskipped = jnode
+        newnode = ((cost + jcost, jloc, jdirection), skipped + jskipped + [loc])
+        return newnode
+      else:
+        return None
+    elif len(togoto) == 0:
+      return None
+    else:
+      #At A Junction!
+      return node
 
   def optimize_graph(self):
-    hashgraph = {}
-
-    for key in self.graph:
-      hashgraph[key] = []
-      for value in self.graph[key]:
-        hashgraph[key].append( (value, []) )
-
-
     """
       walk graph (not backtracking) until there are
       a) no way to walk [DEAD END]
@@ -70,37 +147,32 @@ class Puzzle:
         Add all walked nodes into set of tiles skipped
     """
     
-    didoptimise = True
-    while didoptimise:
-      didoptimise = False
-      for node in hashgraph:
-        points = hashgraph[node]
-        #Single moves can be culled
-        if len(points) == 1:
-          print(node, 'can be optimised')
-          point = points[0]
-          (cst, loc, d), tiles = point
-          #go strait to loc's nodes
-          directs = hashgraph[(loc, d)]
-          print('>', directs)
-          newpath = []
-          #([(1, (1, 13), 'W'), (2001, (3, 13), 'E')], [])
-          for (n, tiles) in directs:
-            ncost, nloc, ndir = n
-            if (nloc, ndir) == node:
-              pass
-            else:
-              newpath.append( ((cst + ncost, nloc, ndir), tiles + [loc]) )
-          print('=', newpath)
-          hashgraph[node] = newpath
-          didoptimize = True
+    newgraph = {}
 
-        #Corridor walks can be culled 
-        # (go in same direction until we hit a junction)
+    visited = {}
+    tovisit = [self.location]
+    while tovisit:
+      current = tovisit.pop()
+      loc, direction = current
+      if current not in visited:
+        visited[current] = True
+        options = self.graph[(loc, direction)]
+        newgraph[current] = []
+        newoptions = []
+        for option in options:
+          #print(loc, '-->', option, 'from', current, '?')
+          junction = self.find_junction(option, current, self.graph)
+          if junction:
+            #((2003, (2, 13), 'W'), [(2, 13)])
+            (_, jloc, jdir), _ = junction
+            newgraph[current].append(junction)
+            tovisit.append( (jloc, jdir) )
+          else:
+            #print('Deadend Nixed')
+            pass
 
-        #Deadends that are not E can be culled
-        # (if traverse corridor until empty moves)
-    
+    self.graph = newgraph
+    print('Graph Optimized!', len(newgraph.keys()), 'nodes')
   
   def graph_map(self):
     visited = {}
@@ -135,91 +207,177 @@ class Puzzle:
               tovisit.append( newnode )
 
 
-    print('Graph Built!')
-    self.graph = graph
+    print('Graph Built!', len(graph.keys()), 'nodes')
+
+    hashgraph = {}
+
+    for key in graph:
+      hashgraph[key] = []
+      for value in graph[key]:
+        hashgraph[key].append( (value, []) )
+
+
+    self.graph = hashgraph
 
 
   def at(self, x, y):
     return self.maze[y][x]
 
   def find_all_best_paths(self):
-    raise 'Sort the path to be tiles visited or skipped'
-    bestlen = None
+    bestlen = 73432
     bests = []
     tovisit = []
     heapq.heapify(tovisit)
-    #heapq.heappush(tovisit, (0, self.location, [], set(), set()))
-    visited = pmap()
+
+    visited = {}
     heapq.heappush(tovisit, (0, self.location, [], visited))
 
     while tovisit:
       current = heapq.heappop(tovisit)
-      cost, (loc, direction), path, visited = current
+      #(0, ((1, 13), 'E'), [], pmap({}))
+      #print(current)
+      cost, (loc, direction), tiles, visited = current
 
       if (bestlen and cost <= bestlen) or (bestlen == None):
         #print('Visiting:', cost, loc, direction)
         if loc == self.end:
           print('Found A Path!', cost)
-          bests.append(path + [(loc, direction, cost)])
+          bests.append(tiles + [loc])
           bestlen = cost
-
-        if (loc, direction) not in visited:
+        elif loc not in visited:
           for node in self.graph[(loc, direction)]:
-            ncost, nloc, ndirection = node
-            if (nloc, ndirection) not in visited:
+            #node: ((2003, (2, 13), 'W'), [(2, 13)])
+            (ncost, nloc, ndirection), ntiles = node
+            if nloc not in visited:
+
+              nvisited = visited.copy()
+              nvisited[loc] = True
+
               heapq.heappush(tovisit, (cost+ncost, \
                 (nloc, ndirection), \
-                path + [(loc, direction, cost)], \
-                visited.set((loc, direction), True),
+                tiles + [loc] + ntiles, \
+                #visited.set((loc, direction), True),
+                #visited | set([loc])
+                nvisited
                 ))
-
 
     return bests
 
-  def x_find_all_best_paths(self):
-    bestlen = None
-    bests = []
+
+  def find_graph_path_all(self):
+    tovisit = []
+
+    costs = {node: float('inf') for node in self.graph}
+
+    costs[(self.end, 'E')] = float('inf')
+    costs[(self.end, 'N')] = float('inf')
+
+    costs[self.location] = 0
+
+    paths = defaultdict(list)
+    paths[self.location].append([self.location[0]])
+
+    heapq.heappush(tovisit, (0, self.location))
+
+    while tovisit:
+      cost, current = heapq.heappop(tovisit)
+      if cost > costs[current]:
+        continue
+
+      options = self.graph[current]
+      for option in options:
+        #option: [((1002, (1, 11), 'N'), [(1, 12)])]
+        (ocost, oloc, odirection), oskipped = option
+        oncost = cost + ocost
+        onode = (oloc, odirection)
+
+        if oncost < costs[onode]:
+          costs[onode] = oncost
+          paths[onode] = [path + oskipped + [oloc] for path in paths[current]]
+          heapq.heappush(tovisit, (oncost, onode) )
+        elif oncost == costs[onode]:
+          paths[onode].extend( path + oskipped + [oloc] for path in paths[current] )
+
+    
+    #Shortest paths to both type of end (coming in east, coming in north)
+    # in top corner so cannot comin travelling W or S
+    if costs[(self.end, 'N')] < costs[(self.end, 'E')]:
+      return paths[(self.end,'N')], costs[(self.end, 'N')]
+    elif costs[(self.end, 'N')] > costs[(self.end, 'E')]:
+      return paths[(self.end,'E')], costs[(self.end, 'E')]
+    else:
+      return paths[(self.end,'E')] + paths[(self.end, 'N')],\
+        costs[(self.end, 'E')]
+
+  def find_graph_path_all_x(self):
     tovisit = []
     heapq.heapify(tovisit)
-    #heapq.heappush(tovisit, (0, self.location, [], set(), set()))
-    visited = pmap()
-    visited2 = pmap()
-    heapq.heappush(tovisit, (0, self.location, [], visited, visited2))
+
+    #visited = {}
+    visited = {}
+
+    #print(tovisit)
+    heapq.heappush(tovisit, (0, self.location, [], visited))
+    #tovisit.append( (0, self.location, [], visited) )
 
     while tovisit:
       current = heapq.heappop(tovisit)
-      cost, (loc, direction), path, visited, visited2 = current
+      #current = tovisit.pop()
+      cost, (loc, direction), path, visited = current
+      #print('Visiting:', cost, loc, direction)
+      if loc == self.end:
+        print('tv:', len(tovisit))
+        return path + [loc]
+    
+      if len(tovisit) % 250000 == 0:
+        print('tv:', len(tovisit), 'c:', cost)
 
-      if (bestlen and cost <= bestlen) or (bestlen == None):
-        #print('Visiting:', cost, loc, direction)
-        if loc == self.end:
-          print('Found A Path!', cost)
-          bests.append(path + [(loc, direction, cost)])
-          bestlen = cost
+      if loc not in visited:
+        options = self.graph[(loc, direction)]
+        for option in options:
+          #option: [((1002, (1, 11), 'N'), [(1, 12)])]
+          (ocost, oloc, odirection), oskipped = option
+          if oloc not in visited:
+            nvisited = visited.copy()
+            nvisited[loc] = True
+            heapq.heappush(tovisit, \
+            #tovisit.append( \
+              (
+                cost+ocost, \
+                (oloc, odirection), \
+                path + oskipped + [loc],
+                nvisited
+              )
+            )
 
-        for turn in TURNS[direction]:
-          if (loc, turn) not in visited2:
-            #nvisited[loc] = True
-            #nvisited2[(loc, direction)] = True
+  def find_graph_path(self):
+    tovisit = []
+    heapq.heapify(tovisit)
+    #visited = {}
+    visited = set()
+    #print(tovisit)
+    heapq.heappush(tovisit, (0, self.location, []))
 
-            heapq.heappush(tovisit, (cost+1000, \
-              (loc, turn), \
-              path + [(loc, direction, cost)], \
-              visited.set(loc, True),
-              visited2.set((loc, direction), True)
-              ))
+    while tovisit:
+      current = heapq.heappop(tovisit)
+      cost, (loc, direction), path = current
+      #print('Visiting:', cost, loc, direction)
+      if loc == self.end:
+        return path + [loc]
 
-        dx, dy = MOVES[direction]
-        nx, ny = loc[0] + dx, loc[1] + dy
-        if self.at(nx, ny) != '#' and (nx,ny) not in visited:
-          heapq.heappush(tovisit, (cost+1, \
-            ((nx, ny), direction), \
-            path + [(loc, direction, cost)], 
-            visited.set(loc, True),
-            visited2.set((loc, direction), True)
-            ))
-
-    return bests
+      if loc not in visited:
+        #visited[loc] = True
+        visited = visited | set([loc])
+        options = self.graph[(loc, direction)]
+        for option in options:
+          #option: [((1002, (1, 11), 'N'), [(1, 12)])]
+          (ocost, oloc, odirection), oskipped = option
+          heapq.heappush(tovisit, \
+            (
+              cost+ocost, (oloc, odirection), \
+              path + oskipped + [loc]
+            )
+          )
 
 
   def find_path(self):
@@ -271,15 +429,20 @@ class Puzzle:
 
   def result(self):
     self.result2()
+    #for node in self.graph:
+    #  print(node, self.graph[node])
+    #self.result_graph()
 
   def result2(self):
-    paths = self.find_all_best_paths()
+    #paths = self.find_all_best_paths()
+    paths, cost = self.find_graph_path_all()
+    print('Number of Paths:', len(paths))
     locs = set()
-    print(len(paths))
-    for path in paths:
-      for loc, _, _ in path:
+    for i, path in enumerate(paths):
+      #print('>', len(path), 'costs', cost)
+      for loc in path:
         locs.add(loc)
-    print(list(locs))
+    self.debug_path(locs)
     print('Total Spots:', len(locs))
 
   def result1(self):
@@ -289,6 +452,11 @@ class Puzzle:
     cost = last[2]
     print('Total Cost:', cost)
 
+  def result_graph(self):
+    pass
+    #path = self.find_graph_path_all()
+    #print('Total Tiles:', len(path))
+    #self.debug_path(path)
 
 if __name__ == '__main__':
   puz = Puzzle()
