@@ -76,12 +76,20 @@ class Puzzle:
   def valid_pattern(self, pattern):
     return self._r_valid(pattern)
 
+  def colorize(self, pattern):
+    pattern = pattern.replace('r', Fore.RED + 'I')
+    pattern = pattern.replace('g', Fore.GREEN + 'I')
+    pattern = pattern.replace('u', Fore.BLUE + 'I')
+    pattern = pattern.replace('w', Fore.WHITE + 'I')
+    pattern = pattern.replace('b', Fore.BLACK + 'I')
+
+    return(pattern + Fore.RESET)
 
   def result(self):
     total = 0
     for pattern in self.patterns:
       count = self.valid_combos(pattern)
-      print(pattern, count)
+      print(self.colorize(pattern), count)
       total += count
     print('Total Valid:', total)
 
