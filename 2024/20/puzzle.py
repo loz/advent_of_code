@@ -8,6 +8,16 @@ NBRS = [
   (0,  1)
 ]
 
+#Clamp the bounds of the search space for circle
+# values are <-x-> and <-y-> of bounds
+# mul by the diamter
+CLAMP = {
+ (0, -1): (-1, 1, -1, 0), #Upper circle
+ (0,  1): (-1, 1,  0, 1), #Lower circle
+ (-1, 0): (-1, 0, -1, 1), #Left circle
+ ( 1, 0): ( 0, 1, -1, 1), #Right circle
+}
+
 class Puzzle:
 
   def process(self, text):
@@ -46,73 +56,66 @@ class Puzzle:
 
     return None
 
-  def reachable(self, t, loc, cache, mappath, path, distance):
-    #print('Trying', loc, '@', t)
-    visited = set(path[:t])
-    tovisit = [(t, loc, 1, visited)]
+  def within_radius(self, t, loc, path, distance):
     cheats = []
-    best = {}
-    while tovisit:
-      ct, cloc, depth, visited = tovisit.pop()
-      if cloc not in visited:
-        if cloc in mappath:
-          pt = mappath[cloc]
-          if ct < pt:
-            saving = pt-ct
-            if (loc, cloc) in best:
-              if saving > best[(loc, cloc)]:
-                #print('Found A Better Path', loc, '->', cloc, '@', ct, 'v', pt, visited)
-                best[(loc, cloc)] = saving
-            else:
-              #print('Found A Path', loc, '->', cloc, '@', ct, 'v', pt, visited)
-              best[(loc, cloc)] = saving
-
-        #Change to if not elif for cutting walls?
-        elif depth <= distance:
-          #Traverse Neighbours
-          for dx, dy in NBRS:
-            wx, wy = cloc[0] + dx, cloc[1] + dy
-            if (wx, wy) not in visited:
-              tovisit.append( (ct+1, (wx, wy), depth+1, visited | set([cloc])) )
-    for key in best:
-      #print(key, 'saving', cache[key])
-      #reachable.append(key[1])
-      #CHEAT: (saving, loc, (cx, cy) )
-      cheats.append( (best[key], key[0], key[1]) )
+    #Manhatten radius/witin circle
+    x, y = loc
+    minx, maxx = x-distance, x+distance
+    miny, maxy = y-distance, y+distance
+    
+    for mx in range(minx, maxx+1):
+      for my in range(miny, maxy+1):
+        mdist = abs(x-mx) + abs(y-my)      #Distance from loc
+        #Within the grid
+        #Within the radius
+        #Connects to path
+        if mx in range(self.width) and \
+           my in range(self.height) and \
+           mdist <= distance and \
+           (mx,my) in path:                
+             ptime = path[(mx, my)]
+             ctime = t + mdist
+             if ctime < ptime:             #Is faster than original 
+               #print( loc, '->', (mx, my), '=', ptime, 'v', ctime)
+               saving = ptime-ctime
+               cheats.append( (saving, loc, (mx, my)) )
 
     return cheats
 
   """
     Strategy:
-      *For given start, flood fill to depth or return to path
-       ?Only interested in return to paths!
-        *If at path and better time (startt + depth)!:
-          *if depth @ loc < bestdepth[loc]
-            *new best depth
-      *all cheats are start -> bestdepth indexes
-        *startt + cheat depth vs t @ loc is saving
-    Optimisations:
-      When we have a path (good or bad):
-        cache the (best) reachable in N tiles based on reverse
-          of path (i.e. in 1 from -1,end, 2 -2, end) etc.
-        use cache for path is we already calculated this
+      Run as fast as possible in a straight line
+        This is a circle surounding all points possible in time
+      if a point on the path is in this circle, we can cheat to it
+        (assuming it is a better time)
+
+    Optimization:
+      scan all points and see it is in a circle? O(N) calculations
+      scan all points in circle and see if on line O(2*4*Distance)
+        2*PI*R, PI is 4 in manhatten distance :D
+      for small paths, first is best, but we have > 160 points
+        in the real map
+
+    Challenges:
+      Running left THEN right is totally possible which would
+        backtrack over our path (not counted)
+
+    Solution:
+      Only look on semi-circle values in direction we moved into wall?
+       /-\     /       \ 
+        ^   or |<  or  >|  or   v
+               \       /       \-/
   """
   def find_cheats_with_distance(self, path, distance):
     pathmap = {}
     starts = []
     for t, loc in enumerate(path):
       pathmap[loc] = t
-      #Add possible cheats to search list
-      for dx, dy in NBRS:
-        wx, wy = loc[0] + dx, loc[1] + dy
-        if (wx, wy) in self.walls:
-          starts.append( (t+1, (wx, wy)) )
+      starts.append( (t, loc) )
 
     cheats = []
-    cache = {}
     for t, loc in starts:
-      #print('Trying to cheat at:', loc, '@', t)
-      cheats += self.reachable(t, loc, cache, pathmap, path, distance)
+      cheats += self.within_radius(t, loc, pathmap, distance)
     return cheats
 
   def find_cheats(self, path):
@@ -167,18 +170,23 @@ class Puzzle:
     path = self.solve()
     cheats = self.find_cheats_with_distance(path, 20)
     for cheat in cheats:
-      saving, _, _ = cheat
+      saving, start, end = cheat
       ctotal = frequency.get(saving, 0)
       ctotal += 1
       frequency[saving] = ctotal
     
     total = 0
-    for f in frequency:
+    minsave = 100
+    freqs = list(frequency.keys())
+    freqs = sorted(freqs)
+
+    for f in freqs:
       count = frequency[f]
-      #print('There are', count, 'saving', f)
-      if f >= 100:
+      #if f >= 100:
+      if f >= minsave:
+        print('There are', count, 'saving', f)
         total += count
-    print('=> ', total, 'save > 100')
+    print('=> ', total, 'save >', minsave)
     
 
   def result1(self):

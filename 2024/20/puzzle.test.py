@@ -68,6 +68,7 @@ class TestPuzzle(unittest.TestCase):
   #    #
   ######
   """
+
   def test_puzzle_finds_cheats_with_distance(self):
     puzzle = puz.Puzzle()
     puzzle.process("""######
@@ -82,13 +83,10 @@ class TestPuzzle(unittest.TestCase):
     """
       nocheat for 7
 
-#((2, 1), (4, 1)) saving 4
+
+#((1, 1), (4, 1)) saving 4
       S->E shortest, lots of waste available 
            cheat is 2, saving 7
-
-#((1, 0), (4, 1)) saving 2
-      ^>>v
-      S  E
 
 #((2, 2), (4, 1)) saving 2
       S >E
@@ -101,18 +99,15 @@ class TestPuzzle(unittest.TestCase):
 #((2, 1), (4, 2)) saving 2
       Sv E
        >>^ cheat is 2, saving 2
+
     """
-    self.assertEqual(len(cheats), 5)
+    self.assertEqual(len(cheats), 4)
     #( saving, start, end)
-    self.assertIn( (4, (2,1), (4,1) ) , cheats)
-    self.assertIn( (2, (2,2), (4,1) ) , cheats)
-    self.assertIn( (2, (1,0), (4,1) ) , cheats)
-    self.assertIn( (2, (2,2), (4,2) ) , cheats)
-    self.assertIn( (2, (2,1), (4,2) ) , cheats)
+    self.assertIn( (4, (1,1), (4,1) ) , cheats)
+    self.assertIn( (2, (1,2), (4,1) ) , cheats)
+    self.assertIn( (2, (1,1), (4,2) ) , cheats)
+    self.assertIn( (2, (1,1), (4,2) ) , cheats)
 
-
-  def test_puzzle_cheats_can_go_in_and_out_of_walls(self):
-    self.assertTrue(False)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
