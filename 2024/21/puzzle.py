@@ -44,36 +44,6 @@ NBRS = [
   (0, 1, 'v')
 ]
 
-
-"""
-   ^A
-  <v>
-  
-  Facts: (dump_facts)
-  For a robot, these are the costs of a button press
-  A : A
-  ^ : <A
-  > : vA
-  v : v<A, <vA
-  < : v<<A, <v<A
-
-  Costs for a ROBOT to make a ROBOT press these
-  A :
-     A => A
-  ^ :
-     <A => v<<A|<v<A, >^>A|>>^A
-  > :
-     vA => v<A|<vA, ^>A|>^A
-  v :
-     v<A => v<A|<vA, <A, >^>A|>>^A
-     <vA => v<<A|<v<A, >A, ^>A|>^A
-  < :
-     v<<A => v<A|<vA, <A, A, >^>A|>>^A
-     <v<A => v<<A|<v<A, >A, <A, >^>A|>>^A
-
-
-"""
-
 class Puzzle:
   def __init__(self):
     self.expansion_cache = {}
@@ -85,43 +55,11 @@ class Puzzle:
     for line in text.split('\n'):
       self.process_line(line)
 
-  def dump_facts(self):
-    buttons = "A^>v<"
-    print('For a robot, these are the costs of a button press')
-    sequences = []
-    for button in buttons:
-      paths = self.robot_path('A', button)
-      paths = [path + 'A' for path in paths]
-      print(button, ':', ', '.join(paths))
-      sequences.append( (button, paths) )
-    print()
-
-    print('Costs for a ROBOT to make a ROBOT press these')
-    for button, paths in sequences:
-      print(button, ':')
-      for presses in paths:
-        paths = self.robot_presses_robot(presses)
-        notes = ['|'.join(p) for p in paths]
-        print('  ', presses, '=>', ', '.join(notes))
-
   def fragment_cost(self, paths):
     cost = 0
     for bit in paths:
       cost += len(bit[0])
     return cost
-
-  def squash_fragments(self, paths, costs):
-    keys = ""
-    for fragments in paths:
-      best = fragments[0]
-      bestcost = costs[best]
-      for frag in fragments:
-        fcost = costs[frag]
-        if fcost < bestcost:
-          best = frag
-          bestcost = fcost
-      keys += best
-    return keys
 
   def select_fragments(self, paths, costs):
     selected = []
@@ -156,7 +94,6 @@ class Puzzle:
                 newfragments.append(frag)
       fragments = newfragments
       iteration += 1
-
     print('Expansion Graph:')
     #Here we have caluclated all possible recursive fragments
     #  Essentially a graph (for middle robots)
@@ -187,7 +124,6 @@ class Puzzle:
       #  total += min(fragcosts)
       #  nextcosts.append( fragcosts )
       #print(nextcosts)
-
     #Make recommendations based on the EXPANSION costs
     bestmap = {}
     for key in known:
@@ -368,7 +304,7 @@ class Puzzle:
       options = self._robot_presses_robot(s)
       squashed = self._squash_options(options)
       presses += squashed
-    print(len(presses), 'options')
+    #print(len(presses), 'options')
 
     minlen = float('inf')
     shortests = []
@@ -378,148 +314,13 @@ class Puzzle:
         minlen = len(o)
       elif len(o) == minlen:
         shortests.append(o)
-    print(len(shortests), 'shortests', minlen)
+    #print(len(shortests), 'shortests', minlen)
     #print(shortests[0])
     return shortests[0]
-
-  def alt_generate_keypad_press(self, keys):
-    # Robot Presses Keypad
-    # Robot Presses Robot
-    # Robot Presses Robot
-    # You Presses Robot (No action needed, just keys)
-    print()
-    print("Robot Pressing Keypad (Decompression)")
-    last = 'A'
-    presses = []
-    for ch in keys:
-      options = self.door_path(last, ch)
-      press = []
-      for opt in options:
-        press.append(opt + 'A')
-      presses.append(press)
-      last = ch
-    print(presses)
-
-    
-    print("Robot Pressing Robot (Radiation)")
-    rad_presses = []
-    for options in presses:
-      optionpresses = self._best_robot_presses(options)
-      rad_presses.append( optionpresses )
-    for opt in rad_presses:
-      print(opt)
-
-    print("Robot Pressing Robot (-40deg)")
-    deg_presses = []
-    for rad_options in rad_presses:
-      degrad_presses = []
-      for rad, options in rad_options:
-        optionpresses = []
-        for opt in options:
-          s_optionpresses = self._best_robot_presses(opt)
-          optionpresses.append((opt, s_optionpresses))
-        degrad_presses.append( (rad, optionpresses) )
-      deg_presses.append( degrad_presses )
-
-    keypress = ""
-    for dopts in deg_presses:
-      print('---')
-      for r, ropt in dopts:
-        print(r)
-        rcost = 0
-        #for _, opt in first:
-        #  keypress += opt[0]
-        
-        for _, opt in ropt:
-          _, first = opt[0]
-          #print('FFF:', first)
-          keypress += ''.join([p[0] for p in first])
-
-          _, sets = opt[0]
-          cost = sum([len(x[0]) for x in sets])
-          rcost += cost
-          print('  ', opt)
-        print('- cost:', rcost)
-    print("Me Pressing Robot:")
-    print(keypress)
-    return keypress
-
-  """
-    COST:
-    cost of a sequence is the moves lengths required
-    based on number of moves, not the inherent upstream
-      cost
-  """
-  def sequence_cost(self, sequence):
-    cost = 0
-    last = 'A'
-    for ch in sequence:
-      moves = self.robot_path(last, ch)
-      cost += len(moves[0])
-      last = ch
-    return cost
 
   def process_line(self, line):
     if line != '':
       self.codes.append(line)
-
-  def _expand_best_chunk(self, presses):
-    result = ""
-    chunks = presses.split('A')
-    for chunk in chunks:
-      if chunk in self.expansion_cache:
-        result += self.expansion_cache[chunk] + 'A'
-      else:
-        value = self.robot_presses_robot(chunk + 'A')
-        flatten = self._squash_options(value)
-        bestcost = float('inf')
-        best = None
-        for f in flatten:
-          fcost = self.sequence_cost(f)
-          if fcost < bestcost:
-            bestcost = fcost
-            best = f
-          #print('(', chunk, ') ?=', f, ':', len(f), self.sequence_cost(f))
-        #print(flatten)
-        self.expansion_cache[chunk] = best
-        result += best + 'A'
-      #print('-'*10)
-    return result
-  
-  def _expand_all_chunks(self, presses):
-    results = [""]
-
-    chunks = presses.split('A')
-    #print('Chunks:', chunks)
-    for chunk in chunks:
-      items = []
-      if chunk in self.expansion_cache:
-        items = self.expansion_cache[chunk]
-      else:
-        print('.', end='', flush=True)
-        value = self.robot_presses_robot(chunk + 'A')
-        flatten = self._squash_options(value)
-        chunkcache = []
-        for f in flatten:
-          chunkcache.append(f)
-        self.expansion_cache[chunk] = chunkcache
-        items = chunkcache
-
-      #print('Items', items)
-      newresults = []
-      for result in results:
-        for item in items:
-          newresults.append(result + item + 'A')
-      #print('---')
-      #print(newresults)
-      results = newresults
-    return results
-
-  def _expand_chunks(self, presses, each=False):
-    if each:
-      return self._expand_all_chunks(presses)
-    else:
-      return self._expand_best_chunk(presses)
 
   def count_best(self, keys, depth):
     self.seen_best = {}
@@ -541,73 +342,7 @@ class Puzzle:
         self.seen_best[(frag,depth)] = fcost
         cost += fcost
     return cost
-
-  def expand_best(self, keys, depth):
-    #print("Expand:", keys, 'For', depth)
-    #Expand the first set
-    options = self.robot_presses_robot(keys)
-    #print('----')
-    #results = self._squash_options(options)
-    #for r in results:
-    #  print(' ', r)
-    #print('----')
-    fragments = self.select_fragments(options, self.propcosts)
-    test = ''.join(fragments)
-    #print('Expanded:', test, test in results)
-    #print('----')
-
-    for i in range(depth-1):
-      print(i, ',', end='', flush=True)
-      #print(i, fragments)
-      options = self.robot_presses_robot(''.join(fragments))
-      #print('  ----')
-      #results = self._squash_options(options)
-      #for r in results:
-      #  print('   ', r)
-      #print('  ----')
-      newfragments = []
-      for frag in fragments:
-        newfragments += self.bestexpansions[frag]
-      fragments = newfragments
-
-    #test = ''.join(fragments)
-    #print('Expanded:', test, test in results)
-    #print('----')
-    print()
-    return ''.join(fragments)
   
-  def _expand(self, presses, depth, bests, returns, debug):
-    if depth == 0:
-      return presses
-
-    if (presses, depth) in self.expansion_cache:
-      #print('.', end='', flush=True)
-      return self.expansion_cache[(presses, depth)]
-
-    print('.', end='', flush=True)
-    result = ""
-    last = "A"
-    for ch in presses:
-      if ch == last:
-        expanded = "A"
-      else:
-        if ch == 'A':
-          move = returns[last] + bests[ch]
-        else:
-          moves = self.robot_path(last, ch) 
-          #print(moves)
-          move = moves[0] #TODO: Find BEST based on repetition
-          move = move + 'A'
-        expanded = move
-      if debug:
-        result += self._expand(expanded, depth-1, bests, returns, debug) + '[' + ch + '] '
-      else:
-        result += self._expand(expanded, depth-1, bests, returns, debug)
-
-      last = ch
-    self.expansion_cache[(presses, depth)] = result
-    return result
-
   def result(self):
     self.result2()
 
@@ -624,7 +359,7 @@ class Puzzle:
 
     depth = 25 #intermediary robots between ME and last robot
     depth = 2 #intermediary robots between ME and last robot
-    #depth = 25 #intermediary robots between ME and last robot
+    depth = 25 #intermediary robots between ME and last robot
 
     #print("Intermediary Robots Act best as follows:")
     #for key in bests:
@@ -637,7 +372,6 @@ class Puzzle:
       code, options = i
       choices = []
       for opt in options:
-        #best = self.expand_best(opt, depth)
         best = self.count_best(opt, depth)
         choices.append(best)
       best = choices[0]
