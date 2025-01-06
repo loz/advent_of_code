@@ -16,6 +16,10 @@ class Wire:
     self.name = name
     self.outputs = []
 
+  def __str__(self):
+    outs = ','.join([g.name for g in self.outputs])
+    return 'W(' + self.name + ': ' + outs + ')'
+
   def connect(self, item):
     self.outputs.append(item)
 
@@ -29,6 +33,9 @@ class Gate:
     self.name = name
     self.outputs  = {}
     self.reset()
+
+  def __str__(self):
+    return 'G(' + self.name + ')'
 
   def reset(self):
     self.recieved = []
@@ -261,6 +268,10 @@ class Puzzle:
       carry, circuit, tmpcount = self.gen_adder(bit, carry, tmpcount)
       wires.extend(circuit)
       #print(carry, circuit)
+
+    goodwires = {}
+    for wire in wires:
+      goodwires[wire.name] = wire
     """
     #replace to test
     self.wires = {}
@@ -277,116 +288,96 @@ class Puzzle:
   
     print('My Circuit')
     self.execute()
+    return
     """
 
     #TODO: Compare self.wires with wires
     print('Diffing correct vs given wires')
-    
-    #Scan adders for bits
+    goodgates = set()
+    for name in goodwires:
+      wire = goodwires[name]
+      for g in wire.outputs:
+        goodgates.add(g)
+
+    # Relable wires in GOOD circuit with BAD to find issues
+    goodkeys = set(goodwires.keys())
+    badkeys = set(self.wires.keys())
+
+    #print(goodkeys)
+    #print(badkeys)
+    tovisit = list(goodkeys & badkeys)
+    mapped = {}
+    visited = {}
+
+    for name in tovisit:
+      mapped[name] = name #We don't remap starter/ends
+
     errors = set()
-    for bit in range(numbits):
-      errors |= self.cmp_adder(bit)
-    print('All Errors:', errors)
+
+    while(tovisit):
+      name = tovisit.pop()
+      if name in visited:
+        next
+      visited[name] = True
+      good = goodwires[name]
+      bad  = self.wires[name]
+      if len(good.outputs) != len(bad.outputs):
+        #print(name, 'does not match good circuit')
+        #print('good', [g.name for g in good.outputs])
+        #print('bad ', [g.name for g in bad.outputs])
+        errors.add(name)
+
+      good_xor = self.find_xor(good.outputs)
+      bad_xor  = self.find_xor(bad.outputs)
+      errors |= self.map_wires(good_xor, bad_xor, 'XOR', mapped, tovisit, goodwires, goodgates)
+
+      good_or  = self.find_or(good.outputs)
+      bad_or   = self.find_or(bad.outputs)
+      errors |= self.map_wires(good_or, bad_or, 'OR', mapped, tovisit, goodwires, goodgates)
+
+      good_and = self.find_and(good.outputs)
+      bad_and  = self.find_and(bad.outputs)
+      errors |= self.map_wires(good_and, bad_and, 'AND', mapped, tovisit, goodwires, goodgates)
+
+    print(errors)
     errors = sorted(errors)
-    for e in errors:
-      wire = self.wires[e]
-      print(e, [g.name for g in wire.outputs])
     print('Answer:', ','.join(errors))
 
-  def cmp_adder(self, bit):
-    x = "x{:0>2}".format(bit)
-    y = "y{:0>2}".format(bit)
-    z = "z{:0>2}".format(bit)
-    wx = self.wires[x]
-    wy = self.wires[y]
-    wz = self.wires[z]
-    xgates = set(wx.outputs)
-    ygates = set(wx.outputs)
+  def rename_wire(self, wire, newname, goodgates, goodwires):
+    oldname = wire.name
+    for g in goodgates:
+      if oldname in g.outputs:
+        g.outputs.pop(oldname)
+        g.outputs[newname] = wire
+    goodwires.pop(oldname)
+    goodwires[newname] = wire
+    wire.name = newname
 
+  def map_wires(self, goodgate, badgate, gatetype, mapped, tovisit, goodwires, goodgates):
     errors = set()
-    #x&y should match gates to be wired correctly
-    if xgates != ygates:
-      print('Adder mismatch!', x, y)
-    else:
-      xor_gate = self.find_xor(xgates)
-      and_gate = self.find_and(xgates)
-      if bit == 0: #ADDER, no carry
-        """
-          bitx, bity
-          x XOR y -> z  *
-          x AND y -> carry *
-        """
-        setz = xor_gate.outputs
-        if z not in setz:
-          print('Z add incorrect: wanted', z, 'have', setz.keys())
+    if goodgate:
+      if not badgate:
+        #print('Bad Missing:>> '+ gatetype, goodgate.name)
+        pass
       else:
-        """
-        x XOR y -> i1
-        i1 XOR c -> z  *
-        x AND y -> i2
-        i1 AND c -> i3
-        i2 OR i3 -> c  *
-        """
-        if not xor_gate:
-          raise 'x XOR y missing'
-        if not and_gate:
-          raise 'x AND y missing'
-
-        i1 = list(xor_gate.outputs.keys())[0]
-        i2 = list(and_gate.outputs.keys())[0]
-        wi1 = self.wires[i1]
-        wi2 = self.wires[i2]
-        i1_xor_c = self.find_xor(wi1.outputs)
-        newc = '?carry'
-        c = '?c'
-        i3 = '?i3'
-        if not i1_xor_c:
-          #print('ERROR: i1 XOR carry -> z Missing:')
-          #print('  expected:', i1, 'XOR', c, '->', z)
-          #print('  got     :', [g.name for g in wi1.outputs])
-          errors.add(i1)
-        else:
-          c, wc = self.find_other_input(i1_xor_c, i1)
-          oz = list(i1_xor_c.outputs.keys())[0]
-          if oz != z:
-            #print('ERROR: i1 XOR carry -> z:')
-            #print('  expected: ', i1, 'XOR', c, '->', z)
-            #print('  got     : ', i1, 'XOR', c, '->',oz)
-            errors.add(z)
-            errors.add(oz)
-          i1_and_c = self.find_and(wi1.outputs)
-          if not i1_and_c:
-            raise('Not Handled')
-            #print('ERROR: i1 AND carry -> i3 Missing:')
-            #print('  expected: ', i1, 'AND', c, '->', i3)
-            #print('  got     :', [g.name for g in wi1.outputs])
+        goodname = list(goodgate.outputs.keys())[0]
+        badname  = list(badgate.outputs.keys())[0]
+        if goodname != badname: #Remap
+          if goodname in mapped and mapped[goodname] != badname:
+            #print('Collision', mapped[goodname], 'v', badname)
+            errors.add(goodname)
+            errors.add(badname)
           else:
-            if i1_and_c not in wc.outputs:
-              raise('Not Handled')
-              #print('ERROR: i1 AND c, i1 XOR c mismatch:', i1, c)
-
-            i3 = list(i1_and_c.outputs.keys())[0]
-            wi3 = self.wires[i3]
-            i2or_gate = self.find_or(wi2.outputs)
-            i3or_gate = self.find_or(wi3.outputs)
-            if not i2or_gate:
-              #print('ERROR: i2 OR i3 -> c missing:')
-              #print('  expected: ', i2, 'OR', i3, '->', newc)
-              #print('  got     : ', [g.name for g in wi2.outputs])
-              #print('  got     : ', [g.name for g in wi3.outputs])
-              errors.add(i2)
-            elif not i3or_gate:
-              #print('ERROR i2 OR i3 -> c not wired correct:')
-              #print('  expected: ', i2, 'OR', i3, '->', c)
-              #print('  got     : ', [g.name for g in wi2.outputs])
-              #print('  got     : ', [g.name for g in wi3.outputs])
-              errors.add(i3)
-            else:
-              newc = list(i2or_gate.outputs.keys())[0]
-              if newc.startswith('z'):
-                #print('ERROR: Carry out to Z: ', newc)
-                errors.add(newc)
-      return errors
+            good = goodwires[goodname]
+            bad = self.wires[badname]
+            #print('Mapping', goodname, badname, good, bad)
+            self.rename_wire(good, badname, goodgates, goodwires)
+            mapped[goodname] = badname
+            tovisit.append(badname)
+    elif badgate:
+      #print('Badgate Extra? ' + gatetype, badgate.name)
+      pass
+    return errors
   
   def find_other_input(self, gate, thisone):
     for name in self.wires:
