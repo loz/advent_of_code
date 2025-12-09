@@ -45,15 +45,26 @@ class Puzzle:
           x2 = max(a[0], b[0])
           y1 = min(a[1], b[1])
           y2 = max(a[1], b[1])
-          w = range(x1, x2+1)
-          h = range(y1, y2+1)
-          if polygon.is_rect_inside_polygon(
-            (x1,y1,x2,y2), self.coords
-          ):
-            #print(x1,'->', x2, ':', y1, '->', y2)
-            #self.print_debug((w,h))
-            maxr = area
-            corners = pair
+          w = (x1, x2)
+          h = (y1, y2)
+          #print((x1,y1), '->', (x2,y2))
+          #self.print_debug((w,h))
+          iscut = polygon.polygon_cuts_rect((w,h), self.coords)
+          if iscut:
+            #print('No!')
+            pass
+          else:
+            points = polygon.clip_polygon((w,h), self.coords)
+            corners = [(w[0], h[0]), (w[1], h[0]), (w[0], h[1]), (w[1], h[1])]
+            #print(points, corners)
+            noncorners = list(filter(lambda x: x not in corners, points))
+            if len(points) in (4,2) and len(noncorners)  == 0:
+              #print('YES!', points)
+              maxr = area
+              corners = pair
+            else:
+              #print('No:', points)
+              pass
         else:
           maxr = area
           corners = pair
@@ -148,7 +159,7 @@ class Puzzle:
     print(size)
 
   def result(self):
-    #self.fill_green_tiles()
+    self.fill_green_tiles()
     size, corners = self.find_largest_rectangle(True)
     print(corners)
     print(size)
