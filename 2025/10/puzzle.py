@@ -1,6 +1,9 @@
 import sys
 from colorama import Fore
 from collections import deque
+import numpy as np
+from pulp import LpMinimize, LpProblem, LpVariable, lpSum, PULP_CBC_CMD
+
 
 class Machine:
   def __init__(self, line):
@@ -41,66 +44,41 @@ class Machine:
         for b in range(len(self.buttons)):
           tovisit.append((buttons + [b], nlights))
 
-  def xfind_candidates(self, jpos, joltages):
-    target = self.joltages[jpos]
-    #print(jpos, joltages, 'v', target)
-    if joltages[jpos] < target:
-      options = []
-      for b in range(len(self.buttons)):
-        btns = self.buttons[b]
-        if jpos in btns:
-          options.append(b)
-      return options
-    else:
-      return []
-
-  def find_candidates(self, jpos, joltages):
-    target = self.joltages[jpos]
-    if joltages[jpos] < target:
-      options = []
-      for b in range(len(self.buttons)):
-        btns = self.buttons[b]
-        if jpos in btns:
-          # Check this button won't over-press anything
-          valid = True
-          helpful_count = 0
-          for pos in btns:
-            if joltages[pos] >= self.joltages[pos]:
-              valid = False
-              break
-            if joltages[pos] < self.joltages[pos]:
-              helpful_count += 1
-          
-          if valid:
-            options.append((helpful_count, b))
-      
-      # Sort by most helpful positions first (greedy)
-      options.sort(reverse=True)
-      return [b for (_, b) in options]
-    else:
-      return [] 
-
   def shortest_press_with_joltage(self):
-    tovisit = deque()
-    seen = {}
-    joltages = self.calc_joltage([])
-    candidates = self.find_candidates(0, joltages)
-    for c in candidates:
-      tovisit.append((c, 0, joltages))
+    # Step 1: Create the problem - we want to MINIMIZE something
+    prob = LpProblem("ButtonPresses", LpMinimize)
+    # Step 2: Create variables - one for each button
+    # We need non-negative integers (can't press -5 times or 2.7 times)
+    button_vars = []
+    for i in range(len(self.buttons)):
+        var = LpVariable(f"button_{i}", lowBound=0, cat='Integer')
+        button_vars.append(var)
+    # Step 3: Set the objective - minimize total presses
+    # This is the sum: button_0 + button_1 + button_2 + ... + button_n
+    prob += lpSum(button_vars)
 
-    while tovisit:
-      cur = tovisit.popleft()
-      (button, presses, joltages) = cur
-      seen[tuple(joltages)] = presses
-      jolts = self.press_button_with_jolts(button, joltages)
-      if self.meets_joltage(jolts):
-        return presses + 1
-      elif tuple(jolts) not in seen:
-        first = self.first_unmet_joltage(jolts)
-        if first != -1:
-          candidates = self.find_candidates(first, jolts)
-          for c in candidates:
-            tovisit.append((c, presses + 1, jolts))
+    # Step 4: Add constraints - ensure final joltages match target
+    for j in range(len(self.joltages)):
+      #print(j, self.buttons)
+      impacts = []
+      for b in range(len(self.buttons)):
+        positions = self.buttons[b]
+        if(j in positions):
+          impacts.append(button_vars[b])
+      #print('Impacts for position', j, ':', impacts)
+      prob += lpSum(impacts) == self.joltages[j];
+
+    #print(prob);
+    # Step 5: Solve the problem
+    prob.solve(PULP_CBC_CMD(msg=0))  # msg=0 suppresses solver output
+
+    # Step 6: Extract the solution
+    # Check if we found a valid solution
+    if prob.status == 1:  # 1 means "Optimal solution found"
+        total_presses = sum(var.varValue for var in button_vars)
+        return int(total_presses)
+    else:
+        return None  # No solution found
 
   def calc_joltage(self, buttons):
     joltages = [0] * len(self.joltages)
